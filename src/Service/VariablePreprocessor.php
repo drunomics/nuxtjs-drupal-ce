@@ -96,9 +96,9 @@ class VariablePreprocessor {
         if (in_array($fieldType, $this->scalarFieldTypes)) {
           $entityValues->setDataAttribute($fieldName, $field->value);
         }
-        // Complex fields.
+        // Complex fields with html.
         else {
-          $fieldBuild = $entity->{$fieldName}->view(['view_mode' => $viewMode]);
+          $fieldBuild = $entity->{$fieldName}->view($viewMode);
           /** @var \Drupal\Core\Render\Markup $fieldRendered */
           $fieldRendered = $this->renderer->renderPlain($fieldBuild);
           $entityValues->setFieldValue($fieldName, $fieldRendered);
