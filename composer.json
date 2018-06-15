@@ -1,0 +1,27 @@
+{
+  "name": "drunomics/custom_elements",
+  "description": "Render fields as custom elements.",
+  "type": "drupal-module",
+  "authors": [
+    {
+      "name": "drunomics GmbH",
+      "email": "hello@drunomics.com"
+    }
+  ],
+  "license": "GPL-2.0-or-later",
+  "repositories": [
+    {
+      "type": "composer",
+      "url": "https://packages.drupal.org/8"
+    }
+  ],
+  "extra": {
+    "branch-alias": {
+      "dev-8.x-1.x": "1.0.x-dev"
+    }
+  },
+  "require": {
+  },
+  "require-dev": {
+  }
+}

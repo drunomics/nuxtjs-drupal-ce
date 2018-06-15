@@ -1,0 +1,20 @@
+{#
+/**
+ * @file
+ * Default theme implementation for displaying an custom elements entity.
+ *
+ * Available variables:
+ * - tag: HTML tag for current entity.
+ * - name: Label of paragraph type turned to lowercase.
+ * - type: Type of paragraph.
+ * - data-attributes: Scalar field values.
+ * - fields: Rendered field values.
+ *
+ * @ingroup themeable
+ */
+#}
+<{{ tag }}-{{ name }} type="{{ type }}" {{ data_attributes }}>
+  {% for field_name,field_value in fields %}
+    <section name="{{ field_name }}">{{ field_value }}</section>
+  {% endfor %}
+</{{ tag }}-{{ name }}>

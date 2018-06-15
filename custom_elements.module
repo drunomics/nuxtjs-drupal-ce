@@ -1,0 +1,71 @@
+<?php
+
+/**
+ * @file
+ * Custom elements hooks.
+ */
+
+use Drupal\Core\Entity\ContentEntityBase;
+use Drupal\Core\Template\Attribute;
+
+/**
+ * Implements hook_theme().
+ */
+function custom_elements_theme() {
+  return [
+    'custom_elements' => [
+      'tag' => NULL,
+      'name' => NULL,
+      'type' => NULL,
+      'data_attributes' => [],
+      'fields' => [],
+    ],
+  ];
+}
+
+/**
+ * Implements hook_theme_suggestions_alter().
+ *
+ * Use custom elements template for every content entity which is using
+ * view mode prefixed with `custom_elements`.
+ */
+function custom_elements_theme_suggestions_alter(array &$suggestions, array &$variables, $hook) {
+  // Applies if view mode is prefixed with 'custom_elements'.
+  if (isset($variables['elements']['#view_mode']) && strpos($variables['elements']['#view_mode'], 'custom_elements') === 0) {
+    // Suggests that hook is entity type, so entity object is placed on #{hook}.
+    $entity = $variables['elements']['#' . $hook] ?? NULL;
+    // Check if entity was found.
+    if (!$entity) {
+      /** @var \Drupal\Core\Logger\LoggerChannel $logger */
+      $logger = \Drupal::service('logger.channel.custom_elements');
+      $logger->warning(t('Cannot obtain entity @entity for element with custom elements view mode.', ['@entity' => $hook]));
+      return;
+    }
+    // Check if entity is content entity, exit if not.
+    if (!$entity instanceof ContentEntityBase) {
+      return;
+    }
+    $variables['elements']['#entity'] = $entity;
+    $suggestions[] = 'custom_elements';
+  }
+}
+
+/**
+ * Prepares variables for content entity.
+ *
+ * Default template: custom-elements.twig.html.
+ */
+function template_preprocess_custom_elements(&$variables) {
+  /** @var \Drupal\Core\Entity\ContentEntityBase $entity */
+  $entity = $variables['elements']['#entity'];
+  $variables['#attached']['library'][] = 'custom_elements/main';
+  $variables['type'] = $entity->bundle();
+  $variables['name'] = $entity->bundle();
+  $view_mode = $variables['elements']['#view_mode'];
+  /** @var \Drupal\custom_elements\Service\VariablePreprocessor $variable_preprocessor */
+  $variable_preprocessor = \Drupal::service('custom_elements.variable_preprocessor');
+  $entity_values = $variable_preprocessor->preprocessVariables($entity, $view_mode);
+  $variables['data_attributes'] = new Attribute($entity_values->getDataAttributes());
+  $variables['fields'] = $entity_values->getFieldValues();
+  $variables['tag'] = $entity_values->getHtmlTag();
+}

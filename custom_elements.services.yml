@@ -1,0 +1,7 @@
+services:
+  logger.channel.custom_elements:
+    parent: logger.channel_base
+    arguments: ['custom_elements']
+  custom_elements.variable_preprocessor:
+    class: Drupal\custom_elements\Service\VariablePreprocessor
+    arguments: ['@renderer']

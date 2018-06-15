@@ -1,0 +1,5 @@
+name: Custom Elements
+description: Render fields as custom elements.
+package: Other
+type: module
+core: 8.x
