@@ -1,5 +1,5 @@
 {
-  "name": "drunomics/custom_elements",
+  "name": "drupal/custom_elements",
   "description": "Render fields as custom elements.",
   "type": "drupal-module",
   "authors": [
