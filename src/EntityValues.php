@@ -49,25 +49,6 @@ class EntityValues {
   }
 
   /**
-   * Gets HTML tag.
-   *
-   * @return string
-   */
-  public function getHtmlTag() {
-    return $this->tag;
-  }
-
-  /**
-   * Sets HTML tag.
-   *
-   * @param string $tag
-   *   HTML tag.
-   */
-  public function setHtmlTag($tag) {
-    $this->tag = $tag;
-  }
-
-  /**
    * Gets data attributes.
    *
    * @return array

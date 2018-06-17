@@ -53,24 +53,6 @@ class VariablePreprocessor {
   }
 
   /**
-   * Get html tag based on entity type.
-   *
-   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
-   *   Entity to get tag for.
-   *
-   * @return string
-   *   HTML tag.
-   */
-  protected function getHtmlTag(ContentEntityInterface $entity) {
-    $entityType = $entity->getEntityTypeId();
-    switch ($entityType) {
-      case 'paragraph':
-        return 'pg';
-    }
-    return $entityType;
-  }
-
-  /**
    * Preprocess entity to extract data attributes and field values.
    *
    * @param \Drupal\Core\Entity\ContentEntityInterface $entity
@@ -83,7 +65,6 @@ class VariablePreprocessor {
    */
   public function preprocessVariables(ContentEntityInterface $entity, $viewMode) {
     $entityValues = new EntityValues();
-    $entityValues->setHtmlTag($this->getHtmlTag($entity));
     /** @var \Drupal\Core\Field\FieldItemListInterface[] $fields */
     $fields = $entity->getFields();
     foreach ($fields as $field) {

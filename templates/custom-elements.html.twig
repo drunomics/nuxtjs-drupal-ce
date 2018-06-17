@@ -4,17 +4,19 @@
  * Default theme implementation for displaying an custom elements entity.
  *
  * Available variables:
- * - tag: HTML tag for current entity.
- * - name: Label of paragraph type turned to lowercase.
- * - type: Type of paragraph.
- * - data-attributes: Scalar field values.
- * - fields: Rendered field values.
+ * - tag_prefix: Prefix to use for the html tag.
+ * - tag: HTML tag to use for the entity.
+ * - type: Type of the custom element; usually determined by the entity bundle.
+ * - attributes: The attributes to add to the tag. Includes data-attributes
+ *   added by the preprocessors.
+ * - fields: Rendered markup fields that are not in data-attributes.
  *
  * @ingroup themeable
  */
 #}
-<{{ tag }}-{{ name }} type="{{ type }}" {{ data_attributes }}>
+
+<{{ tag_prefix }}-{{ tag }} type="{{ type }}" {{ attributes.addClass('custom-elements') }}>
   {% for field_name,field_value in fields %}
-    <section name="{{ field_name }}">{{ field_value }}</section>
+    <section scope="{{ field_name }}">{{ field_value }}</section>
   {% endfor %}
-</{{ tag }}-{{ name }}>
+</{{ tag_prefix }}-{{ tag }}>

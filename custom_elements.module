@@ -59,13 +59,18 @@ function template_preprocess_custom_elements(&$variables) {
   /** @var \Drupal\Core\Entity\ContentEntityBase $entity */
   $entity = $variables['elements']['#entity'];
   $variables['#attached']['library'][] = 'custom_elements/main';
+
+  // By default use the prefix 'pg' for paragraphs and the bundle as tag name.
+  $variables['tag_prefix'] = $entity->getEntityTypeId() == 'paragraph' ? 'pg' : $entity->getEntityTypeId();
+  $variables['tag'] = $entity->bundle();
+
+  // Add the bundle as type.
   $variables['type'] = $entity->bundle();
-  $variables['name'] = $entity->bundle();
+
   $view_mode = $variables['elements']['#view_mode'];
   /** @var \Drupal\custom_elements\Service\VariablePreprocessor $variable_preprocessor */
   $variable_preprocessor = \Drupal::service('custom_elements.variable_preprocessor');
   $entity_values = $variable_preprocessor->preprocessVariables($entity, $view_mode);
-  $variables['data_attributes'] = new Attribute($entity_values->getDataAttributes());
+  $variables['attributes'] = new Attribute($entity_values->getDataAttributes());
   $variables['fields'] = $entity_values->getFieldValues();
-  $variables['tag'] = $entity_values->getHtmlTag();
 }
