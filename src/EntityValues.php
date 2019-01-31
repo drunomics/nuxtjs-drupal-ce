@@ -78,6 +78,7 @@ class EntityValues {
    *   Data attribute value.
    */
   public function setDataAttribute($key, $value) {
+    $key = str_replace('_', '-', $key);
     $this->dataAttributes[$this->dataAttributePrefix . $key] = $this->sanitizeDataAttribute($value);
   }
 
@@ -111,6 +112,7 @@ class EntityValues {
    *   Field value markup.
    */
   public function setFieldValue($key, $value) {
+    $key = str_replace('_', '-', $key);
     $this->fieldValues[$key] = $value;
   }
 

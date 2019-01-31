@@ -17,6 +17,6 @@
 
 <{{ tag_prefix }}-{{ tag }} type="{{ type }}" {{ attributes.addClass('custom-elements') }}>
   {% for field_name,field_value in fields %}
-    <section scope="{{ field_name }}">{{ field_value }}</section>
+    <template slot="{{ field_name }}">{{ field_value }}</template>
   {% endfor %}
 </{{ tag_prefix }}-{{ tag }}>
