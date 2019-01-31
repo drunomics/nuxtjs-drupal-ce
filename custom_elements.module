@@ -6,6 +6,7 @@
  */
 
 use Drupal\Core\Entity\ContentEntityBase;
+use Drupal\Core\Render\Element;
 use Drupal\Core\Template\Attribute;
 
 /**
@@ -15,10 +16,9 @@ function custom_elements_theme() {
   return [
     'custom_elements' => [
       'tag' => NULL,
-      'name' => NULL,
-      'type' => NULL,
-      'data_attributes' => [],
-      'fields' => [],
+      'tag_prefix' => NULL,
+      'attributes' => NULL,
+      'slots' => [],
     ],
   ];
 }
@@ -51,26 +51,26 @@ function custom_elements_theme_suggestions_alter(array &$suggestions, array &$va
 }
 
 /**
- * Prepares variables for content entity.
+ * Prepares variables for an entity that is rendered as custom element.
  *
  * Default template: custom-elements.twig.html.
  */
 function template_preprocess_custom_elements(&$variables) {
   /** @var \Drupal\Core\Entity\ContentEntityBase $entity */
   $entity = $variables['elements']['#entity'];
+  // Attach custom-elements libraries.
   $variables['#attached']['library'][] = 'custom_elements/main';
 
-  // By default use the prefix 'pg' for paragraphs and the bundle as tag name.
-  $variables['tag_prefix'] = $entity->getEntityTypeId() == 'paragraph' ? 'pg' : $entity->getEntityTypeId();
-  $variables['tag'] = $entity->bundle();
+  /** @var \Drupal\custom_elements\Service\CustomElementGenerator $generator */
+  $generator = \Drupal::service('custom_elements.generator');
+  $field_names = Element::children($variables['elements']);
+  $custom_element = $generator->generate($entity, $field_names, $variables['elements']['#view_mode']);
 
-  // Add the bundle as type.
-  $variables['type'] = $entity->bundle();
+  // Allow altering the element before its output.
+  \Drupal::moduleHandler()->alter('custom_element_entity', $custom_element, $entity);
 
-  $view_mode = $variables['elements']['#view_mode'];
-  /** @var \Drupal\custom_elements\Service\VariablePreprocessor $variable_preprocessor */
-  $variable_preprocessor = \Drupal::service('custom_elements.variable_preprocessor');
-  $entity_values = $variable_preprocessor->preprocessVariables($entity, $view_mode);
-  $variables['attributes'] = new Attribute($entity_values->getDataAttributes());
-  $variables['fields'] = $entity_values->getFieldValues();
+  $variables['attributes'] = new Attribute($custom_element->getAttributes());
+  $variables['slots'] = $custom_element->getSlots();
+  $variables['tag_prefix'] = $custom_element->getTagPrefix();
+  $variables['tag'] = $custom_element->getTag();
 }

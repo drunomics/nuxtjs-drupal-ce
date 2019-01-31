@@ -6,17 +6,16 @@
  * Available variables:
  * - tag_prefix: Prefix to use for the html tag.
  * - tag: HTML tag to use for the entity.
- * - type: Type of the custom element; usually determined by the entity bundle.
  * - attributes: The attributes to add to the tag. Includes data-attributes
  *   added by the preprocessors.
- * - fields: Rendered markup fields that are not in data-attributes.
+ * - slots: Rendered markup fields that are not in data-attributes.
  *
  * @ingroup themeable
  */
 #}
 
-<{{ tag_prefix }}-{{ tag }} type="{{ type }}" {{ attributes.addClass('custom-elements') }}>
-  {% for field_name,field_value in fields %}
-    <template slot="{{ field_name }}">{{ field_value }}</template>
+<{{ tag_prefix }}-{{ tag }} {{ attributes.addClass('custom-elements') }}>
+  {% for key,value in slots %}
+    <template slot="{{ key }}">{{ value }}</template>
   {% endfor %}
 </{{ tag_prefix }}-{{ tag }}>

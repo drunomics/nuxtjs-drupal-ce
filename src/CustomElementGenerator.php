@@ -3,39 +3,14 @@
 namespace Drupal\custom_elements\Service;
 
 use Drupal\Core\Entity\ContentEntityInterface;
-use Drupal\Core\Render\RendererInterface;
-use Drupal\custom_elements\EntityValues;
-use Drupal\field\Entity\FieldConfig;
+use Drupal\custom_elements\CustomElement;
+use Drupal\custom_elements\Processor\CustomElementProcessorInterface;
 use Drupal\media_entity\Entity\Media;
 
 /**
  * Service to preprocess template variables for custom elements.
  */
-class VariablePreprocessor {
-
-  /**
-   * List of field types considered scalar.
-   *
-   * @var array
-   */
-  protected $scalarFieldTypes = [
-    // General fields.
-    'boolean',
-    'datetime',
-    'email',
-    'timestamp',
-    // Text fields.
-    'string',
-    'list_string',
-    'string_long',
-    // Numeric fields.
-    'float',
-    'list_integer',
-    'list_float',
-    'decimal',
-    'integer',
-  ];
-
+class CustomElementGenerator {
 
   /**
    * Array with field names, that need custom processing.
@@ -49,60 +24,112 @@ class VariablePreprocessor {
   ];
 
   /**
-   * The renderer service.
+   * Array of all processors and their priority.
    *
-   * @var \Drupal\Core\Render\RendererInterface
+   * @var array
    */
-  protected $renderer;
+  protected $processorByPriority = [];
 
   /**
-   * Constructs a new VariablePreprocessor object.
+   * Sorted list of registered processors.
    *
-   * @param \Drupal\Core\Render\RendererInterface $renderer
-   *   The renderer service.
+   * @var \Drupal\custom_elements\Processor\CustomElementProcessorInterface[]
    */
-  public function __construct(RendererInterface $renderer) {
-    $this->renderer = $renderer;
+  protected $sortedProcessors;
+
+  /**
+   * Adds a processor.
+   *
+   * @param \Drupal\custom_elements\Processor\CustomElementProcessorInterface $processor
+   *   The processor to add.
+   * @param int $priority
+   *   The priority for the processor.
+   */
+  public function addProcessor(CustomElementProcessorInterface $processor, $priority = 0) {
+    $this->processorByPriority[$priority][] = $processor;
+    // Force the processors to be re-sorted.
+    $this->sortedProcessors = NULL;
   }
 
   /**
-   * Preprocess entity to extract data attributes and field values.
+   * Gets an array of processors, sorted by their priority.
+   *
+   * @return \Drupal\custom_elements\Processor\CustomElementProcessorInterface[]
+   */
+  public function getSortedProcessors() {
+    if (!isset($this->sortedProcessors)) {
+      // Sort the processors according to priority.
+      krsort($this->processorByPriority);
+
+      // Merge nested processors from $this->processors into $this->sortedProviders.
+      $this->sortedProcessors = [];
+      foreach ($this->processorByPriority as $processors) {
+        $this->sortedProcessors = array_merge($this->sortedProcessors, $processors);
+      }
+    }
+
+    return $this->sortedProcessors;
+  }
+
+  /**
+   * Generates a custom element tag for the given entity and view mode.
    *
    * @param \Drupal\Core\Entity\ContentEntityInterface $entity
-   *   Entity to preprocess.
+   *   Entity to process.
+   * @param string[] $field_names
+   *   Array of field names which should be rendered. Fields not mentioned
+   *   won't be included.
    * @param string $viewMode
-   *   View mode used for rendering field values.
+   *   View mode used for rendering field values into slots.
    *
-   * @return \Drupal\custom_elements\EntityValues
-   *   Extracted entity values containing data attributes and field values.
+   * @return \Drupal\custom_elements\CustomElement
+   *   Extracted custom elements containing data attributes and slots.
    */
-  public function preprocessVariables(ContentEntityInterface $entity, $viewMode) {
-    $entityValues = new EntityValues();
-    /** @var \Drupal\Core\Field\FieldItemListInterface[] $fields */
-    $fields = $entity->getFields();
-    foreach ($fields as $field) {
-      $fieldDefinition = $field->getFieldDefinition();
-      // Handle custom fields only.
-      if ($fieldDefinition instanceof FieldConfig) {
-        $fieldName = $field->getName();
-        // Simple fields considered to be data attributes.
-        $fieldType = $fieldDefinition->getType();
-        if (in_array($fieldType, $this->scalarFieldTypes)) {
-          $entityValues->setDataAttribute($fieldName, $field->value);
-        }
-        // Complex fields with html.
-        else {
-          $this->preprocessNonScalarField($entityValues, $entity, $fieldName, $viewMode);
+  public function generate(ContentEntityInterface $entity, $field_names, $viewMode) {
+    $custom_element = new CustomElement();
+
+    // By default output tags like drupal-node, drupal-comment and for
+    // paragraphs pg-text, pg-image etc.
+    if ($entity->getEntityTypeId() == 'paragraph') {
+      $tag = 'pg-' . $entity->bundle();
+      $prefix = '';
+    }
+    elseif ($entity->getEntityTypeId() == 'node') {
+      $tag = 'node';
+      $prefix = '';
+    }
+    else {
+      $tag = $entity->getEntityTypeId();
+      $prefix = 'drupal';
+    }
+    $custom_element->setTag($tag);
+    $custom_element->setTagPrefix($prefix);
+
+    // Add the bundle as type.
+    if ($entity->bundle() != $entity->getEntityTypeId()) {
+      $custom_element->setAttribute('type', $entity->bundle());
+    }
+    // Add the view mode.
+    $custom_element->setAttribute('view-mode', $viewMode);
+
+    // Handle given fields only.
+    $fields = array_intersect_key($entity->getFields(), array_flip($field_names));
+
+    foreach ($fields as $field_name => $field) {
+      foreach ($this->getSortedProcessors() as $processor) {
+        if ($processor->supports($field)) {
+          $processor->addtoElement($field_name, $field, $custom_element, $viewMode);
+          break 1;
         }
       }
     }
-    return $entityValues;
+    return $custom_element;
   }
 
   /**
    * Preprocess non-scalar fields.
    *
-   * @param \Drupal\custom_elements\EntityValues $entity_values
+   * @param \Drupal\custom_elements\CustomElement $entity_values
    *   The EntityValues object.
    * @param \Drupal\Core\Entity\ContentEntityInterface $entity
    *   The entity that is preprocessed.
@@ -111,7 +138,7 @@ class VariablePreprocessor {
    * @param string $view_mode
    *   The entity's view mode.
    */
-  protected function preprocessNonScalarField(EntityValues &$entity_values, ContentEntityInterface $entity, $field_name, $view_mode) {
+  protected function preprocessNonScalarField(CustomElement &$entity_values, ContentEntityInterface $entity, $field_name, $view_mode) {
     if (in_array($field_name, $this->customFields)) {
       switch ($field_name) {
 
@@ -156,14 +183,14 @@ class VariablePreprocessor {
   /**
    * Preprocess media fields.
    *
-   * @param \Drupal\custom_elements\EntityValues $entity_values
-   *   The entity values object.
+   * @param \Drupal\custom_elements\CustomElement $entity_values
+   *   The custom elements object.
    * @param \Drupal\media_entity\Entity\Media $media_entity
    *   The media entity.
    * @param string $paragraph_bundle
    *   The field's parent paragraph bundle.
    */
-  protected function preprocessMediaField(EntityValues &$entity_values, Media $media_entity, $paragraph_bundle) {
+  protected function preprocessMediaField(CustomElement &$entity_values, Media $media_entity, $paragraph_bundle) {
     switch ($paragraph_bundle) {
       case 'instagram':
         $entity_values->setDataAttribute('url', $media_entity->field_url->uri);
@@ -191,23 +218,6 @@ class VariablePreprocessor {
         break;
     }
 
-  }
-
-  /**
-   * Fallback for non-scalar fields.
-   *
-   * @param \Drupal\custom_elements\EntityValues $entity_values
-   *   The EntityValues object.
-   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
-   *   The entity that is preprocessed.
-   * @param string $field_name
-   *   The field's name.
-   * @param string $view_mode
-   *   The entity's view mode.
-   */
-  protected function preprocessNonscalarFieldFallback(EntityValues &$entity_values, ContentEntityInterface $entity, $field_name, $view_mode) {
-    $field_build = $entity->{$field_name}->view($view_mode);
-    $entity_values->setFieldValue($field_name, $field_build);
   }
 
 }
