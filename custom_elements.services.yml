@@ -4,3 +4,9 @@ services:
     arguments: ['custom_elements']
   custom_elements.generator:
     class: Drupal\custom_elements\CustomElementGenerator
+    tags:
+      - { name: service_collector, tag: custom_elements_processor, call: addProcessor }
+  custom_elements.processor.default:
+    class: Drupal\custom_elements\Processor\DefaultFieldItemListProcessor
+    tags:
+      - { name: custom_elements_processor, priority: -100 }

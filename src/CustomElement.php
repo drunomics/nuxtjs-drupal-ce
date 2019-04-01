@@ -40,8 +40,9 @@ class CustomElement {
   /**
    * List of slots.
    *
-   * @var \Drupal\Core\Render\Markup[]|string[]
-   *   Array of slots, keyed slot name.
+   * @var \Drupal\Core\Render\Markup[]|array[]
+   *   Array of slots, keyed slot name. Each entry has the keys 'tag' and
+   *   'content'.
    */
   protected $slots = [];
 
@@ -99,7 +100,10 @@ class CustomElement {
    * @param string $key
    *   Name of the slot to get.
    *
-   * @return \Drupal\Core\Render\Markup|string
+   * @return array
+   *   An array with two entries:
+   *   - tag: The tag to use for rendering the slot.
+   *   - content (\Drupal\Core\Render\Markup|string): The string to output.
    */
   public function getSlot($key) {
     return $this->slots[$key] ?? NULL;
@@ -112,10 +116,12 @@ class CustomElement {
    *   Name of the slot to set value for.
    * @param \Drupal\Core\Render\Markup|string $value
    *   Slot markup.
+   * @param string $tag
+   *   (optional) The tag to use for the slot.
    */
-  public function setSlot($key, $value) {
+  public function setSlot($key, $value, $tag = 'div') {
     $key = str_replace('_', '-', $key);
-    $this->slots[$key] = $value;
+    $this->slots[$key] = ['tag' => $tag, 'content' => $value];
   }
 
   /**

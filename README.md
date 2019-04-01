@@ -4,19 +4,24 @@ Custom elements modules allows to render content entities as custom elements.
  
 ## Overview
 
-Custom elements module was developed as part of [contentpool](https://github.com/drunomics/contentpool)
-distribution where it's inevitable to have a flixible way of content re-using
-across any independent client. It's basically providing Content-Embed API where
-content from main instance (aka contentpool) can be rendered on client sites.
-Any content entity may be rendered with custom elements where simple (scalar)
-field types are rendered as data attributes and more complex fields as specific
-html tags.
+Renders entities into custom elements markup that can be picked up for client-side rendering. It renders the data of all
+visible fields either as attribute to the custom element tag, or as nested tag with a slot attribute.
+
+Custom element attributes may be picked up as property during client-side rendering.
+
+Slots are a useful way for content distribution in [Vue.js - thus the rendered slots can be used directly by the Vue.js
+[slot implementation](https://vuejs.org/v2/guide/components.html#Content-Distribution-with-Slots). But the concept can
+be used with out client-side libraries as well, e.g. see https://github.com/dschnare/react-slot for a React based
+solution.
 
 ## How it works
 
-To render content entity as custom elements you just need to introduce custom
-view mode with `custom_elements` prefix. Every entity render with such a view
-mode is then automatically processed.
+The module takes over render for all view-modes that are prefixed with `custom_elements` - thus to render content
+entity as custom elements you just need to introduce custom view mode with `custom_elements` prefix. Every entity render
+with such a view mode is then automatically processed.
+
+In order to make client-side rendering possible, the necessary client libraries may be added to the
+custom_elements/main library, which the module is attaching to custom element markup.
 
 ## Example
 

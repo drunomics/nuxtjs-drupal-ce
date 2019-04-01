@@ -71,6 +71,6 @@ function template_preprocess_custom_elements(&$variables) {
 
   $variables['attributes'] = new Attribute($custom_element->getAttributes());
   $variables['slots'] = $custom_element->getSlots();
-  $variables['tag_prefix'] = $custom_element->getTagPrefix();
+  $variables['tag_prefix'] = $custom_element->getTagPrefix() ? $custom_element->getTagPrefix() . '-' : '';
   $variables['tag'] = $custom_element->getTag();
 }

@@ -9,7 +9,7 @@ use Drupal\custom_elements\CustomElement;
 /**
  * Default processor for field item lists.
  */
-class DefaultFieldItemListProcessorInterface implements CustomElementProcessorInterface {
+class DefaultFieldItemListProcessor implements CustomElementProcessorInterface {
 
   /**
    * List of field types considered scalar.

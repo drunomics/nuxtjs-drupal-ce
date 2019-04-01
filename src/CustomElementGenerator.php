@@ -1,9 +1,8 @@
 <?php
 
-namespace Drupal\custom_elements\Service;
+namespace Drupal\custom_elements;
 
 use Drupal\Core\Entity\ContentEntityInterface;
-use Drupal\custom_elements\CustomElement;
 use Drupal\custom_elements\Processor\CustomElementProcessorInterface;
 use Drupal\media_entity\Entity\Media;
 
