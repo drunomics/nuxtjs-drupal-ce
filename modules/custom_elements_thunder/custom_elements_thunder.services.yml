@@ -1,0 +1,5 @@
+services:
+  custom_elements.processor.default:
+    class: Drupal\custom_elements_thunder\ThunderFieldsCustomElementsProcessor
+    tags:
+      - { name: custom_elements_processor, priority: 0 }

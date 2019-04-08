@@ -50,7 +50,7 @@ class DefaultFieldItemListProcessor implements CustomElementProcessorInterface {
 
     // Simple fields considered to be data attributes.
     if (in_array($field_item_list->getFieldDefinition()->getType(), $this->scalarFieldTypes)) {
-      $element->setDataAttribute($key, $field_item_list->value);
+      $element->setAttribute($key, $field_item_list->value);
     }
     // Render complex fields into html and set as slot.
     else {

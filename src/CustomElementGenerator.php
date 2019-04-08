@@ -12,17 +12,6 @@ use Drupal\media_entity\Entity\Media;
 class CustomElementGenerator {
 
   /**
-   * Array with field names, that need custom processing.
-   *
-   * @var string[]
-   */
-  protected $customFields = [
-    'field_image',
-    'field_media',
-    'field_link',
-  ];
-
-  /**
    * Array of all processors and their priority.
    *
    * @var array
@@ -123,100 +112,6 @@ class CustomElementGenerator {
       }
     }
     return $custom_element;
-  }
-
-  /**
-   * Preprocess non-scalar fields.
-   *
-   * @param \Drupal\custom_elements\CustomElement $entity_values
-   *   The EntityValues object.
-   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
-   *   The entity that is preprocessed.
-   * @param string $field_name
-   *   The field's name.
-   * @param string $view_mode
-   *   The entity's view mode.
-   */
-  protected function preprocessNonScalarField(CustomElement &$entity_values, ContentEntityInterface $entity, $field_name, $view_mode) {
-    if (in_array($field_name, $this->customFields)) {
-      switch ($field_name) {
-
-        case 'field_image':
-          /** @var \Drupal\media_entity\Entity\Media $media_entity */
-          $media_entity = $entity->{$field_name}->entity;
-          $fieldCopyright = $media_entity->field_copyright->value;
-          $fieldDescription = $media_entity->field_description->value;
-          $imageSource = file_create_url($media_entity->field_image->entity->getFileUri());
-          $entity_values->setDataAttribute('field_copyright', $fieldCopyright);
-          $entity_values->setDataAttribute('field_description', $fieldDescription);
-          $entity_values->setDataAttribute('img_src', $imageSource);
-          break;
-
-        case 'field_media':
-          /** @var \Drupal\media_entity\Entity\Media $media_entity */
-          $media_entity = $entity->{$field_name}->entity;
-          $this->preprocessMediaField($entity_values, $media_entity, $entity->bundle());
-          break;
-
-        case 'field_link':
-          $links = [];
-          foreach ($entity->{$field_name} as $link) {
-            $links[] = [
-              'uri' => $link->getUrl()->toString(),
-              'title' => $link->title,
-            ];
-          }
-          $entity_values->setDataAttribute('links', json_encode($links));
-          break;
-
-        default:
-          $this->preprocessNonscalarFieldFallback($entity_values, $entity, $field_name, $view_mode);
-          break;
-      }
-    }
-    else {
-      $this->preprocessNonscalarFieldFallback($entity_values, $entity, $field_name, $view_mode);
-    }
-  }
-
-  /**
-   * Preprocess media fields.
-   *
-   * @param \Drupal\custom_elements\CustomElement $entity_values
-   *   The custom elements object.
-   * @param \Drupal\media_entity\Entity\Media $media_entity
-   *   The media entity.
-   * @param string $paragraph_bundle
-   *   The field's parent paragraph bundle.
-   */
-  protected function preprocessMediaField(CustomElement &$entity_values, Media $media_entity, $paragraph_bundle) {
-    switch ($paragraph_bundle) {
-      case 'instagram':
-        $entity_values->setDataAttribute('url', $media_entity->field_url->uri);
-        break;
-
-      case 'gallery':
-        $images = [];
-        foreach ($media_entity->field_media_images as $media_reference) {
-          $media_image = $media_reference->entity;
-          $images[] = [
-            'alt' => $media_image->field_image->entity->field_image_alt_text->value,
-            'src' => $media_image->field_image->entity->uri->url,
-          ];
-        }
-        $entity_values->setDataAttribute('name', $media_entity->name->value);
-        $entity_values->setDataAttribute('images', json_encode($images));
-        break;
-
-      case 'pinterest':
-        $entity_values->setDataAttribute('url', $media_entity->field_url->uri);
-        break;
-
-      case 'twitter':
-        $entity_values->setDataAttribute('url', $media_entity->field_url->uri);
-        break;
-    }
-
   }
 
 }

@@ -1,7 +1,4 @@
 services:
-  logger.channel.custom_elements:
-    parent: logger.channel_base
-    arguments: ['custom_elements']
   custom_elements.generator:
     class: Drupal\custom_elements\CustomElementGenerator
     tags:

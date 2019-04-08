@@ -60,31 +60,6 @@ class CustomElement {
   }
 
   /**
-   * Gets value for given data attribute.
-   *
-   * @param string $key
-   *   Name of the data attribute to get value for.
-   *
-   * @return string
-   */
-  public function getDataAttribute($key) {
-    return $this->attributes[$this->dataAttributePrefix . $key] ?? NULL;
-  }
-
-  /**
-   * Sets value for given data attribute.
-   *
-   * @param string $key
-   *   Name of the data attribute to set value for.
-   * @param string $value
-   *   Data attribute value.
-   */
-  public function setDataAttribute($key, $value) {
-    $key = str_replace('_', '-', $key);
-    $this->attributes[$this->dataAttributePrefix . $key] = $this->sanitizeAttribute($value);
-  }
-
-  /**
    * Gets the element slots, keyed by slot name.
    *
    * @return \Drupal\Core\Render\Markup[]|string[]
@@ -164,9 +139,6 @@ class CustomElement {
    *   Attribute value.
    */
   public function setAttribute($key, $value) {
-    if ($key == 'data') {
-      throw new \LogicException('Use setDataAttribute instead.');
-    }
     $key = str_replace('_', '-', $key);
     $this->attributes[$key] = $this->sanitizeAttribute($value);
   }

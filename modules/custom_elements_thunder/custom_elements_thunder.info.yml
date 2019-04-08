@@ -1,0 +1,7 @@
+name: Custom Elements Thunder Integration
+description: Provides custom elements markup for thunder paragraphs.
+package: Thunder
+type: module
+core: 8.x
+dependencies:
+  - drupal:custom_elements
