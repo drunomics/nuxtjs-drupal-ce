@@ -4,7 +4,6 @@ namespace Drupal\custom_elements;
 
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\custom_elements\Processor\CustomElementProcessorInterface;
-use Drupal\media_entity\Entity\Media;
 
 /**
  * Service to preprocess template variables for custom elements.
@@ -100,18 +99,35 @@ class CustomElementGenerator {
     // Add the view mode.
     $custom_element->setAttribute('view-mode', $viewMode);
 
-    // Handle given fields only.
-    $fields = array_intersect_key($entity->getFields(), array_flip($field_names));
+    // Todo: Let the processor generate the element.
+    // Have some default entity processor with above logic then let the
+    // processor inherit and do its work.
+    // Have generic entity processor with generic field translation which can
+    // be inherited also.
+    $this->process(field_name, $field, $custom_element, $viewMode);
 
-    foreach ($fields as $field_name => $field) {
-      foreach ($this->getSortedProcessors() as $processor) {
-        if ($processor->supports($field)) {
-          $processor->addtoElement($field_name, $field, $custom_element, $viewMode);
-          break 1;
-        }
+    return $custom_element;
+  }
+
+  /**
+   * Process the given data and adds it to the custom element.
+   *
+   * @param string $key
+   *   The key under which to add it.
+   * @param $data
+   *   The data.
+   * @param \Drupal\custom_elements\CustomElement $custom_element
+   *   The custom element to which to add it.
+   * @param $viewMode
+   *   The current view-mode.
+   */
+  public function process($key, $data, CustomElement $custom_element, $viewMode) {
+    foreach ($this->getSortedProcessors() as $processor) {
+      if ($processor->supports($data)) {
+        $processor->addtoElement($key, $data, $custom_element, $viewMode);
+        break;
       }
     }
-    return $custom_element;
   }
 
 }
