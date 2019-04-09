@@ -3,7 +3,15 @@ services:
     class: Drupal\custom_elements\CustomElementGenerator
     tags:
       - { name: service_collector, tag: custom_elements_processor, call: addProcessor }
-  custom_elements.processor.default:
+  custom_elements.processor.default_content_entity:
+    class: Drupal\custom_elements\Processor\DefaultContentEntityProcessor
+    tags:
+      - { name: custom_elements_processor, priority: -100 }
+  custom_elements.processor.default_field_item_list:
     class: Drupal\custom_elements\Processor\DefaultFieldItemListProcessor
+    tags:
+      - { name: custom_elements_processor, priority: -100 }
+  custom_elements.processor.default_field_item:
+    class: Drupal\custom_elements\Processor\DefaultFieldItemProcessor
     tags:
       - { name: custom_elements_processor, priority: -100 }

@@ -5,18 +5,21 @@ namespace Drupal\custom_elements\Processor;
 
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\custom_elements\CustomElement;
+use Drupal\custom_elements\CustomElementGeneratorTrait;
 
 /**
  * Default processor for field item lists.
  */
 class DefaultFieldItemListProcessor implements CustomElementProcessorInterface {
 
+  use CustomElementGeneratorTrait;
+
   /**
    * List of field types considered scalar.
    *
    * @var array
    */
-  protected $scalarFieldTypes = [
+  protected static $scalarFieldTypes = [
     // General fields.
     'boolean',
     'datetime',
@@ -44,18 +47,32 @@ class DefaultFieldItemListProcessor implements CustomElementProcessorInterface {
   /**
    * {@inheritdoc}
    */
-  public function addtoElement($key, $data, CustomElement $element, $viewMode) {
+  public function addtoElement($data, CustomElement $element, $viewMode) {
     assert($data instanceof FieldItemListInterface);
     $field_item_list = $data;
 
-    // Simple fields considered to be data attributes.
-    if (in_array($field_item_list->getFieldDefinition()->getType(), $this->scalarFieldTypes)) {
-      $element->setAttribute($key, $field_item_list->value);
-    }
-    // Render complex fields into html and set as slot.
-    else {
-      $render = $field_item_list->view($viewMode);
-      $element->setSlot($key, $render);
+    // By default just handle each field item with cardinality 1 on its own.
+    // Fields with higher cardinality
+    foreach ($field_item_list as $field_item) {
+      if ($field_item_list->getFieldDefinition()->getFieldStorageDefinition()->getCardinality() == 1) {
+        $this->customElementGenerator->process($field_item, $element, $viewMode);
+      }
+      // Render non-scalar multiple fields as slot.
+      elseif (!in_array($field_item_list->getFieldDefinition()->getType(), static::$scalarFieldTypes)) {
+        $element->setSlot($field_item_list->getName(), $field_item_list->view($viewMode));
+      }
+      // Render scalar multiple fields individual, below another tag.
+      else {
+        $nested_elements = [];
+        foreach ($field_item_list as $field_item) {
+          $nested_element = new CustomElement();
+          $nested_element->setTagPrefix('field');
+          $nested_element->setTag($field_item_list->getFieldDefinition()->getType());
+          $this->customElementGenerator->process($field_item, $nested_element, $viewMode);
+          $nested_elements[] = $nested_element;
+        }
+        $element->setSlotFromNestedElements($field_item_list->getName(), $nested_elements, 'div', ['class' => 'nested']);
+      }
     }
   }
 

@@ -51,26 +51,29 @@ function custom_elements_theme_suggestions_alter(array &$suggestions, array &$va
 }
 
 /**
- * Prepares variables for an entity that is rendered as custom element.
+ * Prepares variables when an entity is rendered as custom element.
  *
  * Default template: custom-elements.twig.html.
  */
 function template_preprocess_custom_elements(&$variables) {
-  /** @var \Drupal\Core\Entity\ContentEntityBase $entity */
-  $entity = $variables['elements']['#entity'];
   // Attach custom-elements libraries.
   $variables['#attached']['library'][] = 'custom_elements/main';
 
-  /** @var \Drupal\custom_elements\Service\CustomElementGenerator $generator */
-  $generator = \Drupal::service('custom_elements.generator');
-  $field_names = Element::children($variables['elements']);
-  $custom_element = $generator->generate($entity, $field_names, $variables['elements']['#view_mode']);
+  if (!empty($variables['elements']['#entity'])) {
+    /** @var \Drupal\Core\Entity\ContentEntityBase $entity */
+    $entity = $variables['elements']['#entity'];
 
-  // Allow altering the element before its output.
-  \Drupal::moduleHandler()->alter('custom_element_entity', $custom_element, $entity);
+    /** @var \Drupal\custom_elements\Service\CustomElementGenerator $generator */
+    $generator = \Drupal::service('custom_elements.generator');
+    $field_names = Element::children($variables['elements']);
+    $custom_element = $generator->generate($entity, $field_names, $variables['elements']['#view_mode']);
 
-  $variables['attributes'] = new Attribute($custom_element->getAttributes());
-  $variables['slots'] = $custom_element->getSlots();
-  $variables['tag_prefix'] = $custom_element->getTagPrefix() ? $custom_element->getTagPrefix() . '-' : '';
-  $variables['tag'] = $custom_element->getTag();
+    // Allow altering the element before its output.
+    \Drupal::moduleHandler()->alter('custom_element_entity', $custom_element, $entity);
+
+    $variables['attributes'] = new Attribute($custom_element->getAttributes());
+    $variables['slots'] = $custom_element->getSlots();
+    $variables['tag_prefix'] = $custom_element->getTagPrefix() ? $custom_element->getTagPrefix() . '-' : '';
+    $variables['tag'] = $custom_element->getTag();
+  }
 }

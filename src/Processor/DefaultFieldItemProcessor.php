@@ -3,59 +3,38 @@
 
 namespace Drupal\custom_elements\Processor;
 
+use Drupal\Core\Field\FieldItemInterface;
 use Drupal\Core\Field\FieldItemListInterface;
+use Drupal\Core\TypedData\PrimitiveInterface;
 use Drupal\custom_elements\CustomElement;
 
 /**
- * Default processor for field item lists.
+ * Default processor for field items.
  */
-class DefaultFieldItemListProcessor implements CustomElementProcessorInterface {
-
-  /**
-   * List of field types considered scalar.
-   *
-   * @var array
-   */
-  protected $scalarFieldTypes = [
-    // General fields.
-    'boolean',
-    'datetime',
-    'email',
-    'timestamp',
-    // Text fields.
-    'string',
-    'list_string',
-    'string_long',
-    // Numeric fields.
-    'float',
-    'list_integer',
-    'list_float',
-    'decimal',
-    'integer',
-  ];
+class DefaultFieldItemProcessor implements CustomElementProcessorInterface {
 
   /**
    * {@inheritdoc}
    */
   public function supports($data) {
-    return $data instanceof FieldItemListInterface;
+    return $data instanceof FieldItemInterface;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function addtoElement($key, $data, CustomElement $element, $viewMode) {
-    assert($data instanceof FieldItemListInterface);
-    $field_item_list = $data;
+  public function addtoElement($data, CustomElement $element, $viewMode) {
+    assert($data instanceof FieldItemInterface);
+    $field_item = $data;
 
-    // Simple fields considered to be data attributes.
-    if (in_array($field_item_list->getFieldDefinition()->getType(), $this->scalarFieldTypes)) {
-      $element->setAttribute($key, $field_item_list->value);
-    }
-    // Render complex fields into html and set as slot.
-    else {
-      $render = $field_item_list->view($viewMode);
-      $element->setSlot($key, $render);
+    // Add all primitive properties by default. We cannot generically add
+    // non-primitives since we do not know how to render them. This is not
+    // really an issue as non-scalar fields are by default already rendered on
+    // the field item list level, thus never get here.
+    foreach ($field_item->getProperties() as $name => $property) {
+      if ($property instanceof PrimitiveInterface) {
+        $element->setAttribute($name, $property->getValue());
+      }
     }
   }
 

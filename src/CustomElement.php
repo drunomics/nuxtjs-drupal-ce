@@ -2,6 +2,8 @@
 
 namespace Drupal\custom_elements;
 
+use Drupal\Core\Template\Attribute;
+
 /**
  * Custom element data model.
  */
@@ -21,14 +23,7 @@ class CustomElement {
    *
    * @var string
    */
-  protected $tag;
-
-  /**
-   * Prefix for data attribute.
-   *
-   * @var string
-   */
-  protected $dataAttributePrefix = 'data-';
+  protected $tag = 'div';
 
   /**
    * List of other attributes.
@@ -93,10 +88,40 @@ class CustomElement {
    *   Slot markup.
    * @param string $tag
    *   (optional) The tag to use for the slot.
+   * @param array $attributes
+   *   (optional) Attributes to add to the slot tag.
    */
-  public function setSlot($key, $value, $tag = 'div') {
+  public function setSlot($key, $value, $tag = 'div', $attributes = []) {
     $key = str_replace('_', '-', $key);
-    $this->slots[$key] = ['tag' => $tag, 'content' => $value];
+    $this->slots[$key] = ['tag' => $tag, 'content' => $value, 'attributes' => new Attribute($attributes)];
+  }
+
+  /**
+   * Sets the slot content from a nested custom elements.
+   *
+   * @param $key
+   *   Name of the slot to set value for.
+   * @param \Drupal\custom_elements\CustomElement[] $nestedElements
+   *   The nested custom element.
+   * @param string $tag
+   *   (optional) The tag to use for the slot.
+   * @param array $attributes
+   *   (optional) Attributes to add to the slot tag.
+   */
+  public function setSlotFromNestedElements($key, array $nestedElements, $tag = 'div', $attributes = []) {
+    $content = [];
+    foreach ($nestedElements as $key => $nestedElement) {
+      $content[$key] = [
+        '#theme' => 'custom_elements',
+        '#attributes' => new Attribute($nestedElement->getAttributes()),
+        '#slots' => $nestedElement->getSlots(),
+        '#tag_prefix' => $nestedElement->getTagPrefix(),
+        '#tag' => $nestedElement->getTag(),
+      ];
+    }
+    $this->setSlot($key, $content, $tag, $attributes);
+    // Mark the slot as nested so rendering may optimize the output.
+    $this->slots[$key]['nested'] = TRUE;
   }
 
   /**

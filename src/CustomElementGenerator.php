@@ -54,7 +54,6 @@ class CustomElementGenerator {
         $this->sortedProcessors = array_merge($this->sortedProcessors, $processors);
       }
     }
-
     return $this->sortedProcessors;
   }
 
@@ -63,16 +62,13 @@ class CustomElementGenerator {
    *
    * @param \Drupal\Core\Entity\ContentEntityInterface $entity
    *   Entity to process.
-   * @param string[] $field_names
-   *   Array of field names which should be rendered. Fields not mentioned
-   *   won't be included.
    * @param string $viewMode
    *   View mode used for rendering field values into slots.
    *
    * @return \Drupal\custom_elements\CustomElement
    *   Extracted custom elements containing data attributes and slots.
    */
-  public function generate(ContentEntityInterface $entity, $field_names, $viewMode) {
+  public function generate(ContentEntityInterface $entity, $viewMode) {
     $custom_element = new CustomElement();
 
     // By default output tags like drupal-node, drupal-comment and for
@@ -99,12 +95,8 @@ class CustomElementGenerator {
     // Add the view mode.
     $custom_element->setAttribute('view-mode', $viewMode);
 
-    // Todo: Let the processor generate the element.
-    // Have some default entity processor with above logic then let the
-    // processor inherit and do its work.
-    // Have generic entity processor with generic field translation which can
-    // be inherited also.
-    $this->process(field_name, $field, $custom_element, $viewMode);
+    // Process and return.
+    $this->process($entity, $custom_element, $viewMode);
 
     return $custom_element;
   }
@@ -112,8 +104,6 @@ class CustomElementGenerator {
   /**
    * Process the given data and adds it to the custom element.
    *
-   * @param string $key
-   *   The key under which to add it.
    * @param $data
    *   The data.
    * @param \Drupal\custom_elements\CustomElement $custom_element
@@ -121,10 +111,10 @@ class CustomElementGenerator {
    * @param $viewMode
    *   The current view-mode.
    */
-  public function process($key, $data, CustomElement $custom_element, $viewMode) {
+  public function process($data, CustomElement $custom_element, $viewMode) {
     foreach ($this->getSortedProcessors() as $processor) {
       if ($processor->supports($data)) {
-        $processor->addtoElement($key, $data, $custom_element, $viewMode);
+        $processor->addtoElement($custom_element, $viewMode,);
         break;
       }
     }

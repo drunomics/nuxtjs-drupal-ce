@@ -40,7 +40,7 @@ class ThunderParagraphsCustomElementsProcessor implements CustomElementProcessor
   /**
    * {@inheritdoc}
    */
-  public function addtoElement($key, $data, CustomElement $element, $viewMode) {
+  public function addtoElement($data, CustomElement $element, $viewMode) {
     assert($data instanceof FieldItemListInterface);
     $field_item_list = $data;
     $paragraph = $field_item_list->getEntity();

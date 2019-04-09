@@ -23,8 +23,6 @@ interface CustomElementProcessorInterface {
   /**
    * Processes the given data and adds it to the element.
    *
-   * @param string $key
-   *   The key under which to add this data.
    * @param mixed $data
    *   The data to be added.
    * @param \Drupal\custom_elements\CustomElement $element
@@ -32,5 +30,6 @@ interface CustomElementProcessorInterface {
    * @param string $viewMode
    *   The view mode under which the element is rendered.
    */
-  public function addtoElement($key, $data, CustomElement $element, $viewMode);
+  public function addtoElement($data, CustomElement $element, $viewMode);
+
 }
