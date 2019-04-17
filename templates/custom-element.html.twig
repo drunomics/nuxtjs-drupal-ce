@@ -18,7 +18,7 @@
  */
 #}
 
-<{{ tag_prefix }}{{ tag }}{{ attributes.addClass('custom-elements') }}>
+<{{ tag_prefix }}{{ tag }}{{ attributes.addClass('custom-element') }}>
   {% for key,slot in slots %}
   <{{ slot.tag }}{{ slot.attributes.setAttribute('slot', key) }}>
     {{ slot.content }}
