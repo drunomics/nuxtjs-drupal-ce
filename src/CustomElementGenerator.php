@@ -134,7 +134,7 @@ class CustomElementGenerator {
    */
   public function process($data, CustomElement $custom_element, $viewMode) {
     foreach ($this->getSortedProcessors() as $processor) {
-      if ($processor->supports($data, , $viewMode)) {
+      if ($processor->supports($data, $viewMode)) {
         $processor->addtoElement($data, $custom_element, $viewMode);
         break;
       }

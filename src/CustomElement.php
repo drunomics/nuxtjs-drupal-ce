@@ -10,6 +10,16 @@ use Drupal\Core\Template\Attribute;
 class CustomElement {
 
   /**
+   * Whether Drupal's "field-" prefixes should be removed.
+   *
+   * This is a global settings and can be set early in the bootstrap, e.g. from
+   * settings.php.
+   *
+   * @var bool
+   */
+  public static $removeFieldPrefix = TRUE;
+
+  /**
    * HTML tag prefix.
    *
    * Used for prefixing a bunch of custom elements the same way.
@@ -103,6 +113,9 @@ class CustomElement {
    */
   public function setSlot($key, $value, $tag = 'div', $attributes = []) {
     $key = str_replace('_', '-', $key);
+    if (static::$removeFieldPrefix && strpos($key, 'field-') === 0) {
+      $key = substr($key, strlen('field-'));
+    }
     $this->slots[$key] = ['tag' => $tag, 'content' => $value, 'attributes' => new Attribute($attributes)];
   }
 
@@ -200,6 +213,9 @@ class CustomElement {
    */
   public function setAttribute($key, $value) {
     $key = str_replace('_', '-', $key);
+    if (static::$removeFieldPrefix && strpos($key, 'field-') === 0) {
+      $key = substr($key, strlen('field-'));
+    }
     $this->attributes[$key] = $this->sanitizeAttribute($value);
   }
 
