@@ -30,7 +30,7 @@ class ThunderParagraphsCustomElementsProcessor implements CustomElementProcessor
   /**
    * {@inheritdoc}
    */
-  public function supports($data) {
+  public function supports($data, $viewMode) {
     return $data instanceof ParagraphInterface &&
       $data->getEntity()->getEntityTypeId() == 'paragraph' &&
       in_array($data->bundle(), static::$handledTypes

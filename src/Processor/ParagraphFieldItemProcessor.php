@@ -18,7 +18,7 @@ class ParagraphFieldItemProcessor implements CustomElementProcessorInterface {
   /**
    * {@inheritdoc}
    */
-  public function supports($data) {
+  public function supports($data, $viewMode) {
     if ($data instanceof FieldItemInterface) {
       $field_definition = $data->getFieldDefinition();
       return $field_definition->getType() == 'entity_reference_revisions' &&

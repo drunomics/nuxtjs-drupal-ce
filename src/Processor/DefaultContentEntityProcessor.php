@@ -18,7 +18,7 @@ class DefaultContentEntityProcessor implements CustomElementProcessorInterface {
   /**
    * {@inheritdoc}
    */
-  public function supports($data) {
+  public function supports($data, $viewMode) {
     return $data instanceof ContentEntityInterface;
   }
 

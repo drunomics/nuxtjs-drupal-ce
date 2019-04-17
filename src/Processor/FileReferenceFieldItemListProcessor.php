@@ -15,7 +15,7 @@ class FileReferenceFieldItemListProcessor implements CustomElementProcessorInter
   /**
    * {@inheritdoc}
    */
-  public function supports($data) {
+  public function supports($data, $viewMode) {
     return $data instanceof FieldItemListInterface && $data->getFieldDefinition()->getType() == 'entity_reference' && $data->first() instanceof FileItem;
   }
 

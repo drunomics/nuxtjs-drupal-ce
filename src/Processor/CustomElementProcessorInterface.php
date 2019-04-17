@@ -15,10 +15,12 @@ interface CustomElementProcessorInterface {
    *
    * @param mixed $data
    *   The data to be processed into a custom element.
+   * @param string $viewMode
+   *   The view mode used for current rendering.
    *
    * @return bool
    */
-  public function supports($data);
+  public function supports($data, $viewMode);
 
   /**
    * Processes the given data and adds it to the element.
