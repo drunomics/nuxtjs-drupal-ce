@@ -20,6 +20,10 @@ services:
     class: Drupal\custom_elements\Processor\FileReferenceFieldItemListProcessor
     tags:
       - { name: custom_elements_processor, priority: -50 }
+  custom_elements.processor.paragraph_field_item:
+    class: Drupal\custom_elements\Processor\ParagraphFieldItemProcessor
+    tags:
+      - { name: custom_elements_processor, priority: -50 }
   custom_elements.processor.text_field_item:
     class: Drupal\custom_elements\Processor\TextFieldItemProcessor
     tags:

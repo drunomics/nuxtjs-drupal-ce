@@ -20,8 +20,8 @@
 
 <{{ tag_prefix }}{{ tag }}{{ attributes.addClass('custom-elements') }}>
   {% for key,slot in slots %}
-    <{{ slot.tag }}{{ slot.attributes.setAttribute('slot', key) }}>
-      {{ slot.content }}
-    </{{ slot.tag }}>
+  <{{ slot.tag }}{{ slot.attributes.setAttribute('slot', key) }}>
+    {{ slot.content }}
+  </{{ slot.tag }}>
   {% endfor %}
 </{{ tag_prefix }}{{ tag }}>

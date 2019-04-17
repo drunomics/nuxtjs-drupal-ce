@@ -55,10 +55,20 @@ class CustomElement {
   }
 
   /**
+   * Sets the slots of th element.
+   *
+   * @param array[] $slots
+   *   The slots as returned by getSlots().
+   */
+  public function setSlots(array $slots) {
+    $this->slots = $slots;
+  }
+
+  /**
    * Gets the element slots, keyed by slot name.
    *
    * @return \Drupal\Core\Render\Markup[]|string[]
-   *   Array of slots, keyed slot name.
+   *   Array of slots, keyed by slot name.
    */
   public function getSlots() {
     return $this->slots;
