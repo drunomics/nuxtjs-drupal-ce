@@ -43,6 +43,7 @@ class ParagraphFieldItemProcessor implements CustomElementProcessorInterface {
       $element->setTagPrefix($paragraph_element->getTagPrefix());
       $element->setAttributes($paragraph_element->getAttributes());
       $element->setSlots($paragraph_element->getSlots());
+      $element->addCacheableDependency($paragraph_element);
     }
   }
 

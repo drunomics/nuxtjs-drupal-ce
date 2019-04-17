@@ -2,12 +2,16 @@
 
 namespace Drupal\custom_elements;
 
+use Drupal\Core\Cache\CacheableDependencyInterface;
+use Drupal\Core\Cache\RefinableCacheableDependencyTrait;
 use Drupal\Core\Template\Attribute;
 
 /**
  * Custom element data model.
  */
-class CustomElement {
+class CustomElement implements CacheableDependencyInterface {
+
+  use RefinableCacheableDependencyTrait;
 
   /**
    * Whether Drupal's "field-" prefixes should be removed.
@@ -146,6 +150,8 @@ class CustomElement {
 
     }
     $this->setSlot($key, $content,  $nestedElement->getPrefixedTag(), $nestedElement->getAttributes());
+    // Bubble up cache metadata.
+    $this->addCacheableDependency($nestedElement);
   }
 
   /**
@@ -167,6 +173,8 @@ class CustomElement {
         '#theme' => 'custom_element',
         '#custom_element' => $nestedElement,
       ];
+      // Bubble up cache metadata.
+      $this->addCacheableDependency($nestedElement);
     }
     $this->setSlot($key, $content, $tag, $attributes);
   }

@@ -88,6 +88,7 @@ class CustomElementGenerator {
    */
   public function generate(ContentEntityInterface $entity, $viewMode) {
     $custom_element = new CustomElement();
+    $custom_element->addCacheableDependency($entity);
 
     // By default output tags like drupal-node, drupal-comment and for
     // paragraphs pg-text, pg-image etc.

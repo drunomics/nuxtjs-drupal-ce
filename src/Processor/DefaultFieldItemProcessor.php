@@ -43,6 +43,7 @@ class DefaultFieldItemProcessor implements CustomElementProcessorInterface {
             $nested_element->setAttribute('href', $url);
             $nested_element->setAttribute('type', $property->getTarget()->getEntityTypeId());
             $nested_element->setAttribute('ref', $property->getTargetIdentifier());
+            $nested_element->addCacheableDependency($property->getTarget());
             $element->setSlotFromCustomElement($name, $nested_element);
           }
           // For other references just add the id.
