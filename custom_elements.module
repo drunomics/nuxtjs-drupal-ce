@@ -5,8 +5,8 @@
  * Custom elements hooks.
  */
 
-use Drupal\Core\Entity\ContentEntityBase;
-use Drupal\Core\Render\Element;
+use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Template\Attribute;
 
 /**
@@ -14,66 +14,54 @@ use Drupal\Core\Template\Attribute;
  */
 function custom_elements_theme() {
   return [
-    'custom_elements' => [
-      'tag' => NULL,
-      'tag_prefix' => NULL,
-      'attributes' => NULL,
-      'slots' => [],
+    'custom_element' => [
+      'variables' => ['custom_element' => NULL],
     ],
   ];
 }
 
 /**
- * Implements hook_theme_suggestions_alter().
+ * Prepares variables when an entity is rendered as custom element.
  *
- * Use custom elements template for every content entity which is using
- * view mode prefixed with `custom_elements`.
+ * Default template: custom-element.twig.html.
  */
-function custom_elements_theme_suggestions_alter(array &$suggestions, array &$variables, $hook) {
-  // Applies if view mode is prefixed with 'custom_elements'.
-  if (isset($variables['elements']['#view_mode']) && strpos($variables['elements']['#view_mode'], 'custom_elements') === 0) {
-    // Suggests that hook is entity type, so entity object is placed on #{hook}.
-    $entity = $variables['elements']['#' . $hook] ?? NULL;
-    // Check if entity was found.
-    if (!$entity) {
-      /** @var \Drupal\Core\Logger\LoggerChannel $logger */
-      $logger = \Drupal::service('logger.channel.custom_elements');
-      $logger->warning(t('Cannot obtain entity @entity for element with custom elements view mode.', ['@entity' => $hook]));
-      return;
-    }
-    // Check if entity is content entity, exit if not.
-    if (!$entity instanceof ContentEntityBase) {
-      return;
-    }
-    $variables['elements']['#entity'] = $entity;
-    $suggestions[] = 'custom_elements';
+function template_preprocess_custom_element(&$variables) {
+  // Attach custom-elements libraries.
+  $variables['#attached']['library'][] = 'custom_elements/main';
+
+  // Generate variables for easier usage in the template.
+  $custom_element = $variables['custom_element'];
+  $variables['attributes'] = new Attribute($custom_element->getAttributes());
+  $variables['slots'] = $custom_element->getSlots();
+  $variables['tag_prefix'] = $custom_element->getTagPrefix() ? $custom_element->getTagPrefix() . '-' : '';
+  $variables['tag'] = $custom_element->getTag();
+}
+
+/**
+ * Implements hook_entity_build_defaults_alter().
+ */
+function custom_elements_entity_build_defaults_alter(array &$build, EntityInterface $entity, $view_mode) {
+  // Only handle content entities.
+  if (!$entity instanceof ContentEntityInterface) {
+    return;
+  }
+  if (strpos($view_mode, 'custom_elements') === 0 || TRUE) {
+    $build['#theme'] = 'custom_element';
+    $build['#entity_type_id'] = $entity->getEntityTypeId();
+    // This is already there by default, but write again to enforce it.
+    $build['#' . $entity->getEntityTypeId()] = $entity;
+    $build['#view_mode'] = $view_mode;
+    $build['#pre_render'][] = 'custom_elements_prerender_entity';
   }
 }
 
 /**
- * Prepares variables when an entity is rendered as custom element.
- *
- * Default template: custom-elements.twig.html.
+ * Pre-render callback for rendering an entity into a custom element.
  */
-function template_preprocess_custom_elements(&$variables) {
-  // Attach custom-elements libraries.
-  $variables['#attached']['library'][] = 'custom_elements/main';
-
-  if (!empty($variables['elements']['#entity'])) {
-    /** @var \Drupal\Core\Entity\ContentEntityBase $entity */
-    $entity = $variables['elements']['#entity'];
-
-    /** @var \Drupal\custom_elements\Service\CustomElementGenerator $generator */
-    $generator = \Drupal::service('custom_elements.generator');
-    $field_names = Element::children($variables['elements']);
-    $custom_element = $generator->generate($entity, $field_names, $variables['elements']['#view_mode']);
-
-    // Allow altering the element before its output.
-    \Drupal::moduleHandler()->alter('custom_element_entity', $custom_element, $entity);
-
-    $variables['attributes'] = new Attribute($custom_element->getAttributes());
-    $variables['slots'] = $custom_element->getSlots();
-    $variables['tag_prefix'] = $custom_element->getTagPrefix() ? $custom_element->getTagPrefix() . '-' : '';
-    $variables['tag'] = $custom_element->getTag();
-  }
+function custom_elements_prerender_entity($render_content) {
+  $entity = $render_content['#' . $render_content['#entity_type_id']];
+  /** @var \Drupal\custom_elements\Service\CustomElementGenerator $generator */
+  $generator = \Drupal::service('custom_elements.generator');
+  $render_content['#custom_element'] = $generator->generate($entity, $render_content['#view_mode']);
+  return $render_content;
 }

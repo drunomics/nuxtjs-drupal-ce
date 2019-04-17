@@ -97,6 +97,35 @@ class CustomElement {
   }
 
   /**
+   * Sets the slot with a single custom element.
+   *
+   * This method avoids a wrapper div as necessary by the helper for multiple
+   * elements.
+   *
+   * @param $key
+   *   Name of the slot to set value for.
+   * @param \Drupal\custom_elements\CustomElement $nestedElement
+   *   The nested custom element.
+   */
+  public function setSlotFromCustomElement($key, CustomElement $nestedElement) {
+    // Render slots without wrapping tag.
+    $content = [];
+    foreach ($nestedElement->getSlots() as $key => $slot) {
+      // Mimic what custom-elements.html.twig does by default.
+      $slot['attributes']->setAttribute('slot', $key);
+      $render_key = is_array($slot['content']) ? 'content' : '#markup';
+
+      $content[$key][] = [
+        '#prefix' => '<' . $slot['tag'] . $slot['attributes'] . '>',
+        $render_key => $slot['content'],
+        '#suffix' => '</' . $slot['tag'] . '>',
+      ];
+
+    }
+    $this->setSlot($key, $content,  $nestedElement->getPrefixedTag(), $nestedElement->getAttributes());
+  }
+
+  /**
    * Sets the slot content from a nested custom elements.
    *
    * @param $key
@@ -110,18 +139,13 @@ class CustomElement {
    */
   public function setSlotFromNestedElements($key, array $nestedElements, $tag = 'div', $attributes = []) {
     $content = [];
-    foreach ($nestedElements as $key => $nestedElement) {
-      $content[$key] = [
-        '#theme' => 'custom_elements',
-        '#attributes' => new Attribute($nestedElement->getAttributes()),
-        '#slots' => $nestedElement->getSlots(),
-        '#tag_prefix' => $nestedElement->getTagPrefix(),
-        '#tag' => $nestedElement->getTag(),
+    foreach ($nestedElements as $delta => $nestedElement) {
+      $content[$delta] = [
+        '#theme' => 'custom_element',
+        '#custom_element' => $nestedElement,
       ];
     }
     $this->setSlot($key, $content, $tag, $attributes);
-    // Mark the slot as nested so rendering may optimize the output.
-    $this->slots[$key]['nested'] = TRUE;
   }
 
   /**
@@ -140,6 +164,7 @@ class CustomElement {
    *   The tag.
    */
   public function setTag(string $tag) {
+    $tag = str_replace('_', '-', $tag);
     $this->tag = $tag;
   }
 
@@ -181,6 +206,7 @@ class CustomElement {
    * Sets all attributes.
    *
    * @param array $attributes
+   *   The attributes.
    */
   public function setAttributes(array $attributes) {
     $this->attributes = $attributes;
@@ -199,9 +225,20 @@ class CustomElement {
    * Sets the tag prefix.
    *
    * @param string $tagPrefix
+   *   The tag prfeix.
    */
   public function setTagPrefix($tagPrefix) {
+    $tagPrefix = str_replace('_', '-', $tagPrefix);
     $this->tagPrefix = $tagPrefix;
+  }
+
+  /**
+   * Returns the tag including tag-prefix.
+   *
+   * @return string
+   */
+  public function getPrefixedTag() {
+    return $this->tagPrefix . $this->tag;
   }
 
 }

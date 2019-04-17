@@ -1,6 +1,7 @@
 services:
   custom_elements.generator:
     class: Drupal\custom_elements\CustomElementGenerator
+    arguments: ['@module_handler']
     tags:
       - { name: service_collector, tag: custom_elements_processor, call: addProcessor }
   custom_elements.processor.default_content_entity:
@@ -15,3 +16,11 @@ services:
     class: Drupal\custom_elements\Processor\DefaultFieldItemProcessor
     tags:
       - { name: custom_elements_processor, priority: -100 }
+  custom_elements.processor.file_field_item_list:
+    class: Drupal\custom_elements\Processor\FileReferenceFieldItemListProcessor
+    tags:
+      - { name: custom_elements_processor, priority: -50 }
+  custom_elements.processor.text_field_item:
+    class: Drupal\custom_elements\Processor\TextFieldItemProcessor
+    tags:
+      - { name: custom_elements_processor, priority: -50 }

@@ -3,12 +3,20 @@
 namespace Drupal\custom_elements;
 
 use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\custom_elements\Processor\CustomElementProcessorInterface;
 
 /**
  * Service to preprocess template variables for custom elements.
  */
 class CustomElementGenerator {
+
+  /**
+   * The module handler.
+   *
+   * @var \Drupal\Core\Extension\ModuleHandlerInterface
+   */
+  protected $moduleHandler;
 
   /**
    * Array of all processors and their priority.
@@ -23,6 +31,16 @@ class CustomElementGenerator {
    * @var \Drupal\custom_elements\Processor\CustomElementProcessorInterface[]
    */
   protected $sortedProcessors;
+
+  /**
+   * CustomElementGenerator constructor.
+   *
+   * @param \Drupal\Core\Extension\ModuleHandlerInterface $moduleHandler
+   *   The module handler.
+   */
+  public function __construct(ModuleHandlerInterface $moduleHandler) {
+    $this->moduleHandler = $moduleHandler;
+  }
 
   /**
    * Adds a processor.
@@ -83,7 +101,7 @@ class CustomElementGenerator {
     }
     else {
       $tag = $entity->getEntityTypeId();
-      $prefix = 'drupal';
+      $prefix = 'drupal-';
     }
     $custom_element->setTag($tag);
     $custom_element->setTagPrefix($prefix);
@@ -97,6 +115,9 @@ class CustomElementGenerator {
 
     // Process and return.
     $this->process($entity, $custom_element, $viewMode);
+
+    // Allow altering the element for the given entity.
+    $this->moduleHandler->alter('custom_element_entity', $custom_element, $entity);
 
     return $custom_element;
   }
@@ -114,7 +135,7 @@ class CustomElementGenerator {
   public function process($data, CustomElement $custom_element, $viewMode) {
     foreach ($this->getSortedProcessors() as $processor) {
       if ($processor->supports($data)) {
-        $processor->addtoElement($custom_element, $viewMode,);
+        $processor->addtoElement($data, $custom_element, $viewMode);
         break;
       }
     }

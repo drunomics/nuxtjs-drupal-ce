@@ -5,13 +5,11 @@ namespace Drupal\custom_elements\Processor;
 
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\Entity\EntityViewDisplay;
-use Drupal\Core\Entity\EntityDisplayRepository;
-use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\custom_elements\CustomElement;
 use Drupal\custom_elements\CustomElementGeneratorTrait;
 
 /**
- * Default processor for field item lists.
+ * Default processor for content entities.
  */
 class DefaultContentEntityProcessor implements CustomElementProcessorInterface {
 
@@ -37,7 +35,7 @@ class DefaultContentEntityProcessor implements CustomElementProcessorInterface {
 
     foreach ($display->getComponents() as $field_name => $options) {
       if (isset($entity->{$field_name})) {
-        $this->customElementGenerator->process($entity->get($field_name), $custom_element, $viewMode);
+        $this->getCustomElementGenerator()->process($entity->get($field_name), $custom_element, $viewMode);
       }
     }
   }
