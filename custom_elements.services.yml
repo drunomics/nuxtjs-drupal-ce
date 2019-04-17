@@ -16,8 +16,12 @@ services:
     class: Drupal\custom_elements\Processor\DefaultFieldItemProcessor
     tags:
       - { name: custom_elements_processor, priority: -100 }
-  custom_elements.processor.file_field_item_list:
+  custom_elements.processor.file_reference_field_item_list:
     class: Drupal\custom_elements\Processor\FileReferenceFieldItemListProcessor
+    tags:
+      - { name: custom_elements_processor, priority: -50 }
+  custom_elements.processor.media_reference_field_item:
+    class: Drupal\custom_elements\Processor\MediaReferenceFieldItemProcessor
     tags:
       - { name: custom_elements_processor, priority: -50 }
   custom_elements.processor.paragraph_field_item:

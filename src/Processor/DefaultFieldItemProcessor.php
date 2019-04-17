@@ -58,6 +58,15 @@ class DefaultFieldItemProcessor implements CustomElementProcessorInterface {
       // We cannot generically other other properties since we do not know how
       // to render them and they are not primitive. So they are skipped.
     }
+
+    // Add the main property as default slot if no content would be there else.
+    if (count($element->getSlots() == 0) && $property = $field_item->getFieldDefinition()->getFieldStorageDefinition()->getMainPropertyName()) {
+      if ($field_item->get($property) instanceof PrimitiveInterface) {
+        $element->setSlot('default', $field_item->get($property)->getValue());
+        $element->setAttribute($property, NULL);
+      }
+    }
+
   }
 
 }

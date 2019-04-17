@@ -2,8 +2,10 @@
 
 namespace Drupal\custom_elements;
 
+use Drupal\Component\Utility\SafeMarkup;
 use Drupal\Core\Cache\CacheableDependencyInterface;
 use Drupal\Core\Cache\RefinableCacheableDependencyTrait;
+use Drupal\Core\Render\Markup;
 use Drupal\Core\Template\Attribute;
 
 /**
@@ -137,19 +139,27 @@ class CustomElement implements CacheableDependencyInterface {
   public function setSlotFromCustomElement($key, CustomElement $nestedElement) {
     // Render slots without wrapping tag.
     $content = [];
-    foreach ($nestedElement->getSlots() as $key => $slot) {
+    $slots = $nestedElement->getSlots();
+    foreach ($slots as $slot_key => $slot) {
       // Mimic what custom-elements.html.twig does by default.
-      $slot['attributes']->setAttribute('slot', $key);
+      $slot['attributes']->setAttribute('slot', $slot_key);
+
+      if (is_array($slot['content']) && empty($slot['content'])) {
+        $slot['content'] = '';
+      }
       $render_key = is_array($slot['content']) ? 'content' : '#markup';
 
-      $content[$key][] = [
-        '#prefix' => '<' . $slot['tag'] . $slot['attributes'] . '>',
+      $content[$slot_key][] = [
+        '#prefix' => Markup::create('<' . $slot['tag'] . $slot['attributes'] . '>'),
         $render_key => $slot['content'],
-        '#suffix' => '</' . $slot['tag'] . '>',
+        '#suffix' => Markup::create('</' . $slot['tag'] . '>'),
       ];
-
     }
-    $this->setSlot($key, $content,  $nestedElement->getPrefixedTag(), $nestedElement->getAttributes());
+    // Do not add a default slot tag if this is the only content.
+    if (count($content) == 1 && isset($slots['default']) && count($slots['default']['attributes']) == 1) {
+      $content = $slots['default']['content'];
+    }
+    $this->setSlot($key, $content, $nestedElement->getPrefixedTag(), $nestedElement->getAttributes());
     // Bubble up cache metadata.
     $this->addCacheableDependency($nestedElement);
   }
@@ -216,15 +226,20 @@ class CustomElement implements CacheableDependencyInterface {
    *
    * @param string $key
    *   Name of the attribute to set value for.
-   * @param string $value
-   *   Attribute value.
+   * @param string|null $value
+   *   Attribute value or NULL to unset the attribute.
    */
-  public function setAttribute($key, $value) {
+  public function setAttribute($key, $value = NULL) {
     $key = str_replace('_', '-', $key);
     if (static::$removeFieldPrefix && strpos($key, 'field-') === 0) {
       $key = substr($key, strlen('field-'));
     }
-    $this->attributes[$key] = $this->sanitizeAttribute($value);
+    if (isset($value)) {
+      $this->attributes[$key] = $this->sanitizeAttribute($value);
+    }
+    else {
+      unset($this->attributes[$key]);
+    }
   }
 
   /**
