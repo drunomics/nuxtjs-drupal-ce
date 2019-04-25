@@ -1,5 +1,26 @@
 services:
-  custom_elements.processor.default:
-    class: Drupal\custom_elements_thunder\ThunderFieldsCustomElementsProcessor
+  custom_elements.processor.thunder_gallery:
+    class: Drupal\custom_elements_thunder\Processor\ParagraphGalleryProcessor
     tags:
-      - { name: custom_elements_processor, priority: 0 }
+      - { name: custom_elements_processor, priority: -50 }
+  custom_elements.processor.thunder_image:
+    class: Drupal\custom_elements_thunder\Processor\ParagraphImageProcessor
+    tags:
+      - { name: custom_elements_processor, priority: -50 }
+  custom_elements.processor.thunder_video:
+    class: Drupal\custom_elements_thunder\Processor\ParagraphVideoProcessor
+    arguments: ['@video_embed_field.provider_manager']
+    tags:
+      - { name: custom_elements_processor, priority: -50 }
+  custom_elements.processor.thunder_instagram:
+    class: Drupal\custom_elements_thunder\Processor\ParagraphInstagramProcessor
+    tags:
+      - { name: custom_elements_processor, priority: -50 }
+  custom_elements.processor.thunder_pinterese:
+    class: Drupal\custom_elements_thunder\Processor\ParagraphPinterestProcessor
+    tags:
+      - { name: custom_elements_processor, priority: -50 }
+  custom_elements.processor.thunder_twitter:
+    class: Drupal\custom_elements_thunder\Processor\ParagraphTwitterProcessor
+    tags:
+      - { name: custom_elements_processor, priority: -50 }

@@ -63,7 +63,7 @@ class DefaultFieldItemProcessor implements CustomElementProcessorInterface {
     // However, do not do this if this the only attribute, because in that
     // case we rather let the default field item list processor optimize the
     // whole tag into a parent attribute.
-    if (count($element->getSlots() == 0) && count($element->getAttributes()) != 1 && $property = $field_item->getFieldDefinition()->getFieldStorageDefinition()->getMainPropertyName()) {
+    if (count($element->getSlots()) == 0 && count($element->getAttributes()) != 1 && $property = $field_item->getFieldDefinition()->getFieldStorageDefinition()->getMainPropertyName()) {
       if ($field_item->get($property) instanceof PrimitiveInterface) {
         $element->setSlot('default', $field_item->get($property)->getValue());
         $element->setAttribute($property, NULL);
