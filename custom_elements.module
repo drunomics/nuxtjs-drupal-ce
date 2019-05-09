@@ -50,7 +50,7 @@ function custom_elements_entity_build_defaults_alter(array &$build, EntityInterf
   if (!$entity instanceof ContentEntityInterface) {
     return;
   }
-  if (strpos($view_mode, 'custom_elements') === 0 || TRUE) {
+  if (strpos($view_mode, 'custom_elements') === 0) {
     $build['#theme'] = 'custom_element';
     $build['#entity_type_id'] = $entity->getEntityTypeId();
     // This is already there by default, but write again to enforce it.
@@ -65,7 +65,7 @@ function custom_elements_entity_build_defaults_alter(array &$build, EntityInterf
  */
 function custom_elements_prerender_entity($render_content) {
   $entity = $render_content['#' . $render_content['#entity_type_id']];
-  /** @var \Drupal\custom_elements\Service\CustomElementGenerator $generator */
+  /** @var \Drupal\custom_elements\CustomElementGenerator $generator */
   $generator = \Drupal::service('custom_elements.generator');
   $render_content['#custom_element'] = $generator->generate($entity, $render_content['#view_mode']);
   return $render_content;
