@@ -1,0 +1,34 @@
+<?php
+
+/**
+ * @file
+ * Custom elements hooks.
+ */
+
+use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\Core\Entity\EntityInterface;
+
+/**
+ * Implements hook_entity_build_defaults_alter().
+ */
+function custom_elements_everywhere_entity_build_defaults_alter(array &$build, EntityInterface $entity, $view_mode) {
+  // Only handle content entities.
+  if (!$entity instanceof ContentEntityInterface) {
+    return;
+  }
+
+  // @todo Load Layout builder here.
+  // If layout build is enabled, let it render.
+  return (bool) $this->getThirdPartySetting('layout_builder', 'enabled');
+
+  // Else - take over.
+  if (strpos($view_mode, 'custom_elements') !== 0) {
+    $build['#theme'] = 'custom_element';
+    $build['#entity_type_id'] = $entity->getEntityTypeId();
+    // This is already there by default, but write again to enforce it.
+    $build['#' . $entity->getEntityTypeId()] = $entity;
+    $build['#view_mode'] = $view_mode;
+    $build['#view_mode'] = 'full';
+    $build['#pre_render'][] = 'custom_elements_prerender_entity';
+  }
+}

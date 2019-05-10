@@ -1,0 +1,7 @@
+name: Custom Elements Everywhere
+description: Render fields as custom elements on all view modes.
+package: Other
+type: module
+core: 8.x
+dependencies:
+  - drupal:custom_elements
