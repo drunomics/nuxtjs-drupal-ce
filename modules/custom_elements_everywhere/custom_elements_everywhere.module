@@ -17,10 +17,6 @@ function custom_elements_everywhere_entity_build_defaults_alter(array &$build, E
     return;
   }
 
-  // @todo Load Layout builder here.
-  // If layout build is enabled, let it render.
-  return (bool) $this->getThirdPartySetting('layout_builder', 'enabled');
-
   // Else - take over.
   if (strpos($view_mode, 'custom_elements') !== 0) {
     $build['#theme'] = 'custom_element';
