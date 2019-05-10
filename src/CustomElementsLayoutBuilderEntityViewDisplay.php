@@ -2,12 +2,12 @@
 
 namespace Drupal\custom_elements;
 
-use Drupal\Core\Entity\Entity\EntityViewDisplay;
+use Drupal\layout_builder\Entity\LayoutBuilderEntityViewDisplay;
 
 /**
- * Customized entity display to take over entity rendering.
+ * Customized entity display to take over entity rendering from layout builder.
  */
-class CustomElementsEntityViewDisplay extends EntityViewDisplay {
+class CustomElementsLayoutBuilderEntityViewDisplay extends LayoutBuilderEntityViewDisplay {
 
   use CustomElementsEntityViewDisplayTrait;
 
@@ -27,7 +27,11 @@ class CustomElementsEntityViewDisplay extends EntityViewDisplay {
     if (!$this->isCustomElementsEnabled()) {
       return parent::buildMultiple($entities);
     }
+
     $build_list = [];
+    if ($this->isLayoutBuilderEnabled()) {
+      $build_list = parent::buildMultiple($entities);
+    }
     $this->buildMultipleViaCustomElements($build_list, $entities);
     return $build_list;
   }
