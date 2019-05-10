@@ -5,26 +5,15 @@
  * Custom elements hooks.
  */
 
-use Drupal\Core\Entity\ContentEntityInterface;
-use Drupal\Core\Entity\EntityInterface;
-
 /**
- * Implements hook_entity_build_defaults_alter().
+ * Implements hook_entity_prepare_view().
  */
-function custom_elements_everywhere_entity_build_defaults_alter(array &$build, EntityInterface $entity, $view_mode) {
-  // Only handle content entities.
-  if (!$entity instanceof ContentEntityInterface) {
-    return;
-  }
-
-  // Else - take over.
-  if (strpos($view_mode, 'custom_elements') !== 0) {
-    $build['#theme'] = 'custom_element';
-    $build['#entity_type_id'] = $entity->getEntityTypeId();
-    // This is already there by default, but write again to enforce it.
-    $build['#' . $entity->getEntityTypeId()] = $entity;
-    $build['#view_mode'] = $view_mode;
-    $build['#view_mode'] = 'full';
-    $build['#pre_render'][] = 'custom_elements_prerender_entity';
+function custom_elements_everywhere_entity_prepare_view($entity_type_id, array $entities, array $displays, $view_mode) {
+  // Use this hook for enabling custom elements rendering since it applies
+  // to all proper entity rendering, but not to single-field rendered displays.
+  // Single field rendered displayed should be rendered as usual, such that
+  // custom elements processor may use it to render individual fields.
+  foreach ($displays as $display) {
+    $display->setThirdPartySetting('custom_elements', 'enabled', 1);
   }
 }

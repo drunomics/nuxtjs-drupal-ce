@@ -6,9 +6,14 @@
  */
 
 use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Render\BubbleableMetadata;
 use Drupal\Core\Template\Attribute;
+use Drupal\custom_elements\CustomElementsEntityViewDisplay;
+use Drupal\layout_builder\Entity\LayoutBuilderEntityViewDisplay;
+use Drupal\layout_builder\Entity\LayoutBuilderEntityViewDisplayStorage;
+use Drupal\layout_builder\Form\LayoutBuilderEntityViewDisplayForm;
 
 /**
  * Implements hook_theme().
@@ -43,30 +48,49 @@ function template_preprocess_custom_element(&$variables) {
 }
 
 /**
- * Implements hook_entity_build_defaults_alter().
+ * Implements hook_entity_type_alter().
+ *
+ * @see custom_elements_module_implements_alter()
  */
-function custom_elements_entity_build_defaults_alter(array &$build, EntityInterface $entity, $view_mode) {
-  // Only handle content entities.
-  if (!$entity instanceof ContentEntityInterface) {
-    return;
-  }
-  if (strpos($view_mode, 'custom_elements') === 0) {
-    $build['#theme'] = 'custom_element';
-    $build['#entity_type_id'] = $entity->getEntityTypeId();
-    // This is already there by default, but write again to enforce it.
-    $build['#' . $entity->getEntityTypeId()] = $entity;
-    $build['#view_mode'] = $view_mode;
-    $build['#pre_render'][] = 'custom_elements_prerender_entity';
+function custom_elements_entity_type_alter(array &$entity_types) {
+  /** @var \Drupal\Core\Entity\EntityTypeInterface[] $entity_types */
+  $entity_types['entity_view_display']
+    ->setClass(CustomElementsEntityViewDisplay::class);
+}
+
+/**
+ * Implements hook_module_implements_alter().
+ */
+function custom_elements_module_implements_alter(&$implementations, $hook) {
+  if ($hook == 'entity_type_alter') {
+    // Make sure this runs after layout builder.
+    // Move custom_elements_entity_type_alter() to the end of the list.
+    // \Drupal::moduleHandler()->getImplementations()
+    // iterates through $implementations with a foreach loop which PHP iterates
+    // in the order that the items were added, so to move an item to the end of
+    // the array, we remove it and then add it.
+    $group = $implementations['custom_elements'];
+    unset($implementations['custom_elements']);
+    $implementations['custom_elements'] = $group;
   }
 }
 
 /**
- * Pre-render callback for rendering an entity into a custom element.
+ * Implements hook_entity_view_display_alter().
  */
-function custom_elements_prerender_entity($render_content) {
-  $entity = $render_content['#' . $render_content['#entity_type_id']];
-  /** @var \Drupal\custom_elements\CustomElementGenerator $generator */
-  $generator = \Drupal::service('custom_elements.generator');
-  $render_content['#custom_element'] = $generator->generate($entity, $render_content['#view_mode']);
-  return $render_content;
+function custom_elements_entity_view_display_alter(EntityViewDisplayInterface $display, array $context) {
+  // Enable for all view-modes named appropriately by default.
+  if (strpos($context['view_mode'], 'custom_elements') === 0) {
+    $display->setThirdPartySetting('custom_elements', 'enabled', 1);
+  }
+}
+
+/**
+ * Implements hook_entity_view_alter().
+ */
+function custom_elements_entity_view_alter(array &$build, Drupal\Core\Entity\EntityInterface $entity, \Drupal\Core\Entity\Display\EntityViewDisplayInterface $display) {
+  // Alter the build array to apply custom elements rendering.
+  if (!empty($build['#custom_elements_enabled'])) {
+    $build['#theme'] = 'custom_element';
+  }
 }
