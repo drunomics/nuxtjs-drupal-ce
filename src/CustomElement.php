@@ -26,6 +26,28 @@ class CustomElement implements CacheableDependencyInterface {
   public static $removeFieldPrefix = TRUE;
 
   /**
+   * List of no-end tags.
+   *
+   * @var array
+   */
+  protected static $noEndTags = [
+    'area',
+    'base',
+    'br',
+    'col',
+    'embed',
+    'hr',
+    'img',
+    'input',
+    'link',
+    'meta',
+    'param',
+    'source',
+    'track',
+    'wbr',
+  ];
+
+  /**
    * HTML tag prefix.
    *
    * Used for prefixing a bunch of custom elements the same way.
@@ -118,11 +140,19 @@ class CustomElement implements CacheableDependencyInterface {
    *   (optional) Attributes to add to the slot tag.
    */
   public function setSlot($key, $value, $tag = 'div', $attributes = []) {
+    if (in_array($tag, static::$noEndTags) && !empty($value)) {
+      throw new \LogicException(sprintf('Tag %s is no-end tag and should not have a content.', $tag));
+    }
+
     $key = str_replace('_', '-', $key);
     if (static::$removeFieldPrefix && strpos($key, 'field-') === 0) {
       $key = substr($key, strlen('field-'));
     }
-    $this->slots[$key] = ['tag' => $tag, 'content' => $value, 'attributes' => new Attribute($attributes)];
+    $this->slots[$key] = [
+      'tag' => $tag,
+      'content' => $value,
+      'attributes' => new Attribute($attributes)
+    ];
   }
 
   /**
@@ -149,14 +179,22 @@ class CustomElement implements CacheableDependencyInterface {
       }
       $render_key = is_array($slot['content']) ? 'content' : '#markup';
 
-      $content[$slot_key][] = [
-        '#prefix' => Markup::create('<' . $slot['tag'] . $slot['attributes'] . '>'),
-        $render_key => $slot['content'],
-        '#suffix' => Markup::create('</' . $slot['tag'] . '>'),
-      ];
+      if (in_array($slot['tag'], static::$noEndTags)) {
+        $content[$slot_key][] = [
+          '#prefix' => Markup::create('<' . $slot['tag'] . $slot['attributes'] . '>'),
+        ];
+      }
+      else {
+        $content[$slot_key][] = [
+          '#prefix' => Markup::create('<' . $slot['tag'] . $slot['attributes'] . '>'),
+          $render_key => $slot['content'],
+          '#suffix' => Markup::create('</' . $slot['tag'] . '>'),
+        ];
+      }
+
     }
     // Do not add a default slot tag if this is the only content.
-    if (count($content) == 1 && isset($slots['default']) && count($slots['default']['attributes']) == 1) {
+    if (count($content) == 1 && isset($slots['default']) && count($slots['default']['attributes']) == 1 && !in_array($slots['default']['tag'], static::$noEndTags)) {
       $content = $slots['default']['content'];
     }
     $this->setSlot($key, $content, $nestedElement->getPrefixedTag(), $nestedElement->getAttributes());
