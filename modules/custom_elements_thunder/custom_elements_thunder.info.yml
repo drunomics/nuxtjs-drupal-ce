@@ -5,3 +5,4 @@ type: module
 core: 8.x
 dependencies:
   - drupal:custom_elements
+  - drupal:video_embed_field
