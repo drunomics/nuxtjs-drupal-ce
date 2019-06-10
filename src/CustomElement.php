@@ -194,8 +194,13 @@ class CustomElement implements CacheableDependencyInterface {
 
     }
     // Do not add a default slot tag if this is the only content.
-    if (count($content) == 1 && isset($slots['default']) && count($slots['default']['attributes']) == 1 && !in_array($slots['default']['tag'], static::$noEndTags)) {
-      $content = $slots['default']['content'];
+
+    if (count($content) == 1 && isset($slots['default']) && !in_array($slots['default']['tag'], static::$noEndTags)) {
+      // Ensure no other attribute besides 'slot' has been added.
+      // If so, we can forward the slot content as content without slot tag.
+      if (array_keys($slots['default']['attributes']->storage()) == ['slot']) {
+        $content = $slots['default']['content'];
+      }
     }
     $this->setSlot($key, $content, $nestedElement->getPrefixedTag(), $nestedElement->getAttributes());
     // Bubble up cache metadata.
