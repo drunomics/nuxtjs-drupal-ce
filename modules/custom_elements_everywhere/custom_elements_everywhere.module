@@ -9,11 +9,13 @@
  * Implements hook_entity_prepare_view().
  */
 function custom_elements_everywhere_entity_prepare_view($entity_type_id, array $entities, array $displays, $view_mode) {
-  // Use this hook for enabling custom elements rendering since it applies
-  // to all proper entity rendering, but not to single-field rendered displays.
-  // Single field rendered displayed should be rendered as usual, such that
-  // custom elements processor may use it to render individual fields.
-  foreach ($displays as $display) {
-    $display->setThirdPartySetting('custom_elements', 'enabled', 1);
+  if (!\Drupal::service('router.admin_context')->isAdminRoute()) {
+    // Use this hook for enabling custom elements rendering since it applies
+    // to all proper entity rendering, but not to single-field rendered displays.
+    // Single field rendered displayed should be rendered as usual, such that
+    // custom elements processor may use it to render individual fields.
+    foreach ($displays as $display) {
+      $display->setThirdPartySetting('custom_elements', 'enabled', 1);
+    }
   }
 }
