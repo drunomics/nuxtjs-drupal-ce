@@ -57,6 +57,9 @@ class ParagraphVideoProcessor implements CustomElementProcessorInterface {
     /** @var \Drupal\media_entity\Entity\Media $media_entity */
     $media_entity = $paragraph->field_video->entity;
     $provider = $this->providerManager->loadProviderFromInput($media_entity->field_media_video_embed_field->value);
+    if (!$provider) {
+      return;
+    }
     $embed_code = $provider->renderEmbedCode('0', '0', FALSE);
 
     $video_element = new CustomElement();
