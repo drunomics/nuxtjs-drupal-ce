@@ -39,9 +39,15 @@ class ParagraphImageProcessor implements CustomElementProcessorInterface {
     /** @var \Drupal\media_entity\Entity\Media $media_entity */
     $media_entity = $paragraph->field_image->entity;
     $element->setSlot('img', '', 'img', ['src' => $media_entity->field_image->entity->uri->url]);
-    $element->setSlot('copyright', $media_entity->field_copyright->value, 'p');
-    $element->setSlot('source', $media_entity->field_source->value, 'p');
-    $element->setSlot('caption', $media_entity->field_description->value, 'p');
+    if (!$media_entity->field_copyright->isEmpty()) {
+      $element->setSlot('copyright', $media_entity->field_copyright->value, 'div');
+    }
+    if (!$media_entity->field_source->isEmpty()) {
+      $element->setSlot('source', $media_entity->field_source->value, 'div');
+    }
+    if (!$media_entity->field_description->isEmpty()) {
+      $element->setSlot('caption', $media_entity->field_description->value, 'div');
+    }
   }
 
 }
