@@ -24,3 +24,7 @@ services:
     class: Drupal\custom_elements_thunder\Processor\ParagraphTwitterProcessor
     tags:
       - { name: custom_elements_processor, priority: -50 }
+  custom_elements.processor.thunder_link:
+    class: Drupal\custom_elements_thunder\Processor\ParagraphLinkProcessor
+    tags:
+      - { name: custom_elements_processor, priority: -50 }
