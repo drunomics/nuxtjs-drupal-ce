@@ -21,6 +21,13 @@ class ParagraphVideoProcessor implements CustomElementProcessorInterface {
   protected $providerManager;
 
   /**
+   * Video embed provider.
+   *
+   * @var \Drupal\media\OEmbed\Provider $provider
+   */
+  protected $provider;
+
+  /**
    * Constructs the renderer.
    *
    * @param \Drupal\video_embed_field\ProviderManager $provider_manager
@@ -56,11 +63,11 @@ class ParagraphVideoProcessor implements CustomElementProcessorInterface {
 
     /** @var \Drupal\media_entity\Entity\Media $media_entity */
     $media_entity = $paragraph->field_video->entity;
-    $provider = $this->providerManager->loadProviderFromInput($media_entity->field_media_video_embed_field->value);
-    if (!$provider) {
+    $this->provider = $this->providerManager->loadProviderFromInput($media_entity->field_media_video_embed_field->value);
+    if (!$this->provider) {
       return;
     }
-    $embed_code = $provider->renderEmbedCode('0', '0', FALSE);
+    $embed_code = $this->provider->renderEmbedCode('0', '0', FALSE);
 
     $video_element = new CustomElement();
     $video_element->addCacheableDependency($media_entity);
@@ -68,7 +75,7 @@ class ParagraphVideoProcessor implements CustomElementProcessorInterface {
     $video_element->setAttributes(['src' => $embed_code['#url']]);
 
     $element->setSlotFromCustomElement('video', $video_element);
-    $element->setSlot('thumbnail', '', 'img', ['src' => $provider->getRemoteThumbnailUrl()]);
+    $element->setSlot('thumbnail', '', 'img', ['src' => $this->provider->getRemoteThumbnailUrl()]);
   }
 
 }
