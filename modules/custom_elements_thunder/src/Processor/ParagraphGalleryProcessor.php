@@ -50,7 +50,7 @@ class ParagraphGalleryProcessor implements CustomElementProcessorInterface {
         'description' => $media_image->field_description->value,
       ];
     }
-    $element->setAttribute('sources', json_encode($sources));
+    $element->setAttribute(':sources', json_encode($sources));
     $element->setSlot('title', $media_entity->name->value, 'h3');
   }
 
