@@ -4,5 +4,5 @@ package: Thunder
 type: module
 core: 8.x
 dependencies:
-  - drupal:custom_elements
-  - drupal:video_embed_field
+  - custom_elements:custom_elements
+  - video_embed_field:video_embed_field
