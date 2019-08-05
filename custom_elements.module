@@ -5,16 +5,12 @@
  * Custom elements hooks.
  */
 
-use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\Display\EntityViewDisplayInterface;
-use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Render\BubbleableMetadata;
 use Drupal\Core\Template\Attribute;
 use Drupal\custom_elements\CustomElementsEntityViewDisplay;
 use Drupal\custom_elements\CustomElementsLayoutBuilderEntityViewDisplay;
 use Drupal\layout_builder\Entity\LayoutBuilderEntityViewDisplay;
-use Drupal\layout_builder\Entity\LayoutBuilderEntityViewDisplayStorage;
-use Drupal\layout_builder\Form\LayoutBuilderEntityViewDisplayForm;
 
 /**
  * Implements hook_theme().
@@ -40,7 +36,7 @@ function template_preprocess_custom_element(&$variables) {
   /** @var \Drupal\custom_elements\CustomElement $custom_element */
   $custom_element = $variables['custom_element'];
   $variables['attributes'] = new Attribute($custom_element->getAttributes());
-  $variables['slots'] = $custom_element->getSlots();
+  $variables['slots'] = $custom_element->getSortedSlots();
   $variables['tag_prefix'] = $custom_element->getTagPrefix() ? $custom_element->getTagPrefix() . '-' : '';
   $variables['tag'] = $custom_element->getTag();
 

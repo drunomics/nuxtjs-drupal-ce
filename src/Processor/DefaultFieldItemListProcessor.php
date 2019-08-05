@@ -46,8 +46,10 @@ class DefaultFieldItemListProcessor implements CustomElementProcessorInterface {
         // If the element has a single slot, just add that.
         elseif (count($nested_element->getSlots()) == 1 && count($nested_element->getAttributes()) == 0) {
           $slots = $nested_element->getSlots();
-          $slot = reset($slots);
-          $element->setSlot($field_item_list->getName(), $slot['content'], $slot['tag'], $slot['attributes']->toArray());
+          $slot_entries = reset($slots);
+          foreach ($slot_entries as $index => $slot) {
+            $element->setSlot($field_item_list->getName(), $slot['content'], $slot['tag'], $slot['attributes']->toArray(), $index);
+          }
         }
         else {
           $element->setSlotFromCustomElement($field_item_list->getName(), $nested_element);
