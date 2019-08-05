@@ -124,7 +124,7 @@ class CustomElement implements CacheableDependencyInterface {
     $slot_entries = [];
     foreach ($slots as $entries) {
       foreach ($entries as $slot_entry) {
-        $slot_entries[] = $slot_entries;
+        $slot_entries[] = $slot_entry;
       }
     }
     usort($slot_entries, 'Drupal\Component\Utility\SortArray::sortByWeightElement');
@@ -187,6 +187,46 @@ class CustomElement implements CacheableDependencyInterface {
   }
 
   /**
+   * Adds a value for the given slot by appending to any pre-existing ones.
+   *
+   * @param string $key
+   *   Name of the slot to set value for.
+   * @param \Drupal\Core\Render\Markup|string $value
+   *   Slot markup.
+   * @param string $tag
+   *   (optional) The tag to use for the slot.
+   * @param array $attributes
+   *   (optional) Attributes to add to the slot tag.
+   * @param int $weight
+   *   (optional) A weight for ordering output slots. Defaults to 0.
+   */
+  public function addSlot($key, $value, $tag = 'div', $attributes = [], $weight = 0) {
+    $this->setSlot($key, $value, $tag, $attributes, $this->getIndexForNewSlotEntry($key), $weight);
+  }
+
+  /**
+   * Gets the index to use for a new slot entry.
+   *
+   * @param string $key
+   *   The slot key.
+   *
+   * @return int
+   */
+  private function getIndexForNewSlotEntry($key) {
+    // Determine last index.
+    if (isset($this->slots[$key])) {
+      // Determine array index by appending a new one. ::setSlot() will
+      //  overwrite the array with the right slot array afterwards.
+      $this->slots[$key][] = [];
+      end($this->slots[$key]);
+      return key($this->slots[$key]);
+    }
+    else {
+      return 0;
+    }
+  }
+
+  /**
    * Sets the slot with a single custom element.
    *
    * This method avoids a wrapper div as necessary by the helper for multiple
@@ -205,10 +245,9 @@ class CustomElement implements CacheableDependencyInterface {
   public function setSlotFromCustomElement($key, CustomElement $nestedElement, $index = 0, $weight = 0) {
     // Render slots without wrapping tag.
     $content = [];
-    $slots = $nestedElement->getSlots();
-    foreach ($slots as $slot_key => $slot) {
+    foreach ($nestedElement->getSortedSlots() as $i => $slot) {
       // Mimic what custom-elements.html.twig does by default.
-      $slot['attributes']->setAttribute('slot', $slot_key);
+      $slot['attributes']->setAttribute('slot', $slot['key']);
 
       if (is_array($slot['content']) && empty($slot['content'])) {
         $slot['content'] = '';
@@ -216,26 +255,26 @@ class CustomElement implements CacheableDependencyInterface {
       $render_key = is_array($slot['content']) ? 'content' : '#markup';
 
       if (in_array($slot['tag'], static::$noEndTags)) {
-        $content[$slot_key][] = [
+        $content[$i][] = [
           '#prefix' => Markup::create('<' . $slot['tag'] . $slot['attributes'] . '>'),
         ];
       }
       else {
-        $content[$slot_key][] = [
+        $content[$i][] = [
           '#prefix' => Markup::create('<' . $slot['tag'] . $slot['attributes'] . '>'),
           $render_key => $slot['content'],
           '#suffix' => Markup::create('</' . $slot['tag'] . '>'),
         ];
       }
-
     }
-    // Do not add a default slot tag if this is the only content.
 
-    if (count($content) == 1 && isset($slots['default']) && !in_array($slots['default']['tag'], static::$noEndTags)) {
+    // Do not add a default slot tag if this is the only content.
+    $slots = $nestedElement->getSlots();
+    if (count($content) == 1 && isset($slots['default'][0]) && !in_array($slots['default'][0]['tag'], static::$noEndTags)) {
       // Ensure no other attribute besides 'slot' has been added.
       // If so, we can forward the slot content as content without slot tag.
-      if (array_keys($slots['default']['attributes']->storage()) == ['slot']) {
-        $content = $slots['default']['content'];
+      if (array_keys($slots['default'][0]['attributes']->storage()) == ['slot']) {
+        $content = $slots['default'][0]['content'];
       }
     }
     $this->setSlot($key, $content, $nestedElement->getPrefixedTag(), $nestedElement->getAttributes(), $index, $weight);
@@ -244,7 +283,24 @@ class CustomElement implements CacheableDependencyInterface {
   }
 
   /**
-   * Sets the slot content from a nested custom elements.
+   * Sets the slot with a single custom element.
+   *
+   * This method avoids a wrapper div as necessary by the helper for multiple
+   * elements.
+   *
+   * @param $key
+   *   Name of the slot to set value for.
+   * @param \Drupal\custom_elements\CustomElement $nestedElement
+   *   The nested custom element.
+   * @param int $weight
+   *   (optional) A weight for ordering output slots. Defaults to 0.
+   */
+  public function addSlotFromCustomElement($key, CustomElement $nestedElement, $weight = 0) {
+    $this->setSlotFromCustomElement($key, $nestedElement, $this->getIndexForNewSlotEntry($key), $weight);
+  }
+
+  /**
+   * Sets the slot content from multiple nested custom elements.
    *
    * @param $key
    *   Name of the slot to set value for.
@@ -271,6 +327,24 @@ class CustomElement implements CacheableDependencyInterface {
       $this->addCacheableDependency($nestedElement);
     }
     $this->setSlot($key, $content, $tag, $attributes, $index, $weight);
+  }
+
+  /**
+   * Adds the slot content from multiple nested custom elements.
+   *
+   * @param $key
+   *   Name of the slot to set value for.
+   * @param \Drupal\custom_elements\CustomElement[] $nestedElements
+   *   The nested custom element.
+   * @param string $tag
+   *   (optional) The tag to use for the slot.
+   * @param array $attributes
+   *   (optional) Attributes to add to the slot tag.
+   * @param int $weight
+   *   (optional) A weight for ordering output slots. Defaults to 0.
+   */
+  public function addSlotFromNestedElements($key, array $nestedElements, $tag = 'div', $attributes = [], $index = 0, $weight = 0) {
+    $this->setSlotFromNestedElements($key, $nestedElements, $tag, $attributes, $this->getIndexForNewSlotEntry($key), $weight);
   }
 
   /**
