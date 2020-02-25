@@ -5,6 +5,7 @@ namespace Drupal\custom_elements;
 use Drupal\Core\Cache\CacheableDependencyInterface;
 use Drupal\Core\Cache\RefinableCacheableDependencyTrait;
 use Drupal\Core\Render\Markup;
+use Drupal\Core\Site\Settings;
 use Drupal\Core\Template\Attribute;
 
 /**
@@ -243,6 +244,21 @@ class CustomElement implements CacheableDependencyInterface {
    *   (optional) A weight for ordering output slots. Defaults to 0.
    */
   public function setSlotFromCustomElement($key, CustomElement $nestedElement, $index = 0, $weight = 0) {
+    // Bubble up cache metadata.
+    $this->addCacheableDependency($nestedElement);
+
+    $ce_json_enabled = Settings::get('lupus_ce_renderer_format_json');
+    // Json output will be transformed via normalizer.
+    // @see CustomElementNormalizer::normalizeSlots()
+    if ($ce_json_enabled) {
+      $slot_content = [
+        '#theme' => 'custom_element',
+        '#custom_element' => $nestedElement,
+      ];
+      $this->setSlot($key, $slot_content, $nestedElement->getPrefixedTag(), $nestedElement->getAttributes(), $index, $weight);
+      return;
+    }
+
     // Render slots without wrapping tag.
     $content = [];
     foreach ($nestedElement->getSortedSlots() as $i => $slot) {
@@ -278,8 +294,6 @@ class CustomElement implements CacheableDependencyInterface {
       }
     }
     $this->setSlot($key, $content, $nestedElement->getPrefixedTag(), $nestedElement->getAttributes(), $index, $weight);
-    // Bubble up cache metadata.
-    $this->addCacheableDependency($nestedElement);
   }
 
   /**
@@ -345,6 +359,15 @@ class CustomElement implements CacheableDependencyInterface {
    */
   public function addSlotFromNestedElements($key, array $nestedElements, $tag = 'div', $attributes = [], $index = 0, $weight = 0) {
     $this->setSlotFromNestedElements($key, $nestedElements, $tag, $attributes, $this->getIndexForNewSlotEntry($key), $weight);
+  }
+
+  /**
+   * Gets tags which don't have an end-tag.
+   *
+   * @return string[]
+   */
+  public static function getNoEndTags() {
+    return static::$noEndTags;
   }
 
   /**
