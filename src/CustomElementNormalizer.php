@@ -37,11 +37,37 @@ class CustomElementNormalizer implements NormalizerInterface {
    */
   protected function normalizeCustomElement(CustomElement $element) {
     $result = ['element' => $element->getPrefixedTag()];
-    $result = array_merge($result, $element->getAttributes());
-    unset($result['slot']);
+    $result = array_merge($result, $this->normalizeAttributes($element->getAttributes()));
 
     $normalized_slots = $this->normalizeSlots($element->getSortedSlots());
     $result = array_merge($result, $normalized_slots);
+
+    return $result;
+  }
+
+  /**
+   * Normalize custom element attributes.
+   *
+   * @param array $attributes
+   *
+   * @return array
+   */
+  protected function normalizeAttributes(array $attributes) {
+    $result = [];
+    foreach ($attributes as $key => $value) {
+      if ($key == 'slot') {
+        continue;
+      }
+
+      // Check if the value is json & unpack.
+      $json = json_decode($value);
+      if (!json_last_error()) {
+        $value = $json;
+      }
+
+      $result_key = strpos($key, ':') === 0 ? substr($key, 1) : $key;
+      $result[$result_key] = $value;
+    }
 
     return $result;
   }
@@ -82,10 +108,6 @@ class CustomElementNormalizer implements NormalizerInterface {
 
       unset($slot_result['slot']);
 
-      if (!empty($slot_result['content']) && is_array($slot_result['content'])) {
-        $slot_result['content'] = static::filterRenderVars($slot_result['content']);
-      }
-
       if ($slot_key == 'default') {
         $result['content'][] = $slot_result;
       }
@@ -125,80 +147,9 @@ class CustomElementNormalizer implements NormalizerInterface {
       if (!empty($content['#custom_element']) && $content['#custom_element'] instanceof CustomElement) {
         return $this->normalizeCustomElement($content['#custom_element']);
       }
-      if (!empty($content['#layout']) && $content['#layout'] instanceof LayoutDefinition) {
-        return $this->normalizeLayout($content);
-      }
-      if (!empty($content['#theme']) && $content['#theme'] == 'block') {
-        return $this->normalizeBlock($content);
-      }
-      elseif (!empty($content['#theme'])) {
-        $result = \Drupal::service('renderer')->renderRoot($content);
-        $result = (string) $result;
-        return $result;
-      }
       return array_map([$this, 'normalizeSlotContent'], $content);
     }
     return $content;
-  }
-
-  /**
-   * Normalize drupal layout render array.
-   *
-   * @param array $content
-   *   Layout render array.
-   *
-   * @return array
-   */
-  protected function normalizeLayout(array $content) {
-    $layout_content = [];
-    foreach ($content['content'] as $item) {
-      if (empty($item['#theme'])) {
-        continue;
-      }
-      $layout_content[] = $item;
-    }
-    $layout_content = static::filterRenderVars($layout_content);
-
-    $result = [
-      'element' => 'layout',
-      'type' => $content['#layout']->id(),
-      'settings' => !empty($content['#configuration']) ? $content['#configuration'] : [],
-      'content' => $this->normalizeSlotContent($layout_content),
-    ];
-
-    return $result;
-  }
-
-  /**
-   * Normalize drupal block render array.
-   *
-   * @param array $content
-   *
-   * @return array
-   */
-  protected function normalizeBlock(array $content) {
-    $normalized_content = $this->normalizeSlotContent($content['content']);
-    $result = [
-      'element' => 'block',
-      'type' => $content['#plugin_id'],
-      'title' => !empty($content['#configuration']['label']) ? $content['#configuration']['label'] : '',
-      'content' => !empty($normalized_content['element']) ? [$normalized_content] : $normalized_content,
-    ];
-
-    return $result;
-  }
-
-  /**
-   * Removes render variables.
-   *
-   * @param array $array
-   *   Drupal render array.
-   *
-   * @return array
-   */
-  protected static function filterRenderVars(array $array) {
-    $matches = preg_grep('/^#/', array_keys($array));
-    return array_diff_key($array, array_flip($matches));
   }
 
   /**
