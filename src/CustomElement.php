@@ -2,10 +2,11 @@
 
 namespace Drupal\custom_elements;
 
+use Drupal\Component\Render\MarkupInterface;
 use Drupal\Core\Cache\CacheableDependencyInterface;
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Cache\RefinableCacheableDependencyTrait;
 use Drupal\Core\Render\Markup;
-use Drupal\Core\Template\Attribute;
 
 /**
  * Custom element data model.
@@ -47,7 +48,7 @@ class CustomElement implements CacheableDependencyInterface {
   ];
 
   /**
-   * HTML tag prefix.
+   * Custom element tag prefix.
    *
    * Used for prefixing a bunch of custom elements the same way.
    *
@@ -56,7 +57,7 @@ class CustomElement implements CacheableDependencyInterface {
   protected $tagPrefix;
 
   /**
-   * HTML tag.
+   * Custom element tag name.
    *
    * @var string
    */
@@ -70,13 +71,30 @@ class CustomElement implements CacheableDependencyInterface {
   protected $attributes = [];
 
   /**
-   * List of slots.
+   * Array of slots, represented as array of nested custom elements.
    *
-   * @var \Drupal\Core\Render\Markup[]|array[]
-   *   Array of slots, keyed slot name and entry index. Each entry has the keys
-   *   'tag' and 'content'.
+   * @var array[][]
+   *   Array of slots, keyed slot name and entry index. Each entry is an array with the following keys:
+   *   - key: Slot name
+   *   - weight: Slot weight
+   *   - content: Slot markup (MarkupInterface) or element (CustomElement) object.
    */
   protected $slots = [];
+
+  /**
+   * Creates a new custom element.
+   *
+   * @param string $tag
+   *   The element tag name.
+   *
+   * @return static
+   *   The created custom element.
+   */
+  public static function create($tag = 'div') {
+    $element = new static();
+    $element->setTag($tag);
+    return $element;
+  }
 
   /**
    * Sanitizes data attribute value - strip html tags.
@@ -104,8 +122,11 @@ class CustomElement implements CacheableDependencyInterface {
   /**
    * Gets the element slots, keyed by slot name and entry index.
    *
-   * @return \Drupal\Core\Render\Markup[]|string[]
-   *   Array of slots, keyed by slot name and entry index.
+   * @return array[][]
+   *   Array of slots, keyed slot name and entry index. Each entry is an array with the following keys:
+   *   - key: Slot name
+   *   - weight: Slot weight
+   *   - content: Slot markup (MarkupInterface) or element (CustomElement) object.
    */
   public function getSlots() {
     return $this->slots;
@@ -114,7 +135,7 @@ class CustomElement implements CacheableDependencyInterface {
   /**
    * Gets a sorted and flattened list of slots.
    *
-   * @return array[]
+   * @return \Drupal\custom_elements\CustomElement|\Drupal\Core\Render\Markup[]
    *   A numerically indexed and sorted array of slot arrays as defined
    *   by ::getSlot().
    */
@@ -139,13 +160,11 @@ class CustomElement implements CacheableDependencyInterface {
    * @param int $index
    *   (optional) The index of the slot entry to retrieve.
    *
-   * @return array
-   *   An array with the following entries:
-   *   - key: The slot name, e.g. 'default'.
-   *   - tag: The tag to use for rendering the slot.
-   *   - attributes: The slot attributes.
-   *   - content (\Drupal\Core\Render\Markup|string): The string to output.
-   *   - weight: Optionally, a weight assigned to the slot entry.
+   * @return array[][]
+   *   Array of slots, keyed slot name and entry index. Each entry is an array with the following keys:
+   *   - key: Slot name
+   *   - weight: Slot weight
+   *   - content: Slot markup (MarkupInterface) or element (CustomElement) object.
    */
   public function getSlot($key, $index = 0) {
     return $this->slots[$key][$index] ?? NULL;
@@ -156,10 +175,10 @@ class CustomElement implements CacheableDependencyInterface {
    *
    * @param string $key
    *   Name of the slot to set value for.
-   * @param \Drupal\Core\Render\Markup|string $value
-   *   Slot markup.
+   * @param \Drupal\Core\Render\MarkupInterface|string $value
+   *   Slot value or markup.
    * @param string $tag
-   *   (optional) The tag to use for the slot.
+   *   (optional) The element tag to use for the slot.
    * @param array $attributes
    *   (optional) Attributes to add to the slot tag.
    * @param int $index
@@ -167,6 +186,8 @@ class CustomElement implements CacheableDependencyInterface {
    *   first entry is set. Defaults to 0.
    * @param int $weight
    *   (optional) A weight for ordering output slots. Defaults to 0.
+   *
+   * @return $this
    */
   public function setSlot($key, $value, $tag = 'div', $attributes = [], $index = 0, $weight = 0) {
     if (in_array($tag, static::$noEndTags) && !empty($value)) {
@@ -177,13 +198,34 @@ class CustomElement implements CacheableDependencyInterface {
     if (static::$removeFieldPrefix && strpos($key, 'field-') === 0) {
       $key = substr($key, strlen('field-'));
     }
+
+    if ($value && !$value instanceof MarkupInterface) {
+      $value = Markup::create((string) $value);
+    }
+
+    // If markup and attributes are given, we need to wrap the content in another custom element.
+    if ($value && ($attributes || $tag != 'div')) {
+      $slot = CustomElement::create($tag)
+        ->setAttributes($attributes)
+        ->addSlot('default', $value);
+    }
+    // If just markup is given, we can use it directly as slot.
+    elseif ($value) {
+      $slot = $value;
+    }
+    // If no value is given, simply create a nested custom element.
+    else {
+      $slot = CustomElement::create($tag)
+        ->setAttributes($attributes);
+    }
+
     $this->slots[$key][$index] = [
-      'key' => $key,
-      'tag' => $tag,
-      'content' => $value,
-      'attributes' => new Attribute($attributes),
       'weight' => $weight,
+      'key' => $key,
+      'content' => $slot
     ];
+
+    return $this;
   }
 
   /**
@@ -199,9 +241,11 @@ class CustomElement implements CacheableDependencyInterface {
    *   (optional) Attributes to add to the slot tag.
    * @param int $weight
    *   (optional) A weight for ordering output slots. Defaults to 0.
+   *
+   * @return $this
    */
   public function addSlot($key, $value, $tag = 'div', $attributes = [], $weight = 0) {
-    $this->setSlot($key, $value, $tag, $attributes, $this->getIndexForNewSlotEntry($key), $weight);
+    return $this->setSlot($key, $value, $tag, $attributes, $this->getIndexForNewSlotEntry($key), $weight);
   }
 
   /**
@@ -227,7 +271,7 @@ class CustomElement implements CacheableDependencyInterface {
   }
 
   /**
-   * Sets the slot with a single custom element.
+   * Sets the slot with a single custom element on a certain index, possibly overwriting existing slots.
    *
    * This method avoids a wrapper div as necessary by the helper for multiple
    * elements.
@@ -241,58 +285,20 @@ class CustomElement implements CacheableDependencyInterface {
    *   first entry is set. Defaults to 0.
    * @param int $weight
    *   (optional) A weight for ordering output slots. Defaults to 0.
+   *
+   * @return $this
+   *
+   * @see ::addSlotFromCustomElement()
+   *
+   * @todo: Add set/addSlotFromMarkup as well.
    */
   public function setSlotFromCustomElement($key, CustomElement $nestedElement, $index = 0, $weight = 0) {
-    // Bubble up cache metadata.
-    $this->addCacheableDependency($nestedElement);
-
-    $ce_json_enabled = Settings::get('lupus_ce_renderer_format_json');
-    // Json output will be transformed via normalizer.
-    // @see CustomElementNormalizer::normalizeSlots()
-    if ($ce_json_enabled) {
-      $slot_content = [
-        '#theme' => 'custom_element',
-        '#custom_element' => $nestedElement,
-      ];
-      $this->setSlot($key, $slot_content, $nestedElement->getPrefixedTag(), $nestedElement->getAttributes(), $index, $weight);
-      return;
-    }
-
-    // Render slots without wrapping tag.
-    $content = [];
-    foreach ($nestedElement->getSortedSlots() as $i => $slot) {
-      // Mimic what custom-elements.html.twig does by default.
-      $slot['attributes']->setAttribute('slot', $slot['key']);
-
-      if (is_array($slot['content']) && empty($slot['content'])) {
-        $slot['content'] = '';
-      }
-      $render_key = is_array($slot['content']) ? 'content' : '#markup';
-
-      if (in_array($slot['tag'], static::$noEndTags)) {
-        $content[$i][] = [
-          '#prefix' => Markup::create('<' . $slot['tag'] . $slot['attributes'] . '>'),
-        ];
-      }
-      else {
-        $content[$i][] = [
-          '#prefix' => Markup::create('<' . $slot['tag'] . $slot['attributes'] . '>'),
-          $render_key => $slot['content'],
-          '#suffix' => Markup::create('</' . $slot['tag'] . '>'),
-        ];
-      }
-    }
-
-    // Do not add a default slot tag if this is the only content.
-    $slots = $nestedElement->getSlots();
-    if (count($content) == 1 && isset($slots['default'][0]) && !in_array($slots['default'][0]['tag'], static::$noEndTags)) {
-      // Ensure no other attribute besides 'slot' has been added.
-      // If so, we can forward the slot content as content without slot tag.
-      if (array_keys($slots['default'][0]['attributes']->storage()) == ['slot']) {
-        $content = $slots['default'][0]['content'];
-      }
-    }
-    $this->setSlot($key, $content, $nestedElement->getPrefixedTag(), $nestedElement->getAttributes(), $index, $weight);
+    $this->slots[$key][$index] = [
+      'weight' => $weight,
+      'key' => $key,
+      'content' => $nestedElement,
+    ];
+    return $this;
   }
 
   /**
@@ -307,13 +313,15 @@ class CustomElement implements CacheableDependencyInterface {
    *   The nested custom element.
    * @param int $weight
    *   (optional) A weight for ordering output slots. Defaults to 0.
+   *
+   * @return $this
    */
   public function addSlotFromCustomElement($key, CustomElement $nestedElement, $weight = 0) {
-    $this->setSlotFromCustomElement($key, $nestedElement, $this->getIndexForNewSlotEntry($key), $weight);
+    return $this->setSlotFromCustomElement($key, $nestedElement, $this->getIndexForNewSlotEntry($key), $weight);
   }
 
   /**
-   * Sets the slot content from multiple nested custom elements.
+   * Sets the slot content from multiple nested custom elements on a certain index, possibly overwriting existing slots.
    *
    * @param $key
    *   Name of the slot to set value for.
@@ -328,18 +336,23 @@ class CustomElement implements CacheableDependencyInterface {
    *   first entry is set. Defaults to 0.
    * @param int $weight
    *   (optional) A weight for ordering output slots. Defaults to 0.
+   *
+   * @return $this
+   *
+   * @see ::addSlotFromNestedElements()
    */
   public function setSlotFromNestedElements($key, array $nestedElements, $tag = 'div', $attributes = [], $index = 0, $weight = 0) {
-    $content = [];
+    $element = CustomElement::create($tag)
+      ->setAttributes($attributes);
     foreach ($nestedElements as $delta => $nestedElement) {
-      $content[$delta] = [
-        '#theme' => 'custom_element',
-        '#custom_element' => $nestedElement,
-      ];
-      // Bubble up cache metadata.
-      $this->addCacheableDependency($nestedElement);
+      $element->addSlotFromCustomElement('default', $nestedElement);
     }
-    $this->setSlot($key, $content, $tag, $attributes, $index, $weight);
+    $this->slots[$key][$index] = [
+      'weight' => $weight,
+      'key' => $key,
+      'content' => $element,
+    ];
+    return $this;
   }
 
   /**
@@ -355,13 +368,15 @@ class CustomElement implements CacheableDependencyInterface {
    *   (optional) Attributes to add to the slot tag.
    * @param int $weight
    *   (optional) A weight for ordering output slots. Defaults to 0.
+   *
+   * @return $this
    */
   public function addSlotFromNestedElements($key, array $nestedElements, $tag = 'div', $attributes = [], $index = 0, $weight = 0) {
-    $this->setSlotFromNestedElements($key, $nestedElements, $tag, $attributes, $this->getIndexForNewSlotEntry($key), $weight);
+    return $this->setSlotFromNestedElements($key, $nestedElements, $tag, $attributes, $this->getIndexForNewSlotEntry($key), $weight);
   }
 
   /**
-   * Gets tags which don't have an end-tag.
+   * Gets html tags which don't have an end-tag.
    *
    * @return string[]
    */
@@ -370,7 +385,7 @@ class CustomElement implements CacheableDependencyInterface {
   }
 
   /**
-   * Gets the tag.
+   * Gets the custom element tag name.
    *
    * @return string
    */
@@ -379,14 +394,17 @@ class CustomElement implements CacheableDependencyInterface {
   }
 
   /**
-   * Sets the tag.
+   * Sets the custom element tag name.
    *
    * @param string $tag
-   *   The tag.
+   *   The element tag name.
+   *
+   * @return $this
    */
   public function setTag($tag) {
     $tag = str_replace('_', '-', $tag);
     $this->tag = $tag;
+    return $this;
   }
 
   /**
@@ -408,6 +426,8 @@ class CustomElement implements CacheableDependencyInterface {
    *   Name of the attribute to set value for.
    * @param string|null $value
    *   Attribute value or NULL to unset the attribute.
+   *
+   * @return $this
    */
   public function setAttribute($key, $value = NULL) {
     $key = str_replace('_', '-', $key);
@@ -420,6 +440,7 @@ class CustomElement implements CacheableDependencyInterface {
     else {
       unset($this->attributes[$key]);
     }
+    return $this;
   }
 
   /**
@@ -436,9 +457,12 @@ class CustomElement implements CacheableDependencyInterface {
    *
    * @param array $attributes
    *   The attributes.
+   *
+   * @return $this
    */
   public function setAttributes(array $attributes) {
     $this->attributes = $attributes;
+    return $this;
   }
 
   /**
@@ -455,10 +479,13 @@ class CustomElement implements CacheableDependencyInterface {
    *
    * @param string $tagPrefix
    *   The tag prefix.
+   *
+   * @return $this
    */
   public function setTagPrefix($tagPrefix) {
     $tagPrefix = str_replace('_', '-', $tagPrefix);
     $this->tagPrefix = $tagPrefix;
+    return $this;
   }
 
   /**
@@ -468,6 +495,18 @@ class CustomElement implements CacheableDependencyInterface {
    */
   public function getPrefixedTag() {
     return $this->tagPrefix . $this->tag;
+  }
+
+  /**
+   * Gets a render array for rendering the custom element into markup.
+   *
+   * @return array
+   */
+  public function toRenderArray() {
+    return [
+      '#theme' => 'custom_element',
+      '#custom_element' => $this,
+    ];
   }
 
 }

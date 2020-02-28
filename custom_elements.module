@@ -36,9 +36,34 @@ function template_preprocess_custom_element(&$variables) {
   /** @var \Drupal\custom_elements\CustomElement $custom_element */
   $custom_element = $variables['custom_element'];
   $variables['attributes'] = new Attribute($custom_element->getAttributes());
-  $variables['slots'] = $custom_element->getSortedSlots();
   $variables['tag_prefix'] = $custom_element->getTagPrefix() ? $custom_element->getTagPrefix() . '-' : '';
   $variables['tag'] = $custom_element->getTag();
+
+  // Prepare slots:
+  $slot_entries = $custom_element->getSortedSlots();
+  foreach ($slot_entries as &$slot_entry) {
+    if ($slot_entry['content'] instanceof \Drupal\custom_elements\CustomElement) {
+      $element = $slot_entry['content'];
+      $element->setAttribute('slot', $slot_entry['key']);
+      $slots[] = $element->toRenderArray();
+    }
+    elseif ($slot_entry['key'] == 'default' && count($slot_entries) == 1) {
+      // No need for a wrapping div if there is only one default slot entry.
+      $slots[] = [
+        '#type' => 'markup',
+        '#markup' => $slot_entry['content'],
+      ];
+    }
+    else {
+      $slots[] = [
+        '#prefix' => '<div slot=' . $slot_entry['key'] .'>',
+        '#type' => 'markup',
+        '#markup' => $slot_entry['content'],
+        '#suffix' => '</div>',
+      ];
+    }
+  }
+  $variables['slots'] = $slots;
 
   BubbleableMetadata::createFromObject($custom_element)
     ->applyTo($variables);

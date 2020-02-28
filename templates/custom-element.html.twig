@@ -7,12 +7,7 @@
  * - tag_prefix: Prefix to use for the html tag - including the prefix separator.
  * - tag: HTML tag to use for the entity.
  * - attributes: The attributes to add to the tag.
- * - slots: Fields rendered as conten via slots. An array keyed by slot name and containing another array with the
- *   entries:
- *   - 'tag': The tag to use for the slot element.
- *   - 'content': The renderable content.
- *   - 'key': The slot name/key.
- *   - 'attributes': Slot attributes to add to the tag.
+ * - slots: An array of renderable slot entries.
  *
  * @ingroup themeable
  */
@@ -20,8 +15,6 @@
 
 <{{ tag_prefix }}{{ tag }}{{ attributes.addClass('custom-element') }}>
 {% for slot in slots %}
-  <{{ slot.tag }}{{ slot.attributes.setAttribute('slot', slot.key) }}>
-    {{ slot.content }}
-  </{{ slot.tag }}>
+  {{ slot }}
 {% endfor %}
 </{{ tag_prefix }}{{ tag }}>
