@@ -5,7 +5,6 @@ namespace Drupal\custom_elements;
 use Drupal\Core\Cache\CacheableDependencyInterface;
 use Drupal\Core\Cache\RefinableCacheableDependencyTrait;
 use Drupal\Core\Render\Markup;
-use Drupal\Core\Site\Settings;
 use Drupal\Core\Template\Attribute;
 
 /**

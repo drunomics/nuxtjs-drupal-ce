@@ -6,8 +6,6 @@ namespace Drupal\custom_elements\Processor;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\Entity\EntityViewDisplay;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Entity\EntityViewBuilder;
-use Drupal\Core\Site\Settings;
 use Drupal\custom_elements\CustomElement;
 use Drupal\custom_elements\CustomElementGeneratorTrait;
 
@@ -70,7 +68,7 @@ class DefaultContentEntityProcessor implements CustomElementProcessorInterface {
     $display = reset($displays);
 
     // If layout builder is enabled, skip adding components.
-    if (!(bool) $display->getThirdPartySetting('layout_builder', 'enabled') || Settings::get('lupus_ce_renderer_format_json')) {
+    if (!(bool) $display->getThirdPartySetting('layout_builder', 'enabled')) {
       foreach ($display->getComponents() as $field_name => $options) {
         if (isset($entity->{$field_name})) {
           $this->getCustomElementGenerator()->process($entity->get($field_name), $custom_element, $viewMode);
