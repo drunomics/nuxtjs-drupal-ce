@@ -4,7 +4,6 @@ namespace Drupal\custom_elements;
 
 use Drupal\Component\Render\MarkupInterface;
 use Drupal\Core\Cache\CacheableDependencyInterface;
-use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Cache\RefinableCacheableDependencyTrait;
 use Drupal\Core\Render\Markup;
 
