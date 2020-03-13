@@ -40,6 +40,7 @@ function template_preprocess_custom_element(&$variables) {
   $variables['tag'] = $custom_element->getTag();
 
   // Prepare slots:
+  $slots = [];
   $slot_entries = $custom_element->getSortedSlots();
   foreach ($slot_entries as &$slot_entry) {
     if ($slot_entry['content'] instanceof \Drupal\custom_elements\CustomElement) {
