@@ -3,7 +3,7 @@
 namespace Drupal\custom_elements;
 
 use Drupal\Component\Render\MarkupInterface;
-use Drupal\Core\Layout\LayoutDefinition;
+use Drupal\Component\Serialization\Json;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\Template\Attribute;
 use \Symfony\Component\Serializer\Normalizer\NormalizerInterface;
@@ -63,7 +63,7 @@ class CustomElementNormalizer implements NormalizerInterface {
       }
 
       // Check if the value is json & unpack.
-      $json = json_decode($value);
+      $json = Json::decode($value);
       if (!json_last_error()) {
         $value = $json;
       }
