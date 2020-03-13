@@ -36,8 +36,11 @@ class CustomElementNormalizer implements NormalizerInterface {
    * @return array
    */
   protected function normalizeCustomElement(CustomElement $element) {
-    $result = ['element' => $element->getPrefixedTag()];
+    $result = ['element' => !empty($result['is']) ? $result['is'] : $element->getPrefixedTag()];
     $result = array_merge($result, $this->normalizeAttributes($element->getAttributes()));
+
+    unset($result['view-mode']);
+    unset($result['is']);
 
     $normalized_slots = $this->normalizeSlots($element->getSortedSlots());
     $result = array_merge($result, $normalized_slots);
