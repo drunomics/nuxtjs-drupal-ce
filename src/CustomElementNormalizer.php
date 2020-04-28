@@ -88,16 +88,20 @@ class CustomElementNormalizer implements NormalizerInterface {
       $slot_result = [];
       $slot_key = $slot['key'];
 
-      if (is_array($slot['content']) && !empty($slot['content']['#custom_element'])) {
+      if (
+        (!empty($slot['content']['#custom_element']) && $slot['content']['#custom_element'] instanceof CustomElement)
+        || $slot['content'] instanceof CustomElement
+      ) {
+        $element = $slot['content'] instanceof CustomElement ? $slot['content'] : $slot['content']['#custom_element'];
         // In this case the custom element is the slot and not content.
         // @see CustomElement::setSlotFromCustomElement()
-        $slot_result = $this->normalizeCustomElement($slot['content']['#custom_element']);
-        if ($element_slot_key = $slot['content']['#custom_element']->getAttribute('slot')) {
+        $slot_result = $this->normalizeCustomElement($element);
+        if ($element_slot_key = $element->getAttribute('slot')) {
           $slot_key = $element_slot_key;
         }
       }
-      elseif ($normalized_content = $this->normalizeSlotContent($slot['content'])) {
-        $slot_result['content'] = $normalized_content;
+      elseif ($slot['content'] instanceof MarkupInterface) {
+        $slot_result['content'] = (string) $slot['content'];
         if (!empty($slot['attributes']) && $slot['attributes'] instanceof Attribute) {
           $slot_result = array_merge($slot_result, $slot['attributes']->toArray());
         }
@@ -129,30 +133,6 @@ class CustomElementNormalizer implements NormalizerInterface {
     }
 
     return $result;
-  }
-
-  /**
-   * Normalize slot content.
-   *
-   * @param mixed $content
-   *   Any data.
-   *
-   * @return mixed
-   */
-  protected function normalizeSlotContent($content) {
-    if ($content instanceof CustomElement) {
-      return $this->normalizeCustomElement($content);
-    }
-    elseif ($content instanceof MarkupInterface) {
-      return (string) $content;
-    }
-    elseif (is_array($content)) {
-      if (!empty($content['#custom_element']) && $content['#custom_element'] instanceof CustomElement) {
-        return $this->normalizeCustomElement($content['#custom_element']);
-      }
-      return array_map([$this, 'normalizeSlotContent'], $content);
-    }
-    return $content;
   }
 
   /**
