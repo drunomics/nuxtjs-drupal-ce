@@ -89,8 +89,13 @@ class CustomElementNormalizer implements NormalizerInterface {
       $slot_key = $slot['key'];
 
       if (
-        (!empty($slot['content']['#custom_element']) && $slot['content']['#custom_element'] instanceof CustomElement)
-        || $slot['content'] instanceof CustomElement
+        (!empty($slot['content']) && $slot['content'] instanceof CustomElement)
+        ||
+        (
+          is_array($slot['content'])
+          && !empty($slot['content']['#custom_element'])
+          && $slot['content']['#custom_element'] instanceof CustomElement
+        )
       ) {
         $element = $slot['content'] instanceof CustomElement ? $slot['content'] : $slot['content']['#custom_element'];
         // In this case the custom element is the slot and not content.
