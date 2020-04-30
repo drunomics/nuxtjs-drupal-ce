@@ -6,6 +6,7 @@ services:
       - { name: service_collector, tag: custom_elements_processor, call: addProcessor }
   custom_elements.processor.default_content_entity:
     class: Drupal\custom_elements\Processor\DefaultContentEntityProcessor
+    arguments: ['@request_stack']
     tags:
       - { name: custom_elements_processor, priority: -100 }
   custom_elements.processor.default_field_item_list:
