@@ -193,10 +193,7 @@ class CustomElement implements CacheableDependencyInterface {
       throw new \LogicException(sprintf('Tag %s is no-end tag and should not have a content.', $tag));
     }
 
-    $key = str_replace('_', '-', $key);
-    if (static::$removeFieldPrefix && strpos($key, 'field-') === 0) {
-      $key = substr($key, strlen('field-'));
-    }
+    $key = $this->fixSlotKey($key);
 
     if ($value instanceof CustomElement) {
       $this->setSlotFromCustomElement($key, $value, $index, $weight);
@@ -297,6 +294,7 @@ class CustomElement implements CacheableDependencyInterface {
    * @todo: Add set/addSlotFromMarkup as well.
    */
   public function setSlotFromCustomElement($key, CustomElement $nestedElement, $index = 0, $weight = 0) {
+    $key = $this->fixSlotKey($key);
     $this->slots[$key][$index] = [
       'weight' => $weight,
       'key' => $key,
@@ -351,6 +349,9 @@ class CustomElement implements CacheableDependencyInterface {
     foreach ($nestedElements as $delta => $nestedElement) {
       $element->addSlotFromCustomElement('default', $nestedElement);
     }
+
+    $key = $this->fixSlotKey($key);
+
     $this->slots[$key][$index] = [
       'weight' => $weight,
       'key' => $key,
@@ -377,6 +378,23 @@ class CustomElement implements CacheableDependencyInterface {
    */
   public function addSlotFromNestedElements($key, array $nestedElements, $tag = 'div', $attributes = [], $index = 0, $weight = 0) {
     return $this->setSlotFromNestedElements($key, $nestedElements, $tag, $attributes, $this->getIndexForNewSlotEntry($key), $weight);
+  }
+
+  /**
+   * Fix slot key and remove prefix if set via static::$removeFieldPrefix.
+   *
+   * @param string $key
+   *   The slot key.
+   *
+   * @return string
+   *   The fixed slot key.
+   */
+  public function fixSlotKey($key) {
+    $key = str_replace('_', '-', $key);
+    if (static::$removeFieldPrefix && strpos($key, 'field-') === 0) {
+      $key = substr($key, strlen('field-'));
+    }
+    return $key;
   }
 
   /**
