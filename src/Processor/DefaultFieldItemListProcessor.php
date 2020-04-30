@@ -3,6 +3,7 @@
 namespace Drupal\custom_elements\Processor;
 
 use Drupal\Core\Field\FieldItemListInterface;
+use Drupal\Core\Template\Attribute;
 use Drupal\custom_elements\CustomElement;
 use Drupal\custom_elements\CustomElementGeneratorTrait;
 
@@ -48,7 +49,9 @@ class DefaultFieldItemListProcessor implements CustomElementProcessorInterface {
           $slots = $nested_element->getSlots();
           $slot_entries = reset($slots);
           foreach ($slot_entries as $index => $slot) {
-            $element->setSlot($field_item_list->getName(), $slot['content'], $slot['tag'], $slot['attributes']->toArray(), $index);
+            $attributes = !empty($slot['attributes']) && $slot['attributes'] instanceof Attribute ? $slot['attributes']->toArray() : [];
+            $tag = !empty($slot['tag']) ? $slot['tag'] : NULL;
+            $element->setSlot($field_item_list->getName(), $slot['content'], $tag, $attributes, $index);
           }
         }
         else {

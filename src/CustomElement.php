@@ -198,6 +198,11 @@ class CustomElement implements CacheableDependencyInterface {
       $key = substr($key, strlen('field-'));
     }
 
+    if ($value instanceof CustomElement) {
+      $this->setSlotFromCustomElement($key, $value, $index, $weight);
+      return $this;
+    }
+
     if ($value && !$value instanceof MarkupInterface) {
       $value = Markup::create((string) $value);
     }
