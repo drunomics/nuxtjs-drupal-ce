@@ -111,12 +111,6 @@ class CustomElementNormalizer implements NormalizerInterface {
           $slot_result = array_merge($slot_result, $slot['attributes']->toArray());
         }
       }
-      elseif (empty($slot['content'])) {
-        $slot_result['content'] = (string) Markup::create('<' . $slot['tag'] . $slot['attributes'] . '>');
-        if (!in_array($slot['tag'], CustomElement::getNoEndTags())) {
-          $slot_result['content'] .= (string) Markup::create('</' . $slot['tag'] . '>');
-        }
-      }
 
       unset($slot_result['slot']);
 
