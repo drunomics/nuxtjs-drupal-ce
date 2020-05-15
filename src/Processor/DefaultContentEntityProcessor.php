@@ -78,7 +78,7 @@ class DefaultContentEntityProcessor implements CustomElementProcessorInterface {
   /**
    * {@inheritdoc}
    */
-  public function addtoElement($data, CustomElement $custom_element, $viewMode) {
+    public function addtoElement($data, CustomElement $custom_element, $viewMode) {
     assert($data instanceof ContentEntityInterface);
     $entity = $data;
 
@@ -86,13 +86,15 @@ class DefaultContentEntityProcessor implements CustomElementProcessorInterface {
     $displays = EntityViewDisplay::collectRenderDisplays([$entity], $viewMode);
     $display = reset($displays);
 
-    // If layout builder is enabled, skip adding components for markup output.
-    $wrapper_format = $this->requestStack->getCurrentRequest()->query->get(MainContentViewSubscriber::WRAPPER_FORMAT);
-    if (!((bool) $display->getThirdPartySetting('layout_builder', 'enabled') && $wrapper_format == 'custom_elements')) {
-      foreach ($display->getComponents() as $field_name => $options) {
-        if (isset($entity->{$field_name})) {
-          $this->getCustomElementGenerator()->process($entity->get($field_name), $custom_element, $viewMode);
-        }
+    $format = $this->requestStack->getCurrentRequest()->query->get('_format');
+    if ($display->getThirdPartySetting('layout_builder', 'enabled') && $format != 'json') {
+      // Skip processing of the fields and let the layoutbuilder render it all.
+      return;
+    }
+
+    foreach ($display->getComponents() as $field_name => $options) {
+      if (isset($entity->{$field_name})) {
+        $this->getCustomElementGenerator()->process($entity->get($field_name), $custom_element, $viewMode);
       }
     }
   }

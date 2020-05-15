@@ -4,7 +4,6 @@ namespace Drupal\custom_elements;
 
 use Drupal\Component\Render\MarkupInterface;
 use Drupal\Component\Serialization\Json;
-use Drupal\Core\Render\Markup;
 use Drupal\Core\Template\Attribute;
 use \Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 
