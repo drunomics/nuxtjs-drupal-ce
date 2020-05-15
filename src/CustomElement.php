@@ -193,6 +193,10 @@ class CustomElement implements CacheableDependencyInterface {
       throw new \LogicException(sprintf('Tag %s is no-end tag and should not have a content.', $tag));
     }
 
+    if (is_array($value)) {
+      throw new \InvalidArgumentException('Setting slot value to an array is not supported. Provide a CustomElement, MarkupInterface or primitive type.');
+    }
+
     $key = $this->fixSlotKey($key);
 
     if ($value instanceof CustomElement) {

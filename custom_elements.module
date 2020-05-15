@@ -131,7 +131,8 @@ function custom_elements_entity_view_alter(array &$build, Drupal\Core\Entity\Ent
     // @see custom_elements_module_implements_alter().
     // @see \Drupal\custom_elements\CustomElementsEntityViewDisplayTrait::buildMultipleViaCustomElements()
     if (!empty($build['#custom_elements_add_layout_builder_section'])) {
-      $build['#custom_element']->setSlot('sections', $build['_layout_builder']);
+      $sections_markup = render($build['_layout_builder']);
+      $build['#custom_element']->setSlot('sections', $sections_markup);
     }
   }
 }
