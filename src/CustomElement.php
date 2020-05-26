@@ -194,7 +194,9 @@ class CustomElement implements CacheableDependencyInterface {
     }
 
     if (is_array($value)) {
-      throw new \InvalidArgumentException('Setting slot value to an array is not supported. Provide a CustomElement, MarkupInterface or primitive type.');
+      $value = render($value);
+      // @TODO Fix all setSlot calls so that we don't have to handle render arrays.
+      // throw new \InvalidArgumentException('Setting slot value to an array is not supported. Provide a CustomElement, MarkupInterface or primitive type.');
     }
 
     $key = $this->fixSlotKey($key);
