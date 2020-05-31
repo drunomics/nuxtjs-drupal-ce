@@ -35,7 +35,7 @@ class CustomElementNormalizer implements NormalizerInterface {
    * @return array
    */
   protected function normalizeCustomElement(CustomElement $element) {
-    $result = ['element' => !empty($result['is']) ? $result['is'] : $element->getPrefixedTag()];
+    $result = ['element' => $element->getPrefixedTag()];
     $result = array_merge($result, $this->normalizeAttributes($element->getAttributes()));
 
     unset($result['view-mode']);
@@ -78,6 +78,7 @@ class CustomElementNormalizer implements NormalizerInterface {
    * Normalize slots.
    *
    * @param array $slots
+   *   The slots to normalize.
    *
    * @return array
    */
@@ -87,16 +88,8 @@ class CustomElementNormalizer implements NormalizerInterface {
       $slot_result = [];
       $slot_key = $slot['key'];
 
-      if (
-        (!empty($slot['content']) && $slot['content'] instanceof CustomElement)
-        ||
-        (
-          is_array($slot['content'])
-          && !empty($slot['content']['#custom_element'])
-          && $slot['content']['#custom_element'] instanceof CustomElement
-        )
-      ) {
-        $element = $slot['content'] instanceof CustomElement ? $slot['content'] : $slot['content']['#custom_element'];
+      if (!empty($slot['content']) && $slot['content'] instanceof CustomElement) {
+        $element = $slot['content'];
         // In this case the custom element is the slot and not content.
         // @see CustomElement::setSlotFromCustomElement()
         $slot_result = $this->normalizeCustomElement($element);

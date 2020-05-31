@@ -73,10 +73,12 @@ class CustomElement implements CacheableDependencyInterface {
    * Array of slots, represented as array of nested custom elements.
    *
    * @var array[][]
-   *   Array of slots, keyed slot name and entry index. Each entry is an array with the following keys:
+   *   Array of slots, keyed slot name and entry index. Each entry is an array
+   *   with the following keys:
    *   - key: Slot name
    *   - weight: Slot weight
-   *   - content: Slot markup (MarkupInterface) or element (CustomElement) object.
+   *   - content: Slot markup (MarkupInterface) or element (CustomElement)
+   *     object.
    */
   protected $slots = [];
 
@@ -122,10 +124,12 @@ class CustomElement implements CacheableDependencyInterface {
    * Gets the element slots, keyed by slot name and entry index.
    *
    * @return array[][]
-   *   Array of slots, keyed slot name and entry index. Each entry is an array with the following keys:
+   *   Array of slots, keyed slot name and entry index. Each entry is an array
+   *   with the following keys:
    *   - key: Slot name
    *   - weight: Slot weight
-   *   - content: Slot markup (MarkupInterface) or element (CustomElement) object.
+   *   - content: Slot markup (MarkupInterface) or element (CustomElement)
+   *     object.
    */
   public function getSlots() {
     return $this->slots;
@@ -160,10 +164,12 @@ class CustomElement implements CacheableDependencyInterface {
    *   (optional) The index of the slot entry to retrieve.
    *
    * @return array[][]
-   *   Array of slots, keyed slot name and entry index. Each entry is an array with the following keys:
+   *   Array of slots, keyed slot name and entry index. Each entry is an array
+   *   with the following keys:
    *   - key: Slot name
    *   - weight: Slot weight
-   *   - content: Slot markup (MarkupInterface) or element (CustomElement) object.
+   *   - content: Slot markup (MarkupInterface) or element (CustomElement)
+   *     object.
    */
   public function getSlot($key, $index = 0) {
     return $this->slots[$key][$index] ?? NULL;
@@ -193,10 +199,12 @@ class CustomElement implements CacheableDependencyInterface {
       throw new \LogicException(sprintf('Tag %s is no-end tag and should not have a content.', $tag));
     }
 
+    // For BC support passing in render arrays as well.
+    // @TODO Fix all setSlot calls so that we don't have to handle render
+    // arrays and re-enable the following line:
+    // throw new \InvalidArgumentException('Setting slot value to an array is not supported. Provide a CustomElement, MarkupInterface or a markup string.');
     if (is_array($value)) {
       $value = render($value);
-      // @TODO Fix all setSlot calls so that we don't have to handle render arrays.
-      // throw new \InvalidArgumentException('Setting slot value to an array is not supported. Provide a CustomElement, MarkupInterface or primitive type.');
     }
 
     $key = $this->fixSlotKey($key);
@@ -278,7 +286,9 @@ class CustomElement implements CacheableDependencyInterface {
   }
 
   /**
-   * Sets the slot with a single custom element on a certain index, possibly overwriting existing slots.
+   * Sets the slot with a single custom element on a certain index
+   *
+   * Note: This is overwriting possibly already existing slots.
    *
    * This method avoids a wrapper div as necessary by the helper for multiple
    * elements.
@@ -296,8 +306,6 @@ class CustomElement implements CacheableDependencyInterface {
    * @return $this
    *
    * @see ::addSlotFromCustomElement()
-   *
-   * @todo: Add set/addSlotFromMarkup as well.
    */
   public function setSlotFromCustomElement($key, CustomElement $nestedElement, $index = 0, $weight = 0) {
     $key = $this->fixSlotKey($key);
@@ -329,7 +337,9 @@ class CustomElement implements CacheableDependencyInterface {
   }
 
   /**
-   * Sets the slot content from multiple nested custom elements on a certain index, possibly overwriting existing slots.
+   * Sets the slot content from multiple nested custom elements.
+   *
+   * Note: This is overwriting possibly already existing slots.
    *
    * @param $key
    *   Name of the slot to set value for.
@@ -395,7 +405,7 @@ class CustomElement implements CacheableDependencyInterface {
    * @return string
    *   The fixed slot key.
    */
-  public function fixSlotKey($key) {
+  protected function fixSlotKey($key) {
     $key = str_replace('_', '-', $key);
     if (static::$removeFieldPrefix && strpos($key, 'field-') === 0) {
       $key = substr($key, strlen('field-'));

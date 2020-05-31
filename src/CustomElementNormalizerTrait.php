@@ -23,7 +23,7 @@ trait CustomElementNormalizerTrait {
    * @return $this
    */
   public function setCustomElementNormalizer(CustomElementNormalizer $custom_element_normalizer) {
-    $this->CustomElementNormalizer = $custom_element_normalizer;
+    $this->customElementNormalizer = $custom_element_normalizer;
     return $this;
   }
 
@@ -34,10 +34,10 @@ trait CustomElementNormalizerTrait {
    *   Custom element normalizer.
    */
   public function getCustomElementNormalizer() {
-    if (empty($this->CustomElementNormalizer)) {
-      $this->CustomElementNormalizer = \Drupal::service('custom_elements.normalizer');
+    if (empty($this->customElementNormalizer)) {
+      $this->customElementNormalizer = \Drupal::service('custom_elements.normalizer');
     }
-    return $this->CustomElementNormalizer;
+    return $this->customElementNormalizer;
   }
 
 }
