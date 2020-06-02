@@ -66,6 +66,11 @@ function template_preprocess_custom_element(&$variables) {
   }
   $variables['slots'] = $slots;
 
+  // If rendered custom element is not a slot itself, set our class.
+  if (!$variables['attributes']->offsetExists('slot')) {
+    $variables['attributes']->addClass('custom-element');
+  }
+
   BubbleableMetadata::createFromObject($custom_element)
     ->applyTo($variables);
 }

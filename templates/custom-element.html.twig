@@ -13,8 +13,8 @@
  */
 #}
 
-<{{ tag_prefix }}{{ tag }}{{ attributes.addClass('custom-element') }}>
-{% for slot in slots %}
-  {{ slot }}
-{% endfor %}
+<{{ tag_prefix }}{{ tag }}{{ attributes }}>
+{%- for slot in slots %}
+  {{- slot -}}
+{% endfor -%}
 </{{ tag_prefix }}{{ tag }}>

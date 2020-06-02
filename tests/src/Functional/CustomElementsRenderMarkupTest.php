@@ -117,9 +117,7 @@ class CustomElementsRenderMarkupTest extends BrowserTestBase {
     $markup = $this->renderCustomElement($custom_element);
     $expected_markup = <<<EOF
 <pg-text type="text" view-mode="full" class="custom-element">
-  <h3 slot="title">
-    The title
-  </h3>
+  <h3 slot="title">the title</h3>
   <div slot="content">
     <p><strong>some</strong> example text</p>
 
@@ -177,9 +175,7 @@ EOF;
     $markup = $this->renderCustomElement($custom_element);
     $expected_markup = <<<EOF
 <pg-link class="custom-element" type="link" view-mode="full">
-  <a slot="link" href="http://example.com">
-    example site
-  </a>
+  <a href="http://example.com" slot="link">example site</a>
 </pg-link>
 EOF;
     Assert::assertXmlStringEqualsXmlString($expected_markup, $markup);
@@ -206,8 +202,7 @@ EOF;
       ->generate($paragraph, 'full');
     $markup = $this->renderCustomElement($custom_element);
     $expected_markup = <<<EOF
-<pg-twitter class="custom-element" src="https://twitter.com/the_real_fago/status/1189191210709049344" type="twitter" view-mode="full">
-</pg-twitter>
+<pg-twitter class="custom-element" src="https://twitter.com/the_real_fago/status/1189191210709049344" type="twitter" view-mode="full"/>
 EOF;
     Assert::assertXmlStringEqualsXmlString($expected_markup, $markup);
   }
@@ -232,19 +227,13 @@ EOF;
     $custom_element = $this->getCustomElementGenerator()
       ->generate($paragraph, 'full');
     $markup = $this->renderCustomElement($custom_element);
-    // @todo: There should be no closing img tag.
     $expected_markup = <<<EOF
 <pg-video class="custom-element" type="video" view-mode="full">
-  <iframe slot="video" src="https://www.youtube.com/embed/ipr36uranwc">
-
-  </iframe>
-  <img slot="thumbnail" src="http://img.youtube.com/vi/ipr36uranwc/maxresdefault.jpg">
-
-  </img>
+  <iframe slot="video" src="https://www.youtube.com/embed/ipr36uranwc"/>
+  <img slot="thumbnail" src="http://img.youtube.com/vi/ipr36uranwc/maxresdefault.jpg"/>
 </pg-video>
 EOF;
-    // Editors strip trailing spaces, so do so for the generated markup.
-    Assert::assertXmlStringEqualsXmlString($expected_markup, str_replace("    \n", "\n", $markup));
+    Assert::assertXmlStringEqualsXmlString($expected_markup, $markup);
   }
 
   /**
@@ -269,16 +258,12 @@ EOF;
     $custom_element = $this->getCustomElementGenerator()
       ->generate($paragraph, 'full');
     $markup = $this->renderCustomElement($custom_element);
-    // @todo: There should be no closing img tag.
     $expected_markup = <<<EOF
 <pg-image class="custom-element" type="image" view-mode="full">
-  <img slot="img" src="{$this->image->uri->url}">
-
-  </img>
+  <img slot="img" src="{$this->image->uri->url}"/>
 </pg-image>
 EOF;
-    // Editors strip trailing spaces, so do so for the generated markup.
-    Assert::assertXmlStringEqualsXmlString($expected_markup, str_replace("    \n", "\n", $markup));
+    Assert::assertXmlStringEqualsXmlString($expected_markup, $markup);
   }
 
   /**
@@ -334,9 +319,7 @@ EOF;
     ]));
     $expected_markup = <<<EOF
 <pg-gallery :sources="$expected_json" class="custom-element" type="gallery" view-mode="full">
-  <h3 slot="title">
-
-  </h3>
+  <h3 slot="title"></h3>
 </pg-gallery>
 EOF;
     // Editors strip trailing spaces, so do so for the generated markup.
@@ -362,8 +345,7 @@ EOF;
       ->generate($this->node, 'full');
     $markup = $this->renderCustomElement($custom_element);
     $expected_markup = <<<EOF
-<node class="custom-element" created="{$this->node->created->value}" title="test" type="article" uid="0" view-mode="full">
-</node>
+<node class="custom-element" created="{$this->node->created->value}" title="test" type="article" uid="0" view-mode="full"/>
 EOF;
     Assert::assertXmlStringEqualsXmlString($expected_markup, $markup);
   }
