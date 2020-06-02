@@ -1,0 +1,21 @@
+name: Custom Elements Test Paragraphs
+type: module
+description: Paragraphs as provided by Thunder.
+core: 8.x
+package: Testing
+hidden: true
+dependencies:
+  - drupal:crop
+  - drupal:datetime
+  - drupal:paragraphs
+  - drupal:image
+  - drupal:link
+  - drupal:media
+  - drupal:media_entity_instagram
+  - drupal:media_entity_pinterest
+  - drupal:media_entity_slideshow
+  - drupal:media_entity_twitter
+  - drupal:video_embed_media
+  - drupal:taxonomy
+  - drupal:text
+  - drupal:custom_elements
