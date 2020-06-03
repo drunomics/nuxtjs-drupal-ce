@@ -38,12 +38,8 @@ class ParagraphFieldItemProcessor implements CustomElementProcessorInterface {
 
     if ($paragraph = $field_item->entity) {
       $paragraph_element = $this->getCustomElementGenerator()->generate($paragraph, $viewMode);
-      // Set element content from paragraph element.
-      $element->setTag($paragraph_element->getTag());
-      $element->setTagPrefix($paragraph_element->getTagPrefix());
-      $element->setAttributes($paragraph_element->getAttributes());
-      $element->setSlots($paragraph_element->getSlots());
-      $element->addCacheableDependency($paragraph_element);
+      // Set content without wrapping tag.
+      $element->setFromCustomElement($paragraph_element);
     }
   }
 

@@ -28,13 +28,15 @@ class DefaultFieldItemListProcessor implements CustomElementProcessorInterface {
     assert($data instanceof FieldItemListInterface);
     $field_item_list = $data;
 
-    foreach ($field_item_list as $field_item) {
-      // By default just handle each field item with cardinality 1 on its own.
-      if ($field_item_list->getFieldDefinition()->getFieldStorageDefinition()->getCardinality() == 1) {
+    // By default just handle each field item with cardinality 1 on its own.
+    if ($field_item_list->getFieldDefinition()->getFieldStorageDefinition()->getCardinality() == 1) {
+      foreach ($field_item_list as $field_item) {
         $nested_element = new CustomElement();
         $nested_element->setTagPrefix('field-');
-        $nested_element->setTag($field_item_list->getFieldDefinition()->getType());
-        $this->getCustomElementGenerator()->process($field_item, $nested_element, $viewMode);
+        $nested_element->setTag($field_item_list->getFieldDefinition()
+          ->getType());
+        $this->getCustomElementGenerator()
+          ->process($field_item, $nested_element, $viewMode);
 
         // When the element has only a single attribute, don't create a nested
         // tag.
@@ -58,18 +60,18 @@ class DefaultFieldItemListProcessor implements CustomElementProcessorInterface {
           $element->setSlotFromCustomElement($field_item_list->getName(), $nested_element);
         }
       }
-      // Render multiple fields individual, below another tag.
-      else {
-        $nested_elements = [];
-        foreach ($field_item_list as $field_item) {
-          $nested_element = new CustomElement();
-          $nested_element->setTagPrefix('field');
-          $nested_element->setTag($field_item_list->getFieldDefinition()->getType());
-          $this->getCustomElementGenerator()->process($field_item, $nested_element, $viewMode);
-          $nested_elements[] = $nested_element;
-        }
-        $element->setSlotFromNestedElements($field_item_list->getName(), $nested_elements, 'div');
+    }
+    // Render multiple fields individual, below another tag.
+    else {
+      $nested_elements = [];
+      foreach ($field_item_list as $field_item) {
+        $nested_element = new CustomElement();
+        $nested_element->setTagPrefix('field');
+        $nested_element->setTag($field_item_list->getFieldDefinition()->getType());
+        $this->getCustomElementGenerator()->process($field_item, $nested_element, $viewMode);
+        $nested_elements[] = $nested_element;
       }
+      $element->setSlotFromNestedElements($field_item_list->getName(), $nested_elements, 'div');
     }
   }
 

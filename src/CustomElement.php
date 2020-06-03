@@ -83,6 +83,28 @@ class CustomElement implements CacheableDependencyInterface {
   protected $slots = [];
 
   /**
+   * Array of normalization styles.
+   *
+   * @see self::NORMALIZE_AS_SIMPLE_VALUE
+   * @see self::NORMALIZE_AS_SINGLE_VALUE
+   *
+   * @var array[][]
+   *   Array keyed by slot name and normalization style constant, with the value
+   *   indicating whether it's enabled.
+   */
+  protected $slotNormalizationStyles = [];
+
+  /**
+   * Normalize assuming the slot is single-valued.
+   */
+  const NORMALIZE_AS_SINGLE_VALUE = 'single';
+
+  /**
+   * Normalize assuming each slot entry is a simple value, with no attributes.
+   */
+  const NORMALIZE_AS_SIMPLE_VALUE = 'simple';
+
+  /**
    * Creates a new custom element.
    *
    * @param string $tag
@@ -143,7 +165,7 @@ class CustomElement implements CacheableDependencyInterface {
    *   by ::getSlot().
    */
   public function getSortedSlots() {
-    $slots = $this->getSlots();
+    $slots = $this->getSortedSlotsByName();
     // Flatten the array.
     $slot_entries = [];
     foreach ($slots as $entries) {
@@ -151,8 +173,22 @@ class CustomElement implements CacheableDependencyInterface {
         $slot_entries[] = $slot_entry;
       }
     }
-    usort($slot_entries, 'Drupal\Component\Utility\SortArray::sortByWeightElement');
     return $slot_entries;
+  }
+
+  /**
+   * Gets a sorted list of slots, keyed by slot name.
+   *
+   * @return array[]
+   *   A sorted array of slot entries as defined by ::getSlot(), keyed by slot
+   *   name.
+   */
+  public function getSortedSlotsByName() {
+    $slots = $this->getSlots();
+    foreach ($slots as $slot_key => &$entries) {
+      usort($entries, 'Drupal\Component\Utility\SortArray::sortByWeightElement');
+    }
+    return $slots;
   }
 
   /**
@@ -318,6 +354,44 @@ class CustomElement implements CacheableDependencyInterface {
   }
 
   /**
+   * Sets a slot normalization style.
+   *
+   * @param string $key
+   *   The slot name.
+   * @param string[] $style
+   *   One of the following constants, or an array of constants:
+   *    - \Drupal\custom_elements\CustomElement::NORMALIZE_AS_SIMPLE_VALUE
+   *    - \Drupal\custom_elements\CustomElement::NORMALIZE_AS_SINGLE_VALUE
+   * @param bool $enable
+   *   Whether to enable the style (default) or disable it.
+   *
+   * @return $this
+   */
+  public function setSlotNormalizationStyle($key, $style, $enable = TRUE) {
+    foreach (is_array($style) ? $style : [$style] as $entry) {
+      $this->slotNormalizationStyles[$key][$entry] = $enable;
+    }
+    return $this;
+  }
+
+  /**
+   * Returns whether a slot normalization style is set.
+   *
+   * @param string $key
+   *   The slot name.
+   * @param string $style
+   *   One of the following constants:
+   *    - \Drupal\custom_elements\CustomElement::NORMALIZE_AS_SIMPLE_VALUE
+   *    - \Drupal\custom_elements\CustomElement::NORMALIZE_AS_SINGLE_VALUE
+   *
+   * @return bool
+   *   Whether the style is enabled.
+   */
+  public function hasSlotNormalizationStyle($key, $style) {
+    return !empty($this->slotNormalizationStyles[$key][$style]);
+  }
+
+  /**
    * Sets the slot with a single custom element.
    *
    * This method avoids a wrapper div as necessary by the helper for multiple
@@ -420,6 +494,24 @@ class CustomElement implements CacheableDependencyInterface {
    */
   public static function getNoEndTags() {
     return static::$noEndTags;
+  }
+
+  /**
+   * Sets the custom element from the given element.
+   *
+   * This overwrites the current custom element with content from the given
+   * element.
+   *
+   * @param \Drupal\custom_elements\CustomElement $element
+   *   The element to set values from.
+   */
+  public function setFromCustomElement(CustomElement $element) {
+    $this->setTag($element->getTag());
+    $this->setTagPrefix($element->getTagPrefix());
+    $this->setAttributes($element->getAttributes());
+    $this->setSlots($element->getSlots());
+    $this->slotNormalizationStyles = $element->slotNormalizationStyles;
+    $this->addCacheableDependency($element);
   }
 
   /**

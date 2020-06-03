@@ -39,11 +39,7 @@ class MediaReferenceFieldItemProcessor implements CustomElementProcessorInterfac
     if ($media_entity = $field_item->entity) {
       $media_element = $this->getCustomElementGenerator()->generate($media_entity, $viewMode);
       // Set element content from media element to avoid a wrapper tag.
-      $element->setTag($media_element->getTag());
-      $element->setTagPrefix($media_element->getTagPrefix());
-      $element->setAttributes($media_element->getAttributes());
-      $element->setSlots($media_element->getSlots());
-      $element->addCacheableDependency($media_element);
+      $element->setFromCustomElement($media_element);
     }
   }
 

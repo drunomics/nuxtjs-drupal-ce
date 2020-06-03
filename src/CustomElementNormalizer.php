@@ -41,7 +41,7 @@ class CustomElementNormalizer implements NormalizerInterface {
     unset($result['view-mode']);
     unset($result['is']);
 
-    $normalized_slots = $this->normalizeSlots($element->getSortedSlots());
+    $normalized_slots = $this->normalizeSlots($element);
     $result = array_merge($result, $normalized_slots);
 
     return $result;
@@ -77,53 +77,53 @@ class CustomElementNormalizer implements NormalizerInterface {
   /**
    * Normalize slots.
    *
-   * @param array $slots
-   *   The slots to normalize.
+   * @param \Drupal\custom_elements\CustomElement $element
+   *   The element for which to normalize slots.
    *
    * @return array
    */
-  protected function normalizeSlots(array $slots) {
-    $result = [];
-    foreach ($slots as $slot) {
-      $slot_result = [];
-      $slot_key = $slot['key'];
+  protected function normalizeSlots(CustomElement $element) {
+    $data = [];
+    foreach ($element->getSortedSlotsByName() as $slot_key => $slot_entries) {
+      $slot_data = [];
+      $normalize_as_simple_value = $element->hasSlotNormalizationStyle($slot_key, CustomElement::NORMALIZE_AS_SIMPLE_VALUE);
+      foreach ($slot_entries as $index => $slot) {
+        $slot_key = $slot['key'];
 
-      if (!empty($slot['content']) && $slot['content'] instanceof CustomElement) {
-        $element = $slot['content'];
-        // In this case the custom element is the slot and not content.
-        // @see CustomElement::setSlotFromCustomElement()
-        $slot_result = $this->normalizeCustomElement($element);
-        if ($element_slot_key = $element->getAttribute('slot')) {
-          $slot_key = $element_slot_key;
+        // Handle slots set via nested custom element and markup.
+        if (!empty($slot['content']) && $slot['content'] instanceof CustomElement) {
+          $slot_data[$index] = $this->normalizeCustomElement($slot['content']);
+        }
+        elseif ($slot['content'] instanceof MarkupInterface) {
+          $slot_data[$index]['content'] = (string) $slot['content'];
+          if (!empty($slot['attributes']) && !$normalize_as_simple_value && $slot['attributes'] instanceof Attribute) {
+            $slot_data[$index] = array_merge($slot_data[$index], $slot['attributes']->toArray());
+          }
+        }
+
+        // Remove possible doubled slot attributes.
+        unset($slot_data[$index]['slot']);
+
+        if ($normalize_as_simple_value) {
+          $slot_data[$index] = $slot_data[$index]['content'] ?? NULL;
         }
       }
-      elseif ($slot['content'] instanceof MarkupInterface) {
-        $slot_result['content'] = (string) $slot['content'];
-        if (!empty($slot['attributes']) && $slot['attributes'] instanceof Attribute) {
-          $slot_result = array_merge($slot_result, $slot['attributes']->toArray());
-        }
+
+      // If content is the one and only result, assign the value on the top level.
+      // This happens for slots by single markup value.
+      if (isset($slot_data[0]['content']) && count($slot_data) == 1 && count($slot_data[0]) == 1) {
+        $slot_data = $slot_data[0]['content'];
+      }
+      elseif ($element->hasSlotNormalizationStyle($slot_key, CustomElement::NORMALIZE_AS_SINGLE_VALUE)) {
+        $slot_data = reset($slot_data);
       }
 
-      unset($slot_result['slot']);
-
-      if ($slot_key == 'default') {
-        $result['content'][] = $slot_result;
-      }
-      else {
-        $result[$slot_key][] = $slot_result;
-      }
+      // Default to 'content' key for default slots.
+      $data_key = $slot_key == 'default' ? 'content' : $slot_key;
+      $data[$data_key] = $slot_data;
     }
 
-    // If content is the one and only result, assign the value on the top level.
-    foreach ($result as $key => &$item) {
-      if (count($item) == 1) {
-        if (!empty($item[0]['content']) && count($item[0]) == 1) {
-          $result[$key] = $item[0]['content'];
-        }
-      }
-    }
-
-    return $result;
+    return $data;
   }
 
   /**
