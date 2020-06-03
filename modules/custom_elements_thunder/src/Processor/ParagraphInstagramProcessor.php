@@ -34,6 +34,7 @@ class ParagraphInstagramProcessor implements CustomElementProcessorInterface {
     // Generally add a title as slot if field_title is there.
     if (isset($paragraph->field_title)) {
       $element->setSlot('title', $paragraph->field_title, 'h3');
+      $element->setSlotNormalizationStyle('title', CustomElement::NORMALIZE_AS_SINGLE_SIMPLE_VALUE);
     }
 
     /** @var \Drupal\media_entity\Entity\Media $media_entity */

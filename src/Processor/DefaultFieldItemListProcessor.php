@@ -52,7 +52,7 @@ class DefaultFieldItemListProcessor implements CustomElementProcessorInterface {
           $slot_entries = reset($slots);
           foreach ($slot_entries as $index => $slot) {
             $attributes = !empty($slot['attributes']) && $slot['attributes'] instanceof Attribute ? $slot['attributes']->toArray() : [];
-            $tag = !empty($slot['tag']) ? $slot['tag'] : NULL;
+            $tag = !empty($slot['tag']) ? $slot['tag'] : 'div';
             $element->setSlot($field_item_list->getName(), $slot['content'], $tag, $attributes, $index);
           }
         }
@@ -72,6 +72,8 @@ class DefaultFieldItemListProcessor implements CustomElementProcessorInterface {
         $nested_elements[] = $nested_element;
       }
       $element->setSlotFromNestedElements($field_item_list->getName(), $nested_elements, 'div');
+      // Do not add the wrapping div during normalizing.
+      $element->setSlotNormalizationStyle($field_item_list->getName(), CustomElement::NORMALIZE_AS_SINGLE_SIMPLE_VALUE);
     }
   }
 

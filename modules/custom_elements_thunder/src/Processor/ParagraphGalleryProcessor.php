@@ -31,11 +31,6 @@ class ParagraphGalleryProcessor implements CustomElementProcessorInterface {
   public function addtoElement($paragraph, CustomElement $element, $viewMode) {
     assert($paragraph instanceof ParagraphInterface);
 
-    // Generally add a title as slot if field_title is there.
-    if (isset($paragraph->field_title)) {
-      $element->setSlot('title', $paragraph->field_title, 'h3');
-    }
-
     /** @var \Drupal\media_entity\Entity\Media $media_entity */
     $media_entity = $paragraph->field_media->entity;
     $sources = [];
@@ -50,8 +45,9 @@ class ParagraphGalleryProcessor implements CustomElementProcessorInterface {
         'description' => $media_image->field_description->value,
       ];
     }
-    $element->setAttribute(':sources', json_encode($sources));
+    $element->setAttribute(':sources', $sources);
     $element->setSlot('title', $media_entity->name->value, 'h3');
+    $element->setSlotNormalizationStyle('title', CustomElement::NORMALIZE_AS_SINGLE_SIMPLE_VALUE);
   }
 
 }

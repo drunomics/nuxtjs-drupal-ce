@@ -105,6 +105,11 @@ class CustomElement implements CacheableDependencyInterface {
   const NORMALIZE_AS_SIMPLE_VALUE = 'simple';
 
   /**
+   * Normalize as single and simple value.
+   */
+  const NORMALIZE_AS_SINGLE_SIMPLE_VALUE = 'single+simple';
+
+  /**
    * Creates a new custom element.
    *
    * @param string $tag
@@ -117,19 +122,6 @@ class CustomElement implements CacheableDependencyInterface {
     $element = new static();
     $element->setTag($tag);
     return $element;
-  }
-
-  /**
-   * Sanitizes data attribute value - strip html tags.
-   *
-   * @param string $value
-   *   Data attribute value.
-   *
-   * @return string
-   *   Sanitized data attribute value.
-   */
-  protected function sanitizeAttribute($value) {
-    return strip_tags($value);
   }
 
   /**
@@ -222,15 +214,16 @@ class CustomElement implements CacheableDependencyInterface {
    *   (optional) The element tag to use for the slot.
    * @param array $attributes
    *   (optional) Attributes to add to the slot tag.
-   * @param int $index
-   *   (optional) The index of the slot entry to set. By default, always the
-   *   first entry is set. Defaults to 0.
+   * @param int|null $index
+   *   (optional) The index of the slot entry to set. By default, if no value is
+   *   given it's assumed that the slot is single-valued and the index 0 gets
+   *   set.
    * @param int $weight
    *   (optional) A weight for ordering output slots. Defaults to 0.
    *
    * @return $this
    */
-  public function setSlot($key, $value, $tag = 'div', $attributes = [], $index = 0, $weight = 0) {
+  public function setSlot($key, $value, $tag = 'div', $attributes = [], $index = NULL, $weight = 0) {
     if (in_array($tag, static::$noEndTags) && !empty($value)) {
       throw new \LogicException(sprintf('Tag %s is no-end tag and should not have a content.', $tag));
     }
@@ -241,6 +234,11 @@ class CustomElement implements CacheableDependencyInterface {
     // throw new \InvalidArgumentException('Setting slot value to an array is not supported. Provide a CustomElement, MarkupInterface or a markup string.');
     if (is_array($value)) {
       $value = render($value);
+    }
+
+    if (!isset($index)) {
+      $index = 0;
+      $this->setSlotNormalizationStyle($key, self::NORMALIZE_AS_SINGLE_VALUE);
     }
 
     $key = $this->fixSlotKey($key);
@@ -255,14 +253,16 @@ class CustomElement implements CacheableDependencyInterface {
     }
 
     // If markup and attributes are given, we need to wrap the content in another custom element.
-    if ($value && ($attributes || $tag != 'div')) {
+    if ($value && ($attributes || ($tag != 'div' && $tag != 'span'))) {
       $slot = CustomElement::create($tag)
         ->setAttributes($attributes)
-        ->addSlot('default', $value);
+        ->setSlot('default', $value);
     }
-    // If just markup is given, we can use it directly as slot.
+    // If just markup is given, we can use it directly as slot and assume this
+    // is a simple value.
     elseif ($value) {
       $slot = $value;
+      $this->setSlotNormalizationStyle($key, self::NORMALIZE_AS_SIMPLE_VALUE);
     }
     // If no value is given, simply create a nested custom element.
     else {
@@ -333,9 +333,10 @@ class CustomElement implements CacheableDependencyInterface {
    *   Name of the slot to set value for.
    * @param \Drupal\custom_elements\CustomElement $nestedElement
    *   The nested custom element.
-   * @param int $index
-   *   (optional) The index of the slot entry to set. By default, always the
-   *   first entry is set. Defaults to 0.
+   * @param int|null $index
+   *   (optional) The index of the slot entry to set. By default, if no value is
+   *   given it's assumed that the slot is single-valued and the index 0 gets
+   *   set.
    * @param int $weight
    *   (optional) A weight for ordering output slots. Defaults to 0.
    *
@@ -343,7 +344,12 @@ class CustomElement implements CacheableDependencyInterface {
    *
    * @see ::addSlotFromCustomElement()
    */
-  public function setSlotFromCustomElement($key, CustomElement $nestedElement, $index = 0, $weight = 0) {
+  public function setSlotFromCustomElement($key, CustomElement $nestedElement, $index = NULL, $weight = 0) {
+    if (!isset($index)) {
+      $index = 0;
+      $this->setSlotNormalizationStyle($key, self::NORMALIZE_AS_SINGLE_VALUE);
+    }
+
     $key = $this->fixSlotKey($key);
     $this->slots[$key][$index] = [
       'weight' => $weight,
@@ -358,18 +364,25 @@ class CustomElement implements CacheableDependencyInterface {
    *
    * @param string $key
    *   The slot name.
-   * @param string[] $style
-   *   One of the following constants, or an array of constants:
+   * @param string $style
+   *   One of the following constants:
    *    - \Drupal\custom_elements\CustomElement::NORMALIZE_AS_SIMPLE_VALUE
    *    - \Drupal\custom_elements\CustomElement::NORMALIZE_AS_SINGLE_VALUE
+   *    - \Drupal\custom_elements\CustomElement::NORMALIZE_AS_SINGLE_SIMPLE_VALUE
    * @param bool $enable
    *   Whether to enable the style (default) or disable it.
    *
    * @return $this
    */
   public function setSlotNormalizationStyle($key, $style, $enable = TRUE) {
-    foreach (is_array($style) ? $style : [$style] as $entry) {
-      $this->slotNormalizationStyles[$key][$entry] = $enable;
+    $key = $this->fixSlotKey($key);
+    // Special support for often need style covering both cases.
+    if ($style == self::NORMALIZE_AS_SINGLE_SIMPLE_VALUE) {
+      $this->slotNormalizationStyles[$key][self::NORMALIZE_AS_SIMPLE_VALUE] = $enable;
+      $this->slotNormalizationStyles[$key][self::NORMALIZE_AS_SINGLE_VALUE] = $enable;
+    }
+    else {
+      $this->slotNormalizationStyles[$key][$style] = $enable;
     }
     return $this;
   }
@@ -565,7 +578,7 @@ class CustomElement implements CacheableDependencyInterface {
       $key = substr($key, strlen('field-'));
     }
     if (isset($value)) {
-      $this->attributes[$key] = $this->sanitizeAttribute($value);
+      $this->attributes[$key] = $value;
     }
     else {
       unset($this->attributes[$key]);

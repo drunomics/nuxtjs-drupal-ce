@@ -36,6 +36,7 @@ class ParagraphLinkProcessor implements CustomElementProcessorInterface {
     // Generally add a title as slot if field_title is there.
     if (isset($paragraph->field_title)) {
       $element->setSlot('title', $paragraph->field_title->value, 'h3');
+      $element->setSlotNormalizationStyle('title', CustomElement::NORMALIZE_AS_SINGLE_SIMPLE_VALUE);
     }
 
     $element->setSlot('link', $paragraph->field_link->title, 'a', ['href' => $paragraph->field_link->uri]);

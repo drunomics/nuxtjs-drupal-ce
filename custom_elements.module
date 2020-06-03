@@ -35,7 +35,11 @@ function template_preprocess_custom_element(&$variables) {
   // Generate variables for easier usage in the template.
   /** @var \Drupal\custom_elements\CustomElement $custom_element */
   $custom_element = $variables['custom_element'];
-  $variables['attributes'] = new Attribute($custom_element->getAttributes());
+  $variables['attributes'] = new Attribute();
+  foreach ($custom_element->getAttributes() as $key => $value) {
+    // Take care of struct values and json-encode them as necessary.
+    $variables['attributes'][$key] = is_array($value) ? json_encode($value) : $value;
+  }
   $variables['tag_prefix'] = $custom_element->getTagPrefix() ? $custom_element->getTagPrefix() . '-' : '';
   $variables['tag'] = $custom_element->getTag();
 

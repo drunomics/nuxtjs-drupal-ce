@@ -38,12 +38,20 @@ class CustomElementNormalizer implements NormalizerInterface {
     $result = ['element' => $element->getPrefixedTag()];
     $result = array_merge($result, $this->normalizeAttributes($element->getAttributes()));
 
+    // Remove dumb default html wrapping elements.
+    if ($result['element'] == 'div' || $result['element'] == 'span') {
+      unset($result['element']);
+    }
+
+    // Support Vue.js "is" attribute for defining element names.
+    if (!empty($result['is'])) {
+      $result['element'] = $result['is'];
+      unset($result['is']);
+    }
     unset($result['view-mode']);
-    unset($result['is']);
 
     $normalized_slots = $this->normalizeSlots($element);
     $result = array_merge($result, $normalized_slots);
-
     return $result;
   }
 
@@ -60,17 +68,9 @@ class CustomElementNormalizer implements NormalizerInterface {
       if ($key == 'slot') {
         continue;
       }
-
-      // Check if the value is json & unpack.
-      $json = Json::decode($value);
-      if (!json_last_error()) {
-        $value = $json;
-      }
-
       $result_key = strpos($key, ':') === 0 ? substr($key, 1) : $key;
       $result[$result_key] = $value;
     }
-
     return $result;
   }
 
@@ -109,12 +109,7 @@ class CustomElementNormalizer implements NormalizerInterface {
         }
       }
 
-      // If content is the one and only result, assign the value on the top level.
-      // This happens for slots by single markup value.
-      if (isset($slot_data[0]['content']) && count($slot_data) == 1 && count($slot_data[0]) == 1) {
-        $slot_data = $slot_data[0]['content'];
-      }
-      elseif ($element->hasSlotNormalizationStyle($slot_key, CustomElement::NORMALIZE_AS_SINGLE_VALUE)) {
+      if ($element->hasSlotNormalizationStyle($slot_key, CustomElement::NORMALIZE_AS_SINGLE_VALUE)) {
         $slot_data = reset($slot_data);
       }
 
