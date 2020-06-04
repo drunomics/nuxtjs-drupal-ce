@@ -5,6 +5,7 @@ namespace Drupal\custom_elements;
 use Drupal\Component\Render\MarkupInterface;
 use Drupal\Core\Cache\CacheableDependencyInterface;
 use Drupal\Core\Cache\RefinableCacheableDependencyTrait;
+use Drupal\Core\Render\BubbleableMetadata;
 use Drupal\Core\Render\Markup;
 
 /**
@@ -233,7 +234,11 @@ class CustomElement implements CacheableDependencyInterface {
     // arrays and re-enable the following line:
     // throw new \InvalidArgumentException('Setting slot value to an array is not supported. Provide a CustomElement, MarkupInterface or a markup string.');
     if (is_array($value)) {
-      $value = render($value);
+      $render_value = \Drupal::service('renderer')->renderPlain($value);
+      // Add cache metadata as needed from the cache metadata attaced to the
+      // render array.
+      $this->addCacheableDependency(BubbleableMetadata::createFromRenderArray($value));
+      $value = $render_value;
     }
 
     if (!isset($index)) {
