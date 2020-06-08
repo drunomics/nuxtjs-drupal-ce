@@ -20,9 +20,9 @@ trait CustomElementsEntityViewDisplayTrait {
    */
   public function buildMultipleViaCustomElements(array &$build_list, array $entities) {
     foreach ($entities as $id => $entity) {
-      // We cannot do much here, since we cannot override existing build
-      // defaults. Because of that, we do the real work in
-      // custom_elements_entity_view_display_alter() later on.
+      // We cannot take over #theme, since we cannot override existing build
+      // defaults. Thus it'S done via custom_elements_entity_view_alter() later
+      // on.
       $build = &$build_list[$id];
       $build['#custom_elements_enabled'] = TRUE;
       $build['#entity_type_id'] = $entity->getEntityTypeId();
