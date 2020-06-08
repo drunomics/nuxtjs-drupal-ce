@@ -162,24 +162,13 @@ class DefaultContentEntityProcessor implements CustomElementProcessorInterface {
         continue;
       }
 
-      // Create a wrapping element for the block and add the content.
-      // When the block renders into a single custom element, we just forward
-      // that.
-      $block_element = CustomElement::create('drupal-block');
-      if (!isset($build[$key]['#theme']) || $build[$key]['#theme'] != 'block') {
-        // Un-clear render item, just forward through.
-        $block_element->setSlotFromRenderArray('default', $build[$key]);
+      if (isset($build[$key]['content']['#custom_element'])) {
+        $block_element = $build[$key]['content']['#custom_element'];
       }
       else {
-        // Forward some-basic block metadata and add the block content.
-        $block_element->setAttribute('id', $build[$key]['#configuration']['id']);
-
-        if (isset($build[$key]['content']['#custom_element'])) {
-          $block_element->setSlot('default', $build[$key]['content']['#custom_element']);
-        }
-        else {
-          $block_element->setSlotFromRenderArray('default', $build[$key]);
-        }
+        // Un-clear render item, just forward through in a drupal-block tag.
+        $block_element = CustomElement::create('drupal-markup');
+        $block_element->setSlotFromRenderArray('default', $build[$key]);
       }
       $elements[] = $block_element;
     }
