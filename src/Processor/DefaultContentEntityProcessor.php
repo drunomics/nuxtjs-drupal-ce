@@ -5,10 +5,14 @@ namespace Drupal\custom_elements\Processor;
 
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\Entity\EntityViewDisplay;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\EventSubscriber\MainContentViewSubscriber;
+use Drupal\Core\Render\BubbleableMetadata;
+use Drupal\Core\Render\Element;
 use Drupal\custom_elements\CustomElement;
 use Drupal\custom_elements\CustomElementGeneratorTrait;
+use Drupal\custom_elements\CustomElementsLayoutBuilderEntityViewDisplay;
+use Drupal\views\Plugin\views\field\Custom;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
@@ -86,17 +90,100 @@ class DefaultContentEntityProcessor implements CustomElementProcessorInterface {
     $displays = EntityViewDisplay::collectRenderDisplays([$entity], $viewMode);
     $display = reset($displays);
 
-    $format = $this->requestStack->getCurrentRequest()->query->get('_format');
-    if ($display->getThirdPartySetting('layout_builder', 'enabled') && $format != 'json') {
+    if ($display->getThirdPartySetting('layout_builder', 'enabled')) {
       // Skip processing of the fields and let the layoutbuilder render it all.
-      return;
+      $this->addLayoutBuilderContent($entity, $custom_element, $display);
     }
-
-    foreach ($display->getComponents() as $field_name => $options) {
-      if (isset($entity->{$field_name})) {
-        $this->getCustomElementGenerator()->process($entity->get($field_name), $custom_element, $viewMode);
+    else {
+      foreach ($display->getComponents() as $field_name => $options) {
+        if (isset($entity->{$field_name})) {
+          $this->getCustomElementGenerator()->process($entity->get($field_name), $custom_element, $viewMode);
+        }
       }
     }
+  }
+
+  /**
+   * Add content of layout builder to the element.
+   *
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   The entity.
+   * @param \Drupal\custom_elements\CustomElement $custom_element
+   *   The custom element.
+   * @param \Drupal\custom_elements\CustomElementsLayoutBuilderEntityViewDisplay $display
+   *   The view display of the current view mode.
+   */
+  protected function addLayoutBuilderContent(EntityInterface $entity, CustomElement $custom_element, CustomElementsLayoutBuilderEntityViewDisplay $display) {
+    $section_elements = [];
+    $build = $display->buildLayoutSections($entity);
+
+    // Loop over sections and convert render array back to custom elements
+    // if blocks render into custom elements.
+    foreach (Element::children($build, TRUE) as $key) {
+      $section_element = CustomElement::create('layout-section');
+      $section_build = $build[$key];
+      /** @var \Drupal\Core\Layout\LayoutDefinition $layout */
+      $layout = $section_build['#layout'];
+      $section_element->setAttribute('layout', $layout->id());
+      foreach ($layout->getRegions() as $region_name => $region) {
+        if (!empty($section_build[$region_name])) {
+          $elements = $this->getElementsFromBlockContentRenderArray($section_build[$region_name], $section_element);
+          $section_element->addSlotFromNestedElements($region_name, $elements);
+        }
+      }
+      $section_element->setAttribute('settings', $section_build['#settings']);
+      $section_elements[] = $section_element;
+    }
+
+    $custom_element->setSlotFromNestedElements('sections', $section_elements);
+    $custom_element->addCacheableDependency(BubbleableMetadata::createFromRenderArray($build));
+  }
+
+  /**
+   * Converts the block content render array into custom elements.
+   *
+   * @param array $build
+   *   The render array.
+   * @param \Drupal\custom_elements\CustomElement $parent_element
+   *   The parent custom element to which content will be added.
+   *
+   * @return CustomElement[]
+   *   The list of generated custom elements.
+   */
+  protected function getElementsFromBlockContentRenderArray(array $build, CustomElement $parent_element) {
+    $elements = [];
+
+    foreach (Element::children($build, TRUE) as $key) {
+      if (isset($build[$key]['#cache'])) {
+        $parent_element->addCacheableDependency(BubbleableMetadata::createFromRenderArray($build[$key]));
+      }
+      // Handle empty cache-only entries.
+      if (isset($build[$key]['#cache']) && count($build[$key]) == 1) {
+        continue;
+      }
+
+      // Create a wrapping element for the block and add the content.
+      // When the block renders into a single custom element, we just forward
+      // that.
+      $block_element = CustomElement::create('drupal-block');
+      if (!isset($build[$key]['#theme']) || $build[$key]['#theme'] != 'block') {
+        // Un-clear render item, just forward through.
+        $block_element->setSlotFromRenderArray('default', $build[$key]);
+      }
+      else {
+        // Forward some-basic block metadata and add the block content.
+        $block_element->setAttribute('id', $build[$key]['#configuration']['id']);
+
+        if (isset($build[$key]['content']['#custom_element'])) {
+          $block_element->setSlot('default', $build[$key]['content']['#custom_element']);
+        }
+        else {
+          $block_element->setSlotFromRenderArray('default', $build[$key]);
+        }
+      }
+      $elements[] = $block_element;
+    }
+    return $elements;
   }
 
 }

@@ -30,12 +30,6 @@ trait CustomElementsEntityViewDisplayTrait {
       $build['#' . $entity->getEntityTypeId()] = $entity;
       $build['#view_mode'] = $this->originalMode;
       $build['#custom_element'] = $this->getCustomElementGenerator()->generate($entity, $build['#view_mode']);
-
-      // Add layout build sections later during entity_view_alter().
-      // @see custom_elements_entity_view_alter()
-      if (isset($build['_layout_builder']) && !isset($build['#custom_elements_add_layout_builder_section'])) {
-        $build['#custom_elements_add_layout_builder_section'] = TRUE;
-      }
     }
   }
 

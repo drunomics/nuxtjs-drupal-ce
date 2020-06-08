@@ -2,6 +2,7 @@
 
 namespace Drupal\custom_elements;
 
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\layout_builder\Entity\LayoutBuilderEntityViewDisplay;
 
 /**
@@ -36,4 +37,18 @@ class CustomElementsLayoutBuilderEntityViewDisplay extends LayoutBuilderEntityVi
     return $build_list;
   }
 
+  /**
+   * Renders the layout builder layout into a render array.
+   *
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   The entity.
+   *
+   * @return array|null
+   *   The generated render array or NULL if layout builder is not enabled.
+   */
+  public function buildLayoutSections(EntityInterface $entity) {
+    if ($this->isLayoutBuilderEnabled()) {
+      return $this->buildSections($entity);
+    }
+  }
 }

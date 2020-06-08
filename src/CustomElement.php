@@ -205,6 +205,39 @@ class CustomElement implements CacheableDependencyInterface {
   }
 
   /**
+   * Sets a slot from a render array.
+   *
+   * The render-array is rendered into markup and the slot is set with this
+   * markup. Falling-back to adding render arrays should be avoid as much as
+   * possible, instead content should be rendered into nested CustomElement
+   * objects.
+   *
+   * @param string $key
+   *   Name of the slot to set value for.
+   * @param array $build
+   *   The render array.
+   * @param string $tag
+   *   (optional) The element tag to use for the slot.
+   * @param array $attributes
+   *   (optional) Attributes to add to the slot tag.
+   * @param int|null $index
+   *   (optional) The index of the slot entry to set. By default, if no value is
+   *   given it's assumed that the slot is single-valued and the index 0 gets
+   *   set.
+   * @param int $weight
+   *   (optional) A weight for ordering output slots. Defaults to 0.
+   *
+   * @return $this
+   */
+  public function setSlotFromRenderArray($key, array $build, $tag = 'div', $attributes = [], $index = NULL, $weight = 0) {
+    $markup = \Drupal::service('renderer')->renderPlain($build);
+    // Add cache metadata as needed from the cache metadata attached to the
+    // render array.
+    $this->addCacheableDependency(BubbleableMetadata::createFromRenderArray($build));
+    return $this->setSlot($key, $markup, $tag, $attributes, $index, $weight);
+  }
+
+  /**
    * Sets a value for the given slot.
    *
    * @param string $key
@@ -229,16 +262,10 @@ class CustomElement implements CacheableDependencyInterface {
       throw new \LogicException(sprintf('Tag %s is no-end tag and should not have a content.', $tag));
     }
 
-    // For BC support passing in render arrays as well.
-    // @TODO Fix all setSlot calls so that we don't have to handle render
-    // arrays and re-enable the following line:
-    // throw new \InvalidArgumentException('Setting slot value to an array is not supported. Provide a CustomElement, MarkupInterface or a markup string.');
+    // We do not support passing render arrays directly any more.
     if (is_array($value)) {
-      $render_value = \Drupal::service('renderer')->renderPlain($value);
-      // Add cache metadata as needed from the cache metadata attaced to the
-      // render array.
-      $this->addCacheableDependency(BubbleableMetadata::createFromRenderArray($value));
-      $value = $render_value;
+      trigger_error('Setting slot value to an array is not supported. Provide a CustomElement, MarkupInterface or a markup string. Treating content as a render array.', E_USER_DEPRECATED);
+      return $this->setSlotFromRenderArray($key, $value, $tag, $attributes, $index, $weight);
     }
 
     if (!isset($index)) {
@@ -459,6 +486,11 @@ class CustomElement implements CacheableDependencyInterface {
     }
 
     $key = $this->fixSlotKey($key);
+    // Normalize the wrapping element only when needed.
+    $this->setSlotNormalizationStyle($key, self::NORMALIZE_AS_SINGLE_VALUE);
+    if (!$attributes && ($tag == 'div' || $tag == 'span')) {
+      $this->setSlotNormalizationStyle($key, self::NORMALIZE_AS_SIMPLE_VALUE);
+    }
 
     $this->slots[$key][$index] = [
       'weight' => $weight,
