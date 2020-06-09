@@ -4,6 +4,7 @@ namespace Drupal\custom_elements;
 
 use Drupal\Component\Render\MarkupInterface;
 use Drupal\Component\Serialization\Json;
+use Drupal\Core\Render\BubbleableMetadata;
 use Drupal\Core\Template\Attribute;
 use \Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 
@@ -16,7 +17,8 @@ class CustomElementNormalizer implements NormalizerInterface {
    * @inheritDoc
    */
   public function normalize($object, $format = NULL, array $context = []) {
-    $result = $this->normalizeCustomElement($object);
+    $cache_metadata = isset($context['cache_metadata']) ? $context['cache_metadata'] : new BubbleableMetadata();
+    $result = $this->normalizeCustomElement($object, $cache_metadata);
     return $this->convertKeysToCamelCase($result);
   }
 
@@ -31,12 +33,15 @@ class CustomElementNormalizer implements NormalizerInterface {
    * Normalize custom element.
    *
    * @param \Drupal\custom_elements\CustomElement $element
+   *  The custom element.
+   * @param \Drupal\Core\Render\BubbleableMetadata $cache_metadata
+   *  The cache metadata.
    *
    * @return array
    */
-  protected function normalizeCustomElement(CustomElement $element) {
+  protected function normalizeCustomElement(CustomElement $element, BubbleableMetadata $cache_metadata) {
     $result = ['element' => $element->getPrefixedTag()];
-    $result = array_merge($result, $this->normalizeAttributes($element->getAttributes()));
+    $result = array_merge($result, $this->normalizeAttributes($element->getAttributes(), $cache_metadata));
 
     // Remove dumb default html wrapping elements.
     if ($result['element'] == 'div' || $result['element'] == 'span') {
@@ -50,7 +55,11 @@ class CustomElementNormalizer implements NormalizerInterface {
     }
     unset($result['view-mode']);
 
-    $normalized_slots = $this->normalizeSlots($element);
+    // Collect cache metadata. Since the cache metadata object is passed down
+    // to slots, custom elements of slots will add their metadata as well.
+    $cache_metadata->addCacheableDependency($element);
+
+    $normalized_slots = $this->normalizeSlots($element, $cache_metadata);
     $result = array_merge($result, $normalized_slots);
     return $result;
   }
@@ -59,10 +68,13 @@ class CustomElementNormalizer implements NormalizerInterface {
    * Normalize custom element attributes.
    *
    * @param array $attributes
+   *   The attributes.
+   * @param \Drupal\Core\Render\BubbleableMetadata $cache_metadata
+   *   The cache metadata.
    *
    * @return array
    */
-  protected function normalizeAttributes(array $attributes) {
+  protected function normalizeAttributes(array $attributes, BubbleableMetadata $cache_metadata) {
     $result = [];
     foreach ($attributes as $key => $value) {
       if ($key == 'slot') {
@@ -79,10 +91,12 @@ class CustomElementNormalizer implements NormalizerInterface {
    *
    * @param \Drupal\custom_elements\CustomElement $element
    *   The element for which to normalize slots.
+   * @param \Drupal\Core\Render\BubbleableMetadata $cache_metadata
+   *   The cache metadata.
    *
    * @return array
    */
-  protected function normalizeSlots(CustomElement $element) {
+  protected function normalizeSlots(CustomElement $element, BubbleableMetadata $cache_metadata) {
     $data = [];
     foreach ($element->getSortedSlotsByName() as $slot_key => $slot_entries) {
       $slot_data = [];
@@ -92,7 +106,7 @@ class CustomElementNormalizer implements NormalizerInterface {
 
         // Handle slots set via nested custom element and markup.
         if (!empty($slot['content']) && $slot['content'] instanceof CustomElement) {
-          $slot_data[$index] = $this->normalizeCustomElement($slot['content']);
+          $slot_data[$index] = $this->normalizeCustomElement($slot['content'], $cache_metadata);
         }
         elseif ($slot['content'] instanceof MarkupInterface) {
           $slot_data[$index]['content'] = (string) $slot['content'];
