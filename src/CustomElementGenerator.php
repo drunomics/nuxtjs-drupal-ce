@@ -114,11 +114,10 @@ class CustomElementGenerator {
     // Add the view mode.
     $custom_element->setAttribute('view-mode', $viewMode);
 
-    // Process and return.
+    // Allow altering the element for the given before and after.
+    $this->moduleHandler->alter('custom_element_entity_defaults', $custom_element, $entity, $viewMode);
     $this->process($entity, $custom_element, $viewMode);
-
-    // Allow altering the element for the given entity.
-    $this->moduleHandler->alter('custom_element_entity', $custom_element, $entity);
+    $this->moduleHandler->alter('custom_element_entity', $custom_element, $entity, $viewMode);
 
     return $custom_element;
   }
