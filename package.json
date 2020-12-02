@@ -1,8 +1,8 @@
 {
-  "name": "@nuxtjs/drupal-ce",
-  "version": "1.0.0",
-  "description": "Easily connect Nuxt.js to Drupal via custom elements.",
-  "repository": "drunomics/nuxt-drupal-ce",
+  "name": "nuxtjs-drupal-ce",
+  "version": "1.0.0-beta1",
+  "description": "A Nuxt.js module to easily connect Drupal via custom elements.",
+  "repository": "drunomics/nuxt-module-drupal-ce",
   "license": "MIT",
   "contributors": [
     {
