@@ -1,0 +1,43 @@
+{
+  "name": "@nuxtjs/drupal-ce",
+  "version": "1.0.0",
+  "description": "Easily connect Nuxt.js to Drupal via custom elements.",
+  "repository": "drunomics/nuxt-drupal-ce",
+  "license": "MIT",
+  "contributors": [
+    {
+      "name": "Wolfgang Ziegler // fago <fago@wolfgangziegler.net>"
+    }
+  ],
+  "files": [
+    "lib"
+  ],
+  "main": "lib/module.js",
+  "scripts": {
+    "dev": "nuxt example",
+    "lint": "eslint --ext .js,.vue .",
+    "release": "yarn test && standard-version && git push --follow-tags && npm publish",
+    "test": "yarn lint && jest"
+  },
+  "dependencies": {
+    "@nuxt/axios": "^5.12.2"
+  },
+  "devDependencies": {
+    "@babel/core": "latest",
+    "@babel/preset-env": "latest",
+    "@commitlint/cli": "latest",
+    "@commitlint/config-conventional": "latest",
+    "@nuxtjs/eslint-config": "latest",
+    "@nuxtjs/module-test-utils": "latest",
+    "babel-eslint": "latest",
+    "babel-jest": "latest",
+    "eslint": "latest",
+    "husky": "latest",
+    "jest": "latest",
+    "nuxt-edge": "latest",
+    "standard-version": "latest"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
