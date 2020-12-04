@@ -20,7 +20,7 @@
     "test": "yarn lint && jest"
   },
   "dependencies": {
-    "@nuxt/axios": "^5.12.2"
+    "@nuxtjs/axios": "^5.12.2"
   },
   "devDependencies": {
     "@babel/core": "latest",
