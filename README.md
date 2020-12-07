@@ -50,6 +50,9 @@ yarn add nuxtjs-drupal-ce # or npm install nuxtjs-drupal-ce
   
 - `addRequestContentFormat`: If specified, the given value is added as `_content_format`
   URL parameter to requests. Disabled by default.
+
+- `addVueCompiler`: If enabled, the Vue compiler is added to the runtime build. This
+  is necessary if you want to render custom elements markup on runtime. Defaults to `true`.
   
 - `axios`: Options to pass-through to the `drupal-ce`
   [axios](https://github.com/nuxt-community/axios-module) instance.
