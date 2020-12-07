@@ -64,7 +64,9 @@ yarn add nuxtjs-drupal-ce # or npm install nuxtjs-drupal-ce
 
 [MIT License](./LICENSE)
 
-Copyright (c) Wolfgang Ziegler // fago <fago@wolfgangziegler.net>
+## Credits
+
+Development sponsored by [drunomics](https://drunomics.com) <hello@drunomics.com>
 
 <!-- Badges -->
 [npm-version-src]: https://img.shields.io/npm/v/nuxtjs-drupal-ce/latest.svg
