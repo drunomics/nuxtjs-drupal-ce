@@ -58,6 +58,12 @@ You may also take a look at the [example project](https://github.com/drunomics/n
 - `addVueCompiler`: If enabled, the Vue compiler is added to the runtime build. This
   is necessary if you want to render custom elements markup on runtime. Defaults to `true`.
   
+- `useProxy`: If set to `dev-only` and nuxt is in dev-mode, the module automatically 
+  configures '/api' to the Drupal backend via 
+  [@nuxtjs/proxy](https://github.com/nuxt-community/proxy-module) and uses it instead of 
+  the Drupal backend when , such that there are no CORS issues. Other values supported are
+  `always` or false.
+
 - `axios`: Options to pass-through to the `drupal-ce`
   [axios](https://github.com/nuxt-community/axios-module) instance.
 
