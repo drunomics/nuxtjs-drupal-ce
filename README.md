@@ -37,6 +37,9 @@ yarn add nuxtjs-drupal-ce # or npm install nuxtjs-drupal-ce
   ]
 }
 ```
+3. Add the main page `_.vue` and some example components for getting started.
+   You can find those files in the [example project](https://github.com/drunomics/nuxt-drupal-ce-example).
+
 
 ## Options
 
