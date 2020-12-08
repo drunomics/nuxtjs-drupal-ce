@@ -59,9 +59,9 @@ You may also take a look at the [example project](https://github.com/drunomics/n
   is necessary if you want to render custom elements markup on runtime. Defaults to `true`.
   
 - `useProxy`: If set to `dev-only` and nuxt is in dev-mode, the module automatically 
-  configures '/api' to the Drupal backend via 
+  configures `/api` to the Drupal backend via 
   [@nuxtjs/proxy](https://github.com/nuxt-community/proxy-module) and uses it instead of 
-  the Drupal backend when , such that there are no CORS issues. Other values supported are
+  the Drupal backend, such that there are no CORS issues. Other values supported are
   `always` or false.
 
 - `axios`: Options to pass-through to the `drupal-ce`
