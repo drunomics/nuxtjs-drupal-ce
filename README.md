@@ -2,8 +2,6 @@
 
 [![npm version][npm-version-src]][npm-version-href]
 [![npm downloads][npm-downloads-src]][npm-downloads-href]
-[![Github Actions CI][github-actions-ci-src]][github-actions-ci-href]
-[![Codecov][codecov-src]][codecov-href]
 [![License][license-src]][license-href]
 
 > Easily connect Nuxt.js to Drupal via custom elements.
@@ -50,6 +48,9 @@ yarn add nuxtjs-drupal-ce # or npm install nuxtjs-drupal-ce
   
 - `addRequestContentFormat`: If specified, the given value is added as `_content_format`
   URL parameter to requests. Disabled by default.
+
+- `addVueCompiler`: If enabled, the Vue compiler is added to the runtime build. This
+  is necessary if you want to render custom elements markup on runtime. Defaults to `true`.
   
 - `axios`: Options to pass-through to the `drupal-ce`
   [axios](https://github.com/nuxt-community/axios-module) instance.
