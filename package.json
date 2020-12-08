@@ -5,7 +5,7 @@
   "repository": "drunomics/nuxt-module-drupal-ce",
   "license": "MIT",
   "bin": {
-    "nuxt-drupal-ce": "bin/nuxt-drupal-ce.js"
+    "nuxt-drupal-ce-init": "bin/nuxt-drupal-ce-init.js"
   },
   "contributors": [
     {
