@@ -1,4 +1,5 @@
 module.exports = {
+  preset: '@nuxt/test-utils',
   testEnvironment: 'node',
   collectCoverage: true,
   collectCoverageFrom: [

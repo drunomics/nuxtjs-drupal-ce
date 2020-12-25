@@ -1,10 +1,11 @@
 const { resolve } = require('path')
 
 module.exports = {
-  rootDir: resolve(__dirname, '..'),
-  buildDir: resolve(__dirname, '.nuxt'),
-  srcDir: __dirname,
+  components: true,
   modules: [
-    { handler: require('../') }
-  ]
+    resolve(__dirname, '..'),
+  ],
+  'nuxtjs-drupal-ce': {
+    baseURL: 'http://localhost:3000/test-api/'
+  }
 }
