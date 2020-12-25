@@ -1,0 +1,44 @@
+{
+  "title": "Example page",
+  "messages": [],
+  "breadcrumbs": [
+    {
+      "frontpage": true,
+      "url": "/",
+      "label": "Home"
+    }
+  ],
+  "metatags": {
+    "meta": [
+      {
+        "name": "title",
+        "content": "Example page | Drupal 9 Custom Elements Demo"
+      }
+    ],
+    "link": [
+      {
+        "rel": "canonical",
+        "href": "http://example.d9playground.localdev.space/test-api/example-page"
+      }
+    ]
+  },
+  "content_format": "markup",
+  "content": "\n<drupal-markup class=\"custom-element\">This is an example-page.</drupal-markup>\n",
+  "page": "layout--default",
+  "local_tasks": {
+    "primary": [
+      {
+        "url": "/node/1",
+        "label": "View",
+        "active": true
+      },
+      {
+        "url": "/node/1/edit",
+        "label": "Edit",
+        "active": false
+      }
+    ],
+    "secondary": []
+  }
+
+}

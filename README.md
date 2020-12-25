@@ -73,6 +73,10 @@ You may also take a look at the [example project](https://github.com/drunomics/n
 2. Install dependencies using `yarn install` or `npm install`
 3. Start development server using `npm run dev`
 
+## Testing
+
+1. Run `../bin/nuxt-drupal-ce-init.js` from the example folder.
+
 ## License
 
 [MIT License](./LICENSE)
