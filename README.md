@@ -75,7 +75,7 @@ You may also take a look at the [example project](https://github.com/drunomics/n
 
 ## Testing
 
-1. Run `../bin/nuxt-drupal-ce-init.js` from the example folder.
+Run `npm run test` or `yarn test`.
 
 ## License
 
