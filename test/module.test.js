@@ -19,7 +19,7 @@ describe('ssr-without-proxy', () => {
   })
 
   beforeAll(async () => {
-    const { stdout, stderr } = await exec("cd example && ../bin/nuxt-drupal-ce-init.js");
+    await exec('cd example && ../bin/nuxt-drupal-ce-init.js')
   }, 60000)
 
   test('should render example-page', async () => {

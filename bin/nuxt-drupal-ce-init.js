@@ -2,7 +2,7 @@
 
 const fs = require('fs')
 const path = require('path')
-const scaffoldDir = __dirname + '/../scaffold'
+const scaffoldDir = path.join(__dirname, '/../scaffold')
 const target = '.'
 
 function copyFile (source, target) {
@@ -10,9 +10,11 @@ function copyFile (source, target) {
 
   // If target is a directory, a new file with the same name will be created
   if (!fs.existsSync(targetFile)) {
+    // eslint-disable-next-line no-console
     console.log(targetFile + ' - Created.')
     fs.writeFileSync(targetFile, fs.readFileSync(source))
   } else {
+    // eslint-disable-next-line no-console
     console.log(targetFile + ' - Existing, skipped.')
   }
 }
