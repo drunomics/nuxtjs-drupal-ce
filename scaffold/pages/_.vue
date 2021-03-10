@@ -9,7 +9,14 @@
 
 export default {
   async asyncData ({ route, $drupal }) {
-    return { page: await $drupal.fetchPage(route.path) }
+    // Do not return the data here to avoid hydrating data twice. The drupal-ce module is taking care of it already.
+    await $drupal.fetchPage(route.path)
+    return { }
+  },
+  computed: {
+    page () {
+      return this.$drupal.$currentPage
+    }
   },
   head () {
     return {
