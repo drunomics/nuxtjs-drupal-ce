@@ -21,8 +21,8 @@ export default {
   head () {
     return {
       title: this.page.title,
-      meta: this.page.metadata.meta,
-      link: this.page.metadata.link
+      meta: this.page.metatags.meta,
+      link: this.page.metatags.link
     }
   }
 }
