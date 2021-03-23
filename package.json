@@ -9,7 +9,8 @@
   },
   "contributors": [
     {
-      "name": "Wolfgang Ziegler // fago <fago@wolfgangziegler.net>"
+      "name": "Wolfgang Ziegler // fago <fago@wolfgangziegler.net>",
+      "name": "Maximilian Götz-Mikus <max@goetz-mikus.com>"
     }
   ],
   "files": [
@@ -19,8 +20,8 @@
   "scripts": {
     "dev": "nuxt example",
     "lint": "eslint --ext .js,.vue .",
-    "release": "yarn test && standard-version && git push --follow-tags && npm publish",
-    "test": "yarn lint && jest"
+    "release": "npm run test && standard-version && git push --follow-tags && npm publish",
+    "test": "npm run lint && jest"
   },
   "dependencies": {
     "@nuxtjs/axios": "^5.12.2"
