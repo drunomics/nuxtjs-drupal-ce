@@ -1,0 +1,1 @@
+/* This file enables vuex in nuxt */
