@@ -1,7 +1,7 @@
 <template>
   <main role="main">
-    <drupal-tabs v-if="localTasks" :tabs="localTasks" />
-    <component :is="$drupal.contentComponent(content)" />
+    <drupal-tabs v-if="page.localTasks" :tabs="page.localTasks" />
+    <component :is="$drupal.contentComponent(page.content)" />
   </main>
 </template>
 
@@ -15,23 +15,18 @@ export default {
   },
   head () {
     return {
-      title: this.title,
-      meta: this.metadata.meta,
-      link: this.metadata.link,
+      title: this.page.title,
+      meta: this.page.metatags.meta,
+      link: this.page.metatags.link,
       script: [{
         vmid: 'ldjson-schema',
-        json: this.metadata.jsonld || [],
+        json: this.page.metatags.jsonld || [],
         type: 'application/ld+json'
       }]
     }
   },
   computed: {
-    ...mapState('drupalCe', [
-      'title',
-      'content',
-      'localTasks',
-      'metadata'
-    ])
+    ...mapState('drupalCe', ['page'])
   }
 }
 </script>
