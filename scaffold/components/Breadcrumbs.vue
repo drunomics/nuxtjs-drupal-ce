@@ -1,7 +1,7 @@
 <template>
   <div class="breadcrumbs">
     <span
-      v-for="(crumb, index) in $drupal.$currentPage.breadcrumbs"
+      v-for="(crumb, index) in page.breadcrumbs"
       :key="index"
       :url="crumb.url"
     >
@@ -21,6 +21,17 @@
     </span>
   </div>
 </template>
+
+<script>
+import { mapState } from 'vuex'
+
+export default {
+  name: 'Breadcrumbs',
+  computed: {
+    ...mapState('drupalCe', ['page'])
+  }
+}
+</script>
 
 <style lang="css" scoped>
   .breadcrumbs {
