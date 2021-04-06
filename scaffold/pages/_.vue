@@ -1,5 +1,6 @@
 <template>
   <main role="main">
+    <main-navigation />
     <drupal-tabs v-if="page.localTasks" :tabs="page.localTasks" />
     <component :is="$drupal.contentComponent(page.content)" />
   </main>

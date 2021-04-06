@@ -1,1 +1,5 @@
-/* This file enables vuex in nuxt */
+export const actions = {
+  async nuxtServerInit ({ dispatch }, context) {
+    await context.$drupal.fetchMenu('main')
+  }
+}
