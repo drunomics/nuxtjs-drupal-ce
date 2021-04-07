@@ -20,7 +20,7 @@
 import { mapState } from 'vuex'
 
 export default {
-  name: 'messages',
+  name: 'Messages',
   computed: {
     ...mapState('drupalCe', ['messages'])
   },
