@@ -28,6 +28,7 @@ describe('ssr-without-proxy', () => {
     expect(body).toContain('This is an example-page.')
     expect(body).toMatch(/<a .*href="\/node\/1".*>/)
     expect(body).not.toContain('<drupal-markup>')
+    expect(body).toContain('<meta data-n-head="ssr" name="title" content="Example page | Drupal 9 Custom Elements Demo" data-hid="name:title">')
     expect(body).toMatch(/<a .*href="\/channel-science".*>/)
   })
 })
