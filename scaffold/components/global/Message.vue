@@ -10,7 +10,7 @@
 
 <script>
 export default {
-  name: 'message',
+  name: 'Message',
   props: {
     type: {
       type: String,
