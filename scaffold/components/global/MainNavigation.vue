@@ -1,5 +1,5 @@
 <template>
-  <ul class="menu">
+  <ul class="main-menu">
     <li
       v-for="menuItem in menus.main"
       :key="menuItem.key"
@@ -32,7 +32,18 @@ export default {
 </script>
 
 <style lang="css" scoped>
-  .nuxt-link-active {
-    border-bottom: 2px solid #ddd;
-  }
+.main-menu {
+  display: flex;
+  list-style: none;
+}
+
+.item {
+  margin: 0 1rem;
+  text-decoration: none;
+  color: #222;
+}
+
+.nuxt-link-active {
+  border-bottom: 2px solid aquamarine;
+}
 </style>
