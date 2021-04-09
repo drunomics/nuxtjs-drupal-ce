@@ -1,6 +1,6 @@
 {
   "name": "nuxtjs-drupal-ce",
-  "version": "1.0.0-alpha6",
+  "version": "1.0.0-alpha7",
   "description": "A Nuxt.js module to easily connect Drupal via custom elements.",
   "repository": "drunomics/nuxt-module-drupal-ce",
   "license": "MIT",
@@ -9,7 +9,6 @@
   },
   "contributors": [
     {
-      "name": "Wolfgang Ziegler // fago <fago@wolfgangziegler.net>",
       "name": "Maximilian Götz-Mikus <max@goetz-mikus.com>"
     }
   ],
