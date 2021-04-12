@@ -24,8 +24,8 @@
 import { mapState } from 'vuex'
 
 export default {
-  name: 'MainNavigation',
   computed: {
+    // To initially populate the menu, un-comment the nuxtServerInit action in `store/init.js`.
     ...mapState('drupalCe', ['menus'])
   }
 }
