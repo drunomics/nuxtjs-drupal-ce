@@ -31,9 +31,11 @@ function syncDir (directory) {
 
 // Here we want to make sure our directories exist.
 fs.mkdirSync('./components/global', { recursive: true })
+fs.mkdirSync('./layouts', { recursive: true })
 fs.mkdirSync('./pages', { recursive: true })
 fs.mkdirSync('./store', { recursive: true })
 
+syncDir('layouts')
 syncDir('pages')
 syncDir('components')
 syncDir('store')
