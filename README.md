@@ -59,7 +59,12 @@ You may also take a look at the [example project](https://github.com/drunomics/n
 
 - `addVueCompiler`: If enabled, the Vue compiler is added to the runtime build. This
   is necessary if you want to render custom elements markup on runtime. Defaults to `true`.
-  
+
+- `menuEndpoint`: The menu endpoint pattern used for fetching menus. Defaults to 'api/menu_items/$$$NAME$$$' as fitting
+  to the API provided by the [Rest menu items](https://www.drupal.org/project/rest_menu_items) Drupal module.
+  `$$$NAME$$$` is replaced by the menu name being fetched. To enable menu fetching, un-comment the nuxtServerInit action
+  in `store/init.js`.
+
 - `useProxy`: If set to `dev-only` and nuxt is in dev-mode, the module automatically 
   configures `/api` to the Drupal backend via 
   [@nuxtjs/proxy](https://github.com/nuxt-community/proxy-module) and uses it instead of 
