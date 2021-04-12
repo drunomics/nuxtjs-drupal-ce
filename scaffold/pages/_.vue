@@ -1,6 +1,5 @@
 <template>
   <main role="main">
-    <main-navigation />
     <drupal-tabs v-if="page.localTasks" :tabs="page.localTasks" />
     <component :is="$drupal.contentComponent(page.content)" />
   </main>
@@ -11,7 +10,7 @@ import { mapState } from 'vuex'
 
 export default {
   async asyncData ({ route, $drupal }) {
-    // Fill the druaplCe store with data.
+    // Fill the drupal-ce store with data, but do not return the data here to avoid hydrating data twice.
     await $drupal.fetchPage(route.path)
   },
   head () {
