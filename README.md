@@ -1,4 +1,4 @@
-# nuxtjs-drupal-ce
+# nuxtjs-drupal-ce - Nuxt.js Drupal Custom Elements connector
 
 [![npm version][npm-version-src]][npm-version-href]
 [![npm downloads][npm-downloads-src]][npm-downloads-href]
