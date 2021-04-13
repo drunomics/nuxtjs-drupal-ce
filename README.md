@@ -8,6 +8,8 @@
 
 > Easily connect Nuxt.js to Drupal via custom elements.
 
+Please refer to https://stack.lupus.digital for more info.
+
 [📖 **Release Notes**](./CHANGELOG.md)
 
 ## Pre-requisites
@@ -44,7 +46,7 @@ yarn add nuxtjs-drupal-ce # or npm install nuxtjs-drupal-ce
 rm -f layouts/default.vue && $(npm bin)/nuxt-drupal-ce-init
 ```
 
-You may also take a look at the [example project](https://github.com/drunomics/nuxt-drupal-ce-example).
+You may also take a look at the [example project](https://github.com/drunomics/lupus-nuxtjs-drupal-stack-example).
 
 ## Options
 
