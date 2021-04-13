@@ -28,7 +28,7 @@ yarn add nuxtjs-drupal-ce # or npm install nuxtjs-drupal-ce
 
 ```js
 {
-  modules: [
+  buildModules: [
     // Simple usage
     'nuxtjs-drupal-ce',
 
