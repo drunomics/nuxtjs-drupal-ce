@@ -41,7 +41,7 @@ yarn add nuxtjs-drupal-ce # or npm install nuxtjs-drupal-ce
 ```
 3. Get started quickly by scaffolding initial files:
 ```bash
-$(npm bin)/nuxt-drupal-ce-init
+rm -f layouts/default.vue && $(npm bin)/nuxt-drupal-ce-init
 ```
 
 You may also take a look at the [example project](https://github.com/drunomics/nuxt-drupal-ce-example).

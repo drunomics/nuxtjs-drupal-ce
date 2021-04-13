@@ -3,6 +3,7 @@
     <header>
       <main-navigation />
     </header>
+    <messages />
     <breadcrumbs />
     <Nuxt />
   </div>
