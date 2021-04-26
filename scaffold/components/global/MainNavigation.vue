@@ -27,6 +27,12 @@ export default {
   computed: {
     // To initially populate the menu, un-comment the nuxtServerInit action in `store/init.js`.
     ...mapState('drupalCe', ['menus'])
+  },
+  mounted () {
+    // Fetch menu in SPA mode. Should be filled already in SSR mode, so this is a fallback.
+    if (!this.menus.main.length) {
+      this.$drupal.fetchMenu('main')
+    }
   }
 }
 </script>
