@@ -73,7 +73,7 @@ You may also take a look at the [example project](https://github.com/drunomics/l
   the Drupal backend, such that there are no CORS issues. Other values supported are
   `always` or false.
    Note: When using `always` the module must be added to the nuxt `modules` section instead
-   of the `buildModules` seciton.
+   of the `buildModules` section.
 
 - `axios`: Options to pass-through to the `drupal-ce`
   [axios](https://github.com/nuxt-community/axios-module) instance.
