@@ -1,0 +1,7 @@
+{
+  "redirect": {
+      "external": false,
+      "url": "/example-page",
+      "statusCode": 301
+  }
+}

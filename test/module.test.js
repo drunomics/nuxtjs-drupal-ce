@@ -61,3 +61,28 @@ describe('ssr-with-proxy', () => {
     expect(body).toMatch(/<a .*href="\/channel-science".*>/)
   })
 })
+
+describe('ssr-apply-redirect', () => {
+  setupTest({
+    testDir: __dirname,
+    fixture: '../example',
+    server: true,
+    config: {
+      'nuxtjs-drupal-ce': {
+        useProxy: false
+      }
+    }
+  })
+
+  beforeAll(async () => {
+    await exec('cd example && ../bin/nuxt-drupal-ce-init.js')
+  }, 60000)
+
+  test('redirects to example-page', async () => {
+    setupBaseURL()
+    const { statusCode } = await get('/example-redirect', { followRedirect: false })
+    expect(statusCode).toEqual(301)
+    const { body } = await get('/example-redirect')
+    expect(body).toContain('This is an example-page.')
+  })
+})
