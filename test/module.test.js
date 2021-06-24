@@ -3,7 +3,9 @@ const { exec } = require('child_process')
 
 const setupBaseURL = () => {
   const nuxt = getNuxt()
-  nuxt.options.publicRuntimeConfig['drupal-ce'].baseURL = url('/test-api')
+  nuxt.options.publicRuntimeConfig['drupal-ce'] = {
+    baseURL: url('/test-api')
+  }
 }
 
 describe('ssr-without-proxy', () => {

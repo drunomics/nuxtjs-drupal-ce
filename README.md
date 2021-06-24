@@ -50,8 +50,8 @@ You may also take a look at the [example project](https://github.com/drunomics/l
 
 ## Options
 
-- `baseURL`: The Drupal base URL. May be overridden by an environment variable
-  `DRUPAL_BASE_URL` if set. Defaults to http://localhost:8888'.
+- `baseURL`: The Drupal base URL. Defaults to the `DRUPAL_BASE_URL`
+   environment variable if provided, otherwise to `http://localhost:8888`.
 
 - `addRequestFormat`: If set to `true`, the `_format=custom_elements` URL parameter
   is added automatically to requests. Defaults to `true`. 
