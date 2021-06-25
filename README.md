@@ -1,4 +1,4 @@
-# nuxtjs-drupal-ce - Nuxt.js Drupal Custom Elements connector
+# nuxtjs-drupal-ce - Nuxt.js Drupal Custom Elements Connector
 
 [![npm version][npm-version-src]][npm-version-href]
 [![npm downloads][npm-downloads-src]][npm-downloads-href]
@@ -6,7 +6,7 @@
 [![codecov][codecov-src]][codecov-href]
 [![License][license-src]][license-href]
 
-> Connects Nuxt.js with Drupal via the [Custom Elements Renderer](https://www.drupal.org/project/lupus_ce_renderer) 
+> Connects Nuxt.js with Drupal via the [Lupus Custom Elements Renderer](https://www.drupal.org/project/lupus_ce_renderer) 
 
 Please refer to https://stack.lupus.digital for more info.
 
