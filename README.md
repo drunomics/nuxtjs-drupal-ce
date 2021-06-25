@@ -6,7 +6,7 @@
 [![codecov][codecov-src]][codecov-href]
 [![License][license-src]][license-href]
 
-> Easily connect Nuxt.js to Drupal via custom elements.
+> Connects Nuxt.js with Drupal via the [Custom Elements Renderer](https://www.drupal.org/project/lupus_ce_renderer) 
 
 Please refer to https://stack.lupus.digital for more info.
 
