@@ -5,7 +5,7 @@ module.exports = {
   modules: [
     resolve(__dirname, '..')
   ],
-  'nuxtjs-drupal-ce': {
+  'drupal-ce': {
     baseURL: 'http://localhost:3000/test-api/'
   }
 }

@@ -31,14 +31,12 @@ yarn add nuxtjs-drupal-ce # or npm install nuxtjs-drupal-ce
 ```js
 {
   buildModules: [
-    // Simple usage
     'nuxtjs-drupal-ce',
-
-    // With options
-    ['nuxtjs-drupal-ce', {
-      baseURL: 'https://your-drupal.example.com'
-    }]
-  ]
+  ],
+  'drupal-ce', {
+    baseURL: 'https://your-drupal.example.com',
+    // more options...
+  }
 }
 ```
 3. Get started quickly by scaffolding initial files:
