@@ -30,14 +30,14 @@
     "test": "npm run lint && jest"
   },
   "dependencies": {
-    "@nuxtjs/axios": "^5.12.2"
+    "@nuxtjs/axios": "^5.13.6"
   },
   "devDependencies": {
     "@babel/core": "latest",
     "@babel/preset-env": "latest",
     "@commitlint/cli": "latest",
     "@commitlint/config-conventional": "latest",
-    "@nuxt/test-utils": "^0.1.2",
+    "@nuxt/test-utils": "^0.2.2",
     "@nuxtjs/eslint-config": "latest",
     "babel-eslint": "latest",
     "babel-jest": "latest",
