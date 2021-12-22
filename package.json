@@ -1,6 +1,6 @@
 {
   "name": "nuxtjs-drupal-ce",
-  "version": "1.0.0-beta10",
+  "version": "1.0.0-beta11",
   "description": "A Nuxt.js module to easily connect Drupal via custom elements.",
   "repository": "drunomics/nuxtjs-drupal-ce",
   "license": "MIT",
@@ -22,7 +22,7 @@
     "lib",
     "scaffold"
   ],
-  "main": "lib/module.js",
+  "main": "lib/module.mjs",
   "scripts": {
     "dev": "nuxt example",
     "lint": "eslint --ext .js,.vue .",
@@ -30,7 +30,7 @@
     "test": "npm run lint && jest"
   },
   "dependencies": {
-    "@nuxtjs/axios": "^5.12.2"
+    "@nuxtjs/axios": "^5.13.6"
   },
   "devDependencies": {
     "@babel/core": "latest",
