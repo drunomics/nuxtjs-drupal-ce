@@ -21,7 +21,7 @@ describe('ssr-without-proxy', () => {
   })
 
   beforeAll(async () => {
-    await exec('cd example && ../bin/nuxt-drupal-ce-init.mjs')
+    await exec('cd example && ../bin/nuxt-drupal-ce-init.js')
   }, 60000)
 
   test('should render example-page', async () => {
@@ -48,7 +48,7 @@ describe('ssr-with-proxy', () => {
   })
 
   beforeAll(async () => {
-    await exec('cd example && ../bin/nuxt-drupal-ce-init.mjs')
+    await exec('cd example && ../bin/nuxt-drupal-ce-init.js')
   }, 60000)
 
   test('should render example-page', async () => {
@@ -75,7 +75,7 @@ describe('ssr-apply-redirect', () => {
   })
 
   beforeAll(async () => {
-    await exec('cd example && ../bin/nuxt-drupal-ce-init.mjs')
+    await exec('cd example && ../bin/nuxt-drupal-ce-init.js')
   }, 60000)
 
   test('redirects to example-page', async () => {
