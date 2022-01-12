@@ -13,6 +13,6 @@ module.exports = {
     '^@/(.*)$': '<rootDir>/lib/$1'
   },
   transform: {
-    '^.+\\.js$': 'babel-jest'
+    '^.+\\.m|js$': 'babel-jest'
   }
 }
