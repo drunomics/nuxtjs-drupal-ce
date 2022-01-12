@@ -1,6 +1,6 @@
-const { resolve } = require('path')
+import { resolve } from 'path'
 
-module.exports = {
+export default {
   components: true,
   modules: [
     resolve(__dirname, '..')
