@@ -76,6 +76,8 @@ You may also take a look at the [example project](https://github.com/drunomics/l
 - `axios`: Options to pass-through to the `drupal-ce`
   [axios](https://github.com/nuxt-community/axios-module) instance.
 
+- `customErrorPages`: If enabled, Drupal error pages will trigger nuxt error pages. Defaults to `false`.
+
 ## Development
 
 1. Clone this repository
