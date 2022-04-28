@@ -76,7 +76,9 @@ You may also take a look at the [example project](https://github.com/drunomics/l
 - `axios`: Options to pass-through to the `drupal-ce`
   [axios](https://github.com/nuxt-community/axios-module) instance.
 
-- `customErrorPages`: If enabled, Drupal error pages will trigger nuxt error pages. Defaults to `false`.
+- `customErrorPages`: By default, error pages provided by Drupal (e.g. 403, 404 page) are shown,
+   while keeping the right status code. By enabling customErrorPages, the regular Nuxt error
+   pages are shown instead, such that the pages can be customized with Nuxt. Defaults to `false`.
 
 ## Development
 
