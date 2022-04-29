@@ -76,6 +76,14 @@ You may also take a look at the [example project](https://github.com/drunomics/l
 - `axios`: Options to pass-through to the `drupal-ce`
   [axios](https://github.com/nuxt-community/axios-module) instance.
 
+## Filter for special characters
+
+To solve an issue with some HTML characters not getting decoded properly due to a bug in Vue 2 renderer, we introduced a Vue filter to solve that issue.
+
+### Usage:
+
+`{{ teaser | decodeSpecialChars }}`
+
 ## Development
 
 1. Clone this repository
