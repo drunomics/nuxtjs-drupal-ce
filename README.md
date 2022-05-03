@@ -81,13 +81,24 @@ You may also take a look at the [example project](https://github.com/drunomics/l
    pages are shown instead, such that the pages can be customized with Nuxt. Defaults to `false`.
 
 
-## Filter for special characters
+## Known issues
 
-To solve an issue with some HTML characters not getting decoded properly due to a bug in Vue 2 renderer, we introduced a Vue filter to solve that issue.
+### Decoding HTML entities in plain-text strings
 
-### Usage:
+Vue2 has [known problem](https://github.com/vuejs/vue/issues/8805) when decoding HTML entities
+of plain-text strings that are delivered as custom element attributes. While it correctly decodes
+some HTML-encoded characters, it does not handle all of them.
 
-`{{ teaser | decodeSpecialChars }}`
+The problem has been fixed in Vue3.
+
+#### Filter "decodeSpecialChars"
+
+For Vue2, this nuxt-module provides a Vue filter that can be used to work-a-round the issue.
+Consider "teaser-text" being a prop containing a plain-text string. In that case, it's
+recommended to use the provided filter:
+
+   `{{ teaserText | decodeSpecialChars }}`
+
 
 ## Development
 
