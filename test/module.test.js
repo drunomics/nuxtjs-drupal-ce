@@ -1,6 +1,8 @@
 import { setupTest, get, getNuxt, url } from '@nuxt/test-utils'
 const { exec } = require('child_process')
 
+const initDelay = 40000
+
 const setupBaseURL = () => {
   const nuxt = getNuxt()
   nuxt.options.publicRuntimeConfig['drupal-ce'] = {
@@ -22,7 +24,7 @@ describe('ssr-without-proxy', () => {
 
   beforeAll(async () => {
     await exec('cd example && ../bin/nuxt-drupal-ce-init.js')
-  }, 60000)
+  }, initDelay)
 
   test('should render example-page', async () => {
     setupBaseURL()
@@ -49,7 +51,7 @@ describe('ssr-with-proxy', () => {
 
   beforeAll(async () => {
     await exec('cd example && ../bin/nuxt-drupal-ce-init.js')
-  }, 60000)
+  }, initDelay)
 
   test('should render example-page', async () => {
     setupBaseURL()
@@ -76,7 +78,7 @@ describe('ssr-apply-redirect', () => {
 
   beforeAll(async () => {
     await exec('cd example && ../bin/nuxt-drupal-ce-init.js')
-  }, 60000)
+  }, initDelay)
 
   test('redirects to example-page', async () => {
     setupBaseURL()
@@ -84,5 +86,26 @@ describe('ssr-apply-redirect', () => {
     expect(statusCode).toEqual(301)
     const { body } = await get('/example-redirect')
     expect(body).toContain('This is an example-page.')
+  })
+})
+
+describe('rendering-special-chars', () => {
+  setupTest({
+    testDir: __dirname,
+    fixture: '../example',
+    server: true
+  })
+
+  beforeAll(() => {
+    exec('cd example && ../bin/nuxt-drupal-ce-init.js')
+  }, initDelay)
+
+  it('renders HTML special chars correctly', async () => {
+    setupBaseURL()
+    const { body } = await get('/example-teasers')
+    const title = body.match(/<h3>([^<]*)<\/h3>/)[1]
+    const excerpt = body.match(/<p>([^<]*)<\/p>/)[1]
+    expect(title).toMatch("It's a great day! &lt;1000€&gt;")
+    expect(excerpt).not.toMatch('&#10;')
   })
 })

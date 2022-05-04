@@ -1,0 +1,43 @@
+{
+  "title": "Example teasers",
+  "messages": [],
+  "breadcrumbs": [
+    {
+      "frontpage": true,
+      "url": "/",
+      "label": "Home"
+    }
+  ],
+  "metatags": {
+    "meta": [
+      {
+        "name": "title",
+        "content": "Example page | Drupal 9 Custom Elements Demo"
+      }
+    ],
+    "link": [
+      {
+        "rel": "canonical",
+        "href": "http://example.d9playground.localdev.space/test-api/example-page"
+      }
+    ]
+  },
+  "content_format": "markup",
+  "content": "\n<node title=\"Testing encoding\"><teaser title=\"It&#39;s a great day! &#60;1000&#8364;&#62;\" excerpt=\"Dies ist der Teasertext zum Teaser. Der kann auch sehr lange sein. Stell dir vor.  Sollte man so lange schreiben? Dies ist der Teasertext zum Teaser. &#10;Der kann auch sehr lange sein. Stell dir vor.\"></teaser></template></node>\n",
+  "page": "layout--default",
+  "local_tasks": {
+    "primary": [
+      {
+        "url": "/node/1",
+        "label": "View",
+        "active": true
+      },
+      {
+        "url": "/node/1/edit",
+        "label": "Edit",
+        "active": false
+      }
+    ],
+    "secondary": []
+  }
+}

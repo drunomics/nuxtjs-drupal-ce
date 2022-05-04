@@ -80,6 +80,26 @@ You may also take a look at the [example project](https://github.com/drunomics/l
    while keeping the right status code. By enabling customErrorPages, the regular Nuxt error
    pages are shown instead, such that the pages can be customized with Nuxt. Defaults to `false`.
 
+
+## Known issues
+
+### Decoding HTML entities in plain-text strings
+
+Vue2 has [known problem](https://github.com/vuejs/vue/issues/8805) when decoding HTML entities
+of plain-text strings that are delivered as custom element attributes. While it correctly decodes
+some HTML-encoded characters, it does not handle all of them.
+
+The problem has been fixed in Vue3.
+
+#### Filter "decodeSpecialChars"
+
+For Vue2, this nuxt-module provides a Vue filter that can be used to work-a-round the issue.
+Consider "teaser-text" being a prop containing a plain-text string. In that case, it's
+recommended to use the provided filter:
+
+   `{{ teaserText | decodeSpecialChars }}`
+
+
 ## Development
 
 1. Clone this repository
