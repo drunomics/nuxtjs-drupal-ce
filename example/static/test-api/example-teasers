@@ -1,5 +1,5 @@
 {
-  "title": "Example page",
+  "title": "Example teasers",
   "messages": [],
   "breadcrumbs": [
     {
@@ -23,7 +23,7 @@
     ]
   },
   "content_format": "markup",
-  "content": "\n<node title=\"Testing encoding\"><teaser-wide href=\"example-page\" kicker=\"Rubrik\" title=\"It&#39;s a great day! &#60;1000&#8364;&#62;\" publishedAt=\"12.03.2021\" author=\"Maxim Jovanowsky\"  excerpt=\"Dies ist der Teasertext zum Teaser. Der kann auch sehr lange sein. Stell dir vor. Appetizer Text von Poesie her. Sollte man so lange schreiben? Dies ist der Teasertext zum Teaser. Der kann auch sehr lange sein. Stell dir vor. Appetizer Text von Poesie her. Sollte man so lange schreiben?\" :image=\"{\u0026quot;aspect-ratio\u0026quot;:133,\u0026quot;src\u0026quot;:\u0026quot;http://placeimg.com/230/170/tech\u0026quot;,\u0026quot;tiny_image\u0026quot;:\u0026quot;data:image\\/jpg;base64,\\/9j\\/4AAQSkZJRgABAQEAYABgAAD\\/\\/gA7Q1JFQVRPUjogZ2QtanBlZyB2MS4wICh1c2luZyBJSkcgSlBFRyB2ODApLCBxdWFsaXR5ID0gNzUK\\/9sAQwADAgIDAgIDAwMDBAMDBAUIBQUEBAUKBwcGCAwKDAwLCgsLDQ4SEA0OEQ4LCxAWEBETFBUVFQwPFxgWFBgSFBUU\\/9sAQwEDBAQFBAUJBQUJFA0LDRQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQU\\/8AAEQgAAQABAwEiAAIRAQMRAf\\/EABUAAQEAAAAAAAAAAAAAAAAAAAAF\\/8QAFBABAAAAAAAAAAAAAAAAAAAAAP\\/EABUBAQEAAAAAAAAAAAAAAAAAAAME\\/8QAFBEBAAAAAAAAAAAAAAAAAAAAAP\\/aAAwDAQACEQMRAD8AtgFSP\\/\\/Z\u0026quot;,\u0026quot;srcset\u0026quot;:null,\u0026quot;alt\u0026quot;:null,\u0026quot;title\u0026quot;:\u0026quot;Image title\u0026quot;}\"></teaser-wide></template></node>\n",
+  "content": "\n<node title=\"Testing encoding\"><teaser title=\"It&#39;s a great day! &#60;1000&#8364;&#62;\" excerpt=\"Dies ist der Teasertext zum Teaser. Der kann auch sehr lange sein. Stell dir vor.  Sollte man so lange schreiben? Dies ist der Teasertext zum Teaser. &#10;Der kann auch sehr lange sein. Stell dir vor.\"></teaser></template></node>\n",
   "page": "layout--default",
   "local_tasks": {
     "primary": [
@@ -40,5 +40,4 @@
     ],
     "secondary": []
   }
-
 }
