@@ -2,7 +2,7 @@
 
 ## 1.0.0-beta3
 
- * bug: #23 npm package does not contain shaffold files
+ * bug: #23 npm package does not contain scaffold files
 
 ## 1.0.0-beta2
 
