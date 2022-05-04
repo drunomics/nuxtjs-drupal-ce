@@ -16,7 +16,7 @@ jobs:
       matrix:
         # Todo: Fix tests on windows and re-enable.
         os: [ubuntu-latest, macos-latest]
-        node: [12, 14]
+        node: [14, 16]
 
     steps:
       - uses: actions/setup-node@v3
