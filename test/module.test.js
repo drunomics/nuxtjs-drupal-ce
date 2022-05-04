@@ -103,8 +103,8 @@ describe('rendering-special-chars', () => {
   it('renders HTML special chars correctly', async () => {
     setupBaseURL()
     const { body } = await get('/example-teasers')
-    const title = (body.match(/<h3>([^<]*)<\/h3>/) || [])[1]
-    const excerpt = (body.match(/<p>([^<]*)<\/p>/) || [])[1]
+    const title = body.match(/<h3>([^<]*)<\/h3>/)[1]
+    const excerpt = body.match(/<p>([^<]*)<\/p>/)[1]
     expect(title).toMatch("It's a great day! &lt;1000€&gt;")
     expect(excerpt).not.toMatch('&#10;')
   })

@@ -1,8 +1,8 @@
 <template>
   <div :data-id="$options.name">
-    <h2>
+    <h3>
       {{ title | decodeSpecialChars }}
-    </h2>
+    </h3>
     <p>
       {{ excerpt | decodeSpecialChars }}
     </p>
