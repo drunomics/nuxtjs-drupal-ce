@@ -82,7 +82,8 @@ You may also take a look at the [example project](https://github.com/drunomics/l
 
 - `pageErrorHandler`: The default page error handler can be overridden. Example:
   ```javascript
-  pageErrorHandler ({ error, commit, context, options }) {
+  pageErrorHandler (...args) {
+    const [context, error] = args // Available arguments: error, commit, context, options
     context.error({
       statusCode: 400,
       message: error.message
@@ -92,7 +93,8 @@ You may also take a look at the [example project](https://github.com/drunomics/l
 
 - `menuErrorHandler`: The default menu error handler can be overridden. Example:
   ```javascript
-  menuErrorHandler ({ error, commit, context, options }) {
+  menuErrorHandler (...args) {
+    const [error, commit] = args // Available arguments: error, commit, context, options
     commit('addMessage', {
       type: 'error',
       message: `Custom Menu error: ${error.message}.`
