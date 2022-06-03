@@ -80,6 +80,26 @@ You may also take a look at the [example project](https://github.com/drunomics/l
    while keeping the right status code. By enabling customErrorPages, the regular Nuxt error
    pages are shown instead, such that the pages can be customized with Nuxt. Defaults to `false`.
 
+- `pageErrorHandler`: The default page error handler can be overridden. Example:
+  ```javascript
+  pageErrorHandler ({ context, error }) {
+    context.error({
+      statusCode: error.response.status,
+      message: error.message
+    })
+  }
+  ```
+
+- `menuErrorHandler`: The default menu error handler can be overridden. Example:
+  ```javascript
+  menuErrorHandler ({ commit, error }) {
+    commit('addMessage', {
+      type: 'error',
+      message: `Custom menu error: ${error.message}.`
+    })
+  }
+  ```
+
 
 ## Known issues
 
