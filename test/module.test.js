@@ -10,6 +10,10 @@ const setupBaseURL = () => {
   }
 }
 
+beforeAll(async () => {
+  await exec('cd example && ../bin/nuxt-drupal-ce-init.js')
+}, initDelay)
+
 describe('ssr-without-proxy', () => {
   setupTest({
     testDir: __dirname,
@@ -21,10 +25,6 @@ describe('ssr-without-proxy', () => {
       }
     }
   })
-
-  beforeAll(async () => {
-    await exec('cd example && ../bin/nuxt-drupal-ce-init.js')
-  }, initDelay)
 
   test('should render example-page', async () => {
     setupBaseURL()
@@ -49,10 +49,6 @@ describe('ssr-with-proxy', () => {
     }
   })
 
-  beforeAll(async () => {
-    await exec('cd example && ../bin/nuxt-drupal-ce-init.js')
-  }, initDelay)
-
   test('should render example-page', async () => {
     setupBaseURL()
     const { body } = await get('/example-page')
@@ -76,10 +72,6 @@ describe('ssr-apply-redirect', () => {
     }
   })
 
-  beforeAll(async () => {
-    await exec('cd example && ../bin/nuxt-drupal-ce-init.js')
-  }, initDelay)
-
   test('redirects to example-page', async () => {
     setupBaseURL()
     const { statusCode } = await get('/example-redirect', { followRedirect: false })
@@ -95,10 +87,6 @@ describe('rendering-special-chars', () => {
     fixture: '../example',
     server: true
   })
-
-  beforeAll(() => {
-    exec('cd example && ../bin/nuxt-drupal-ce-init.js')
-  }, initDelay)
 
   it('renders HTML special chars correctly', async () => {
     setupBaseURL()

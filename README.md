@@ -92,7 +92,7 @@ You may also take a look at the [example project](https://github.com/drunomics/l
 
 - `menuErrorHandler`: The default menu error handler can be overridden. Example:
   ```javascript
-  menuErrorHandler { commit, error }) {
+  menuErrorHandler ({ commit, error }) {
     commit('addMessage', {
       type: 'error',
       message: `Custom menu error: ${error.message}.`
