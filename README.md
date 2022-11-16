@@ -65,6 +65,8 @@ You may also take a look at the [example project](https://github.com/drunomics/l
   `$$$NAME$$$` is replaced by the menu name being fetched. To enable menu fetching, un-comment the nuxtServerInit action
   in `store/init.js`.
 
+- `useLocalizedMenuEndpoint`: If enabled, the menu endpoint will use a language prefix as configured by [nuxtjs/i18n](https://i18n.nuxtjs.org) module. Defaults to `true`.
+
 - `useProxy`: If set to `dev-only` and nuxt is in dev-mode, the module automatically 
   configures `/api` to the Drupal backend via 
   [@nuxtjs/proxy](https://github.com/nuxt-community/proxy-module) and uses it instead of 
