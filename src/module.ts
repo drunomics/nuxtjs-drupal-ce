@@ -1,8 +1,9 @@
 import { fileURLToPath } from 'url'
-import { defineNuxtModule, addPlugin, createResolver } from '@nuxt/kit'
+import { defineNuxtModule, addPlugin, createResolver, addImportsDir } from '@nuxt/kit'
 
 export interface ModuleOptions {
-  addPlugin: boolean
+  baseURL: string,
+  menuEndpoint: string,
 }
 
 export default defineNuxtModule<ModuleOptions>({
@@ -11,14 +12,18 @@ export default defineNuxtModule<ModuleOptions>({
     configKey: 'drupalCe'
   },
   defaults: {
-    addPlugin: true
+    baseURL: 'https://8080-shaal-drupalpod-xxxxxxxxxxx.ws-xxxx.gitpod.io/ce-api',
+    menuEndpoint: 'api/menu_items/$$$NAME$$$'
   },
   setup (options, nuxt) {
-    if (options.addPlugin) {
-      const { resolve } = createResolver(import.meta.url)
-      const runtimeDir = fileURLToPath(new URL('./runtime', import.meta.url))
-      nuxt.options.build.transpile.push(runtimeDir)
-      addPlugin(resolve(runtimeDir, 'plugin'))
+    const { resolve } = createResolver(import.meta.url)
+    const runtimeDir = fileURLToPath(new URL('./runtime', import.meta.url))
+    nuxt.options.build.transpile.push(runtimeDir)
+    addPlugin(resolve(runtimeDir, 'plugin'))
+    addImportsDir(resolve(runtimeDir, 'composables'))
+    nuxt.options.runtimeConfig.public.drupalCe = {
+      baseURL: options.baseURL,
+      menuEndpoint: options.menuEndpoint
     }
   }
 })

@@ -1,0 +1,45 @@
+<template>
+  <ul class="main-menu">
+    <li
+      v-for="menuItem in mainMenu"
+      :key="menuItem.key"
+    >
+      <nuxt-link
+        v-if="!menuItem.external"
+        class="item"
+        :to="'/' + menuItem.alias"
+      >
+        {{ menuItem.title }}
+      </nuxt-link>
+      <a
+        v-else
+        class="item"
+        :href="menuItem.absolute"
+        v-text="menuItem.title"
+      />
+    </li>
+  </ul>
+</template>
+
+<script lang="ts" setup>
+import { useDrupalCeFetchMenu } from '#imports'
+
+const mainMenu = await useDrupalCeFetchMenu('main')
+</script>
+
+<style lang="css" scoped>
+.main-menu {
+  display: flex;
+  list-style: none;
+}
+
+.item {
+  margin: 0 1rem;
+  text-decoration: none;
+  color: #222;
+}
+
+.router-link-active {
+  border-bottom: 2px solid aquamarine;
+}
+</style>

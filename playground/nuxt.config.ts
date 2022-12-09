@@ -6,6 +6,5 @@ export default defineNuxtConfig({
     DrupalCe
   ],
   drupalCe: {
-    addPlugin: true
   }
 })

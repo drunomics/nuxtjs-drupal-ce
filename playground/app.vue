@@ -1,8 +1,6 @@
 <template>
   <div>
-    Nuxt module playground!
+    <MainNavigation />
+    <NuxtPage />
   </div>
 </template>
-
-<script setup>
-</script>
