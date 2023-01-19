@@ -6,5 +6,6 @@ export default defineNuxtConfig({
     DrupalCe
   ],
   drupalCe: {
+    baseURL: 'https://8080-drunomics-lupusdecouple-xxxxxxxxxx.ws-euxx.gitpod.io/ce-api'
   }
 })
