@@ -4,7 +4,8 @@ import {
   resolveComponent,
   createError,
   useFetch,
-  navigateTo
+  navigateTo,
+  useState
 } from '#imports'
 
 export const useDrupalCeFetchPage = async (path: string) => {
@@ -31,7 +32,13 @@ export const useDrupalCeFetchPage = async (path: string) => {
     throw createError({ statusCode: error.value.status, statusMessage: error.value.message, fatal: true })
   }
 
-  return error.value ? error.value?.data : page
+  if (error.value) {
+    page.value = error.value?.data
+  }
+
+  page.value?.messages && pushMessagesToState(page.value.messages)
+
+  return page
 }
 
 export const useDrupalCeFetchMenu = async (name: string) => {
@@ -40,14 +47,40 @@ export const useDrupalCeFetchMenu = async (name: string) => {
   const menuEndpoint = config.public.drupalCe.menuEndpoint
   const menuPath = menuEndpoint.replace('$$$NAME$$$', name)
 
-  const { data: menu } = await useFetch(menuPath, {
+  const { data: menu, error } = await useFetch(menuPath, {
     key: `menu-${name}`,
     baseURL
   })
 
+  if (error.value) {
+    errorMenuHandler(error)
+    return
+  }
+
   return menu
 }
 
+export const useDrupalCeMessages = () => useState('drupal-ce-messages', () => [])
+
 export const useDrupalCeRenderCustomElements = (customElement) => {
   return h(resolveComponent(customElement.element), customElement)
+}
+
+const pushMessagesToState = (messages) => {
+  messages = Object.assign({ success: [], error: [] }, messages)
+  const messagesArray = [
+    ...messages.error.map(message => ({ type: 'error', message })),
+    ...messages.success.map(message => ({ type: 'success', message }))
+  ]
+  if (!messagesArray.length) {
+    return
+  }
+  process.client && useDrupalCeMessages().value.push(...messagesArray)
+}
+
+const errorMenuHandler = (error) => {
+  process.client && useDrupalCeMessages().value.push({
+    type: 'error',
+    message: `Menu error: ${error.value.message}.`
+  })
 }

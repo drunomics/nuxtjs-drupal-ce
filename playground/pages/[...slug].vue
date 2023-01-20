@@ -11,8 +11,11 @@ import {
   useRoute,
   useDrupalCeRenderCustomElements,
   useState,
+  useDrupalCeMessages
 } from '#imports'
 
 const page = await useDrupalCeFetchPage(useRoute().path)
 useState(`page-${useRoute().path}`, () => page)
+
+const messages = useDrupalCeMessages()
 </script>
