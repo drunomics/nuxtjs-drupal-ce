@@ -1,7 +1,8 @@
 <template>
   <div>
     <MainNavigation />
-    <component :is="useDrupalCeRenderCustomElements(page.content)" v-if="page && page.content" />
+    <Breadcrumbs />
+    <component :is="useDrupalCeRenderCustomElements(page.content)" />
   </div>
 </template>
 

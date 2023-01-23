@@ -1,11 +1,11 @@
-import { h } from 'vue'
 import {
   useRuntimeConfig,
   resolveComponent,
   createError,
   useFetch,
   navigateTo,
-  useState
+  useState,
+  h
 } from '#imports'
 
 export const useDrupalCeFetchPage = async (path: string) => {

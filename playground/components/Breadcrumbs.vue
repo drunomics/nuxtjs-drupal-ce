@@ -1,5 +1,5 @@
 <template>
-  <div class="breadcrumbs" v-if="page">
+  <div class="breadcrumbs">
     <span
       v-for="(crumb, index) in page.breadcrumbs"
       :key="index"
