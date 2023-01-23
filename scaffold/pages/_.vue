@@ -11,7 +11,7 @@ import { mapState } from 'vuex'
 export default {
   async asyncData ({ route, $drupal }) {
     // Fill the drupal-ce store with data, but do not return the data here to avoid hydrating data twice.
-    await $drupal.fetchPage(route.path)
+    await $drupal.fetchPage(route.path, { params: route.query })
   },
   head () {
     return {
