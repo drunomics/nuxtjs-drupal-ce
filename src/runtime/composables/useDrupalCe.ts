@@ -1,14 +1,13 @@
-export const useDrupalCeFetchPage = async (path: string) => {
+export const useDrupalCeFetchPage = async (path: string, useFetchOptions = {}) => {
   const config = useRuntimeConfig()
   const baseURL = config.public.drupalCe.baseURL
 
-  const { data: page, error } = await useFetch(path, {
-    key: `page-${path}`,
-    baseURL,
-    query: {
-      _content_format: 'json'
-    }
-  })
+  useFetchOptions.query = useFetchOptions.query ?? {}
+  useFetchOptions.query._content_format = useFetchOptions.query._content_format ?? 'json'
+  useFetchOptions.key = `page-${path}`
+  useFetchOptions.baseURL = baseURL
+
+  const { data: page, error } = await useFetch(path, useFetchOptions)
 
   if (page?.value?.redirect) {
     await navigateTo(page.value.redirect.url, {

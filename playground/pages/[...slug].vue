@@ -7,7 +7,7 @@
 </template>
 
 <script lang="ts" setup>
-const page = await useDrupalCeFetchPage(useRoute().path)
+const page = await useDrupalCeFetchPage(useRoute().path, { query: useRoute().query })
 useState(`page-${useRoute().path}`, () => page)
 
 const messages = useDrupalCeMessages()
