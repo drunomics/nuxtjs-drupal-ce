@@ -1,13 +1,3 @@
-import {
-  useRuntimeConfig,
-  resolveComponent,
-  createError,
-  useFetch,
-  navigateTo,
-  useState,
-  h
-} from '#imports'
-
 export const useDrupalCeFetchPage = async (path: string) => {
   const config = useRuntimeConfig()
   const baseURL = config.public.drupalCe.baseURL

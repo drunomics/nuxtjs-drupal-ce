@@ -23,8 +23,6 @@
 </template>
 
 <script setup>
-import { useRoute, useState } from '#imports'
-
 const page = useState(`page-${useRoute().path}`)
 </script>
 

@@ -22,8 +22,6 @@
 </template>
 
 <script lang="ts" setup>
-import { useDrupalCeFetchMenu } from '#imports'
-
 const mainMenu = await useDrupalCeFetchMenu('main')
 </script>
 
