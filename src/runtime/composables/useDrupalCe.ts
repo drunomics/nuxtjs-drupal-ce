@@ -1,3 +1,8 @@
+/**
+ * Fetches page data from Drupal, handles redirects, errors and messages
+ * @param path Path of the Drupal page to fetch
+ * @param useFetchOptions Optional Nuxt useFetch options
+ */
 export const useDrupalCeFetchPage = async (path: string, useFetchOptions = {}) => {
   const config = useRuntimeConfig()
   const baseURL = config.public.drupalCe.baseURL
@@ -30,6 +35,10 @@ export const useDrupalCeFetchPage = async (path: string, useFetchOptions = {}) =
   return page
 }
 
+/**
+ * Fetches menu data from Drupal, handles errors
+ * @param name Menu name being fetched
+ */
 export const useDrupalCeFetchMenu = async (name: string) => {
   const config = useRuntimeConfig()
   const baseURL = config.public.drupalCe.baseURL
@@ -49,10 +58,20 @@ export const useDrupalCeFetchMenu = async (name: string) => {
   return menu
 }
 
+/**
+ * Use messages state
+ */
 export const useDrupalCeMessages = () => useState('drupal-ce-messages', () => [])
 
+/**
+ * Use page data
+ */
 export const useDrupalCePage = () => useState(`page-${useRoute().path}`)
 
+/**
+ * Render elements from page data returned from useDrupalCeFetchPage
+ * @param customElement
+ */
 export const useDrupalCeRenderCustomElements = (customElement) => {
   return h(resolveComponent(customElement.element), customElement)
 }
