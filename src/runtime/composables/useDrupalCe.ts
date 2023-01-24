@@ -52,6 +52,8 @@ export const useDrupalCeFetchMenu = async (name: string) => {
 
 export const useDrupalCeMessages = () => useState('drupal-ce-messages', () => [])
 
+export const useDrupalCePage = () => useState(`page-${useRoute().path}`)
+
 export const useDrupalCeRenderCustomElements = (customElement) => {
   return h(resolveComponent(customElement.element), customElement)
 }

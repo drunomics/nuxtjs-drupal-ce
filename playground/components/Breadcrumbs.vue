@@ -23,7 +23,7 @@
 </template>
 
 <script setup>
-const page = useState(`page-${useRoute().path}`)
+const page = useDrupalCePage()
 </script>
 
 <style lang="css" scoped>
