@@ -7,6 +7,9 @@ export const useDrupalCeFetchPage = async (path: string, useFetchOptions = {}) =
   const config = useRuntimeConfig()
   const baseURL = config.public.drupalCe.baseURL
 
+  // Workaround for issue - useState is not available after async call (Nuxt instance unavailable)
+  const pageState = useState(`page-${path}`, () => {})
+
   useFetchOptions.query = useFetchOptions.query ?? {}
   useFetchOptions.query._content_format = useFetchOptions.query._content_format ?? 'json'
   useFetchOptions.key = `page-${path}`
@@ -32,6 +35,7 @@ export const useDrupalCeFetchPage = async (path: string, useFetchOptions = {}) =
 
   page.value?.messages && pushMessagesToState(page.value.messages)
 
+  pageState.value = page
   return page
 }
 
