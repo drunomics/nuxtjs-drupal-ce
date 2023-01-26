@@ -50,6 +50,42 @@ export default defineNuxtConfig({
   `$$$NAME$$$` is replaced by the menu name being fetched.
 
 
+## TODO list of options (not yet implemented)
+
+- `addRequestFormat`: If set to `true`, the `_format=custom_elements` URL parameter
+  is added automatically to requests. Defaults to `true`.
+
+- `addRequestContentFormat`: If specified, the given value is added as `_content_format`
+  URL parameter to requests. Disabled by default.
+
+- `useLocalizedMenuEndpoint`: If enabled, the menu endpoint will use a language prefix as configured by [nuxtjs/i18n](https://i18n.nuxtjs.org) module. Defaults to `true`.
+
+- `useProxy`: If set to `dev-only` and nuxt is in dev-mode, the module automatically
+  configures `/api` to the Drupal backend via
+  [@nuxtjs/proxy](https://github.com/nuxt-community/proxy-module) and uses it instead of
+  the Drupal backend, such that there are no CORS issues. Other values supported are
+  `always` or false.
+  Note: When using `always` the module must be added to the nuxt `modules` section instead
+  of the `buildModules` section.
+
+- `customErrorPages`: By default, error pages provided by Drupal (e.g. 403, 404 page) are shown,
+  while keeping the right status code. By enabling customErrorPages, the regular Nuxt error
+  pages are shown instead, such that the pages can be customized with Nuxt. Defaults to `false`.
+
+- `pageErrorHandler`: The default page error handler can be overridden.
+
+- `menuErrorHandler`: The default menu error handler can be overridden.
+
+
+## Options not supported in 2.x version
+
+- `addVueCompiler`: This is necessary if you want to render custom elements markup on runtime.
+  If you need this, you may find a solution in this [GitHub issue](https://github.com/nuxt/nuxt/issues/13843).
+
+- `axios`: Options to pass-through to the `drupal-ce`
+  [axios](https://github.com/nuxt-community/axios-module) instance.
+
+
 ## Development
 
 1. Clone this repository

@@ -40,7 +40,7 @@ export const useDrupalCeFetchPage = async (path: string, useFetchOptions = {}) =
 }
 
 /**
- * Fetches menu data from Drupal, handles errors
+ * Fetches menu data from Drupal (configured by menuEndpoint option), handles errors
  * @param name Menu name being fetched
  */
 export const useDrupalCeFetchMenu = async (name: string) => {
