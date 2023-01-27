@@ -20,7 +20,7 @@ Please refer to https://stack.lupus.digital for more info.
 
 ## Setup
 
-1. Add `nuxtjs-drupal-ce` dependency to your Nuxt.js project
+1. Add `nuxtjs-drupal-ce` dependency to your Nuxt project
 
 ```bash
 yarn add nuxtjs-drupal-ce # or npm install nuxtjs-drupal-ce
@@ -29,108 +29,70 @@ yarn add nuxtjs-drupal-ce # or npm install nuxtjs-drupal-ce
 2. Add `nuxtjs-drupal-ce` to the `modules` section of `nuxt.config.js`
 
 ```js
-{
-  buildModules: [
+export default defineNuxtConfig({
+  modules: [
     'nuxtjs-drupal-ce',
   ],
-  'drupal-ce', {
+  drupalCe: {
     baseURL: 'https://your-drupal.example.com',
     // more options...
   }
-}
+})
 ```
-3. Get started quickly by scaffolding initial files:
-```bash
-rm -f layouts/default.vue && $(npm bin)/nuxt-drupal-ce-init
-```
-
-You may also take a look at the [example project](https://github.com/drunomics/lupus-nuxtjs-drupal-stack-example).
 
 ## Options
 
 - `baseURL`: The Drupal base URL. Defaults to the `DRUPAL_BASE_URL`
    environment variable if provided, otherwise to `http://localhost:8888`.
 
+- `menuEndpoint`: The menu endpoint pattern used for fetching menus. Defaults to 'api/menu_items/$$$NAME$$$' as fitting
+  to the API provided by the [Rest menu items](https://www.drupal.org/project/rest_menu_items) Drupal module.
+  `$$$NAME$$$` is replaced by the menu name being fetched.
+
+
+## TODO list of options (not yet implemented)
+
 - `addRequestFormat`: If set to `true`, the `_format=custom_elements` URL parameter
-  is added automatically to requests. Defaults to `true`. 
-  
+  is added automatically to requests. Defaults to `true`.
+
 - `addRequestContentFormat`: If specified, the given value is added as `_content_format`
   URL parameter to requests. Disabled by default.
 
-- `addVueCompiler`: If enabled, the Vue compiler is added to the runtime build. This
-  is necessary if you want to render custom elements markup on runtime. Defaults to `true`.
-
-- `menuEndpoint`: The menu endpoint pattern used for fetching menus. Defaults to 'api/menu_items/$$$NAME$$$' as fitting
-  to the API provided by the [Rest menu items](https://www.drupal.org/project/rest_menu_items) Drupal module.
-  `$$$NAME$$$` is replaced by the menu name being fetched. To enable menu fetching, un-comment the nuxtServerInit action
-  in `store/init.js`.
-
 - `useLocalizedMenuEndpoint`: If enabled, the menu endpoint will use a language prefix as configured by [nuxtjs/i18n](https://i18n.nuxtjs.org) module. Defaults to `true`.
 
-- `useProxy`: If set to `dev-only` and nuxt is in dev-mode, the module automatically 
-  configures `/api` to the Drupal backend via 
-  [@nuxtjs/proxy](https://github.com/nuxt-community/proxy-module) and uses it instead of 
+- `useProxy`: If set to `dev-only` and nuxt is in dev-mode, the module automatically
+  configures `/api` to the Drupal backend via
+  [@nuxtjs/proxy](https://github.com/nuxt-community/proxy-module) and uses it instead of
   the Drupal backend, such that there are no CORS issues. Other values supported are
   `always` or false.
-   Note: When using `always` the module must be added to the nuxt `modules` section instead
-   of the `buildModules` section.
+  Note: When using `always` the module must be added to the nuxt `modules` section instead
+  of the `buildModules` section.
+
+- `customErrorPages`: By default, error pages provided by Drupal (e.g. 403, 404 page) are shown,
+  while keeping the right status code. By enabling customErrorPages, the regular Nuxt error
+  pages are shown instead, such that the pages can be customized with Nuxt. Defaults to `false`.
+
+- `pageErrorHandler`: The default page error handler can be overridden.
+
+- `menuErrorHandler`: The default menu error handler can be overridden.
+
+
+## Options not supported in 2.x version
+
+- `addVueCompiler`: This is necessary if you want to render custom elements markup on runtime.
+  If you need this, you may find a solution in this [GitHub issue](https://github.com/nuxt/nuxt/issues/13843).
 
 - `axios`: Options to pass-through to the `drupal-ce`
   [axios](https://github.com/nuxt-community/axios-module) instance.
-
-- `customErrorPages`: By default, error pages provided by Drupal (e.g. 403, 404 page) are shown,
-   while keeping the right status code. By enabling customErrorPages, the regular Nuxt error
-   pages are shown instead, such that the pages can be customized with Nuxt. Defaults to `false`.
-
-- `pageErrorHandler`: The default page error handler can be overridden. Example:
-  ```javascript
-  pageErrorHandler (error, commit, context, options) {
-    context.error({
-      statusCode: error.response.status,
-      message: error.message
-    })
-  }
-  ```
-
-- `menuErrorHandler`: The default menu error handler can be overridden. Example:
-  ```javascript
-  menuErrorHandler (error, commit, context, options) {
-    commit('addMessage', {
-      type: 'error',
-      message: `Custom menu error: ${error.message}.`
-    })
-  }
-  ```
-
-
-## Known issues
-
-### Decoding HTML entities in plain-text strings
-
-Vue2 has [known problem](https://github.com/vuejs/vue/issues/8805) when decoding HTML entities
-of plain-text strings that are delivered as custom element attributes. While it correctly decodes
-some HTML-encoded characters, it does not handle all of them.
-
-The problem has been fixed in Vue3.
-
-#### Filter "decodeSpecialChars"
-
-For Vue2, this nuxt-module provides a Vue filter that can be used to work-a-round the issue.
-Consider "teaser-text" being a prop containing a plain-text string. In that case, it's
-recommended to use the provided filter:
-
-   `{{ teaserText | decodeSpecialChars }}`
 
 
 ## Development
 
 1. Clone this repository
-2. Install dependencies using `yarn install` or `npm install`
-3. Start development server using `npm run dev`
+2. Install dependencies using `npm install`
+3. Use `npm run dev` to start [playground](./playground) in development mode.
+- Run `npm run dev:prepare` to generate type stubs.
 
-## Testing
-
-Run `npm run test` or `yarn test`.
 
 ## License
 

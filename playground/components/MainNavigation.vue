@@ -1,15 +1,16 @@
 <template>
   <ul class="main-menu">
     <li
-      v-for="menuItem in menus.main"
+      v-for="menuItem in mainMenu"
       :key="menuItem.key"
     >
       <nuxt-link
         v-if="!menuItem.external"
         class="item"
         :to="'/' + menuItem.alias"
-        v-text="menuItem.title"
-      />
+      >
+        {{ menuItem.title }}
+      </nuxt-link>
       <a
         v-else
         class="item"
@@ -20,21 +21,8 @@
   </ul>
 </template>
 
-<script>
-import { mapState } from 'vuex'
-
-export default {
-  computed: {
-    // To initially populate the menu, un-comment the nuxtServerInit action in `store/init.js`.
-    ...mapState('drupalCe', ['menus'])
-  },
-  mounted () {
-    // Fetch menu in SPA mode. Should be filled already in SSR mode, so this is a fallback.
-    if (!this.menus.main?.length) {
-      this.$drupal.fetchMenu('main')
-    }
-  }
-}
+<script lang="ts" setup>
+const mainMenu = await useDrupalCeFetchMenu('main')
 </script>
 
 <style lang="css" scoped>
@@ -49,7 +37,7 @@ export default {
   color: #222;
 }
 
-.nuxt-link-active {
+.router-link-active {
   border-bottom: 2px solid aquamarine;
 }
 </style>

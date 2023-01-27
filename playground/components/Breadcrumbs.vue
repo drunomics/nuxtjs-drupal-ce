@@ -22,28 +22,22 @@
   </div>
 </template>
 
-<script>
-import { mapState } from 'vuex'
-
-export default {
-  name: 'Breadcrumbs',
-  computed: {
-    ...mapState('drupalCe', ['page'])
-  }
-}
+<script setup>
+const page = useDrupalCePage()
 </script>
 
 <style lang="css" scoped>
-  .breadcrumbs {
-    font-size: smaller;
-    padding: 1em;
-  }
-  .crumb {
-    margin: 0 0.5em;
-    display: inline-flex;
-    text-transform: uppercase;
-  }
-  a:hover {
-    text-decoration: underline;
-  }
+.breadcrumbs {
+  font-size: smaller;
+  padding: 1em;
+}
+.crumb {
+  margin: 0 0.5em;
+  display: inline-flex;
+  text-transform: uppercase;
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
 </style>
