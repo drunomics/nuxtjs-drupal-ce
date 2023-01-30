@@ -23,7 +23,7 @@ Please refer to https://stack.lupus.digital for more info.
 1. Add `nuxtjs-drupal-ce` dependency to your Nuxt project
 
 ```bash
-yarn add nuxtjs-drupal-ce # or npm install nuxtjs-drupal-ce
+yarn add nuxtjs-drupal-ce@alpha # or npm install nuxtjs-drupal-ce@alpha
 ```
 
 2. Add `nuxtjs-drupal-ce` to the `modules` section of `nuxt.config.js`
@@ -34,7 +34,7 @@ export default defineNuxtConfig({
     'nuxtjs-drupal-ce',
   ],
   drupalCe: {
-    baseURL: 'https://your-drupal.example.com',
+    baseURL: 'https://your-drupal.example.com/ce-api',
     // more options...
   }
 })
@@ -88,10 +88,16 @@ export default defineNuxtConfig({
 
 ## Development
 
-1. Clone this repository
-2. Install dependencies using `npm install`
-3. Use `npm run dev` to start [playground](./playground) in development mode.
-- Run `npm run dev:prepare` to generate type stubs.
+1. Clone this repository.
+2. Install dependencies using `npm install`.
+3. Run `npm run dev:prepare` to generate type stubs.
+4. Use `npm run dev` to start [playground](./playground) in development mode.
+5. Update baseURL setting in Nuxt config with [Lupus Decoupled Drupal](https://www.drupal.org/project/lupus_decoupled) instance URL and append the API-prefix /ce-api, e.g. `https://8080-shaal-drupalpod-8m3z0ms7mb6.ws-eu67.gitpod.io/ce-api`
+
+### Run on StackBlitz
+
+1. [Launch it on StackBlitz](https://stackblitz.com/fork/github/drunomics/nuxtjs-drupal-ce/tree/2.x?startScript=dev:prepare,dev&file=playground/nuxt.config.ts)
+2. Update baseURL setting in Nuxt config with [Lupus Decoupled Drupal](https://www.drupal.org/project/lupus_decoupled) instance URL and append the API-prefix /ce-api, e.g. `https://8080-shaal-drupalpod-8m3z0ms7mb6.ws-eu67.gitpod.io/ce-api`
 
 
 ## License
