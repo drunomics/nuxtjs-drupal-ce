@@ -11,7 +11,6 @@ export const useDrupalCeFetchPage = async (path: string, useFetchOptions = {}) =
   const pageState = useState(`page-${path}`, () => {})
 
   useFetchOptions.query = useFetchOptions.query ?? {}
-  useFetchOptions.query._content_format = useFetchOptions.query._content_format ?? 'json'
   useFetchOptions.key = `page-${path}`
   useFetchOptions.baseURL = baseURL
 
