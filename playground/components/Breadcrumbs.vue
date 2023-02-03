@@ -23,7 +23,8 @@
 </template>
 
 <script setup>
-const page = useDrupalCePage()
+const { getPage } = useDrupalCe()
+const page = getPage()
 </script>
 
 <style lang="css" scoped>

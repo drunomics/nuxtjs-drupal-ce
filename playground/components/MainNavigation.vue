@@ -22,7 +22,8 @@
 </template>
 
 <script lang="ts" setup>
-const mainMenu = await useDrupalCeFetchMenu('main')
+const { fetchMenu } = useDrupalCe()
+const mainMenu = await fetchMenu('main')
 </script>
 
 <style lang="css" scoped>

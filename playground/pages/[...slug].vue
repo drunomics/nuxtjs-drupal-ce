@@ -2,12 +2,12 @@
   <div>
     <MainNavigation />
     <Breadcrumbs />
-    <component :is="useDrupalCeRenderCustomElements(page.content)" />
+    <component :is="renderCustomElements(page.content)" />
   </div>
 </template>
 
 <script lang="ts" setup>
-const page = await useDrupalCeFetchPage(useRoute().path, { query: useRoute().query })
-
-const messages = useDrupalCeMessages()
+const { fetchPage, getMessages, renderCustomElements } = useDrupalCe()
+const page = await fetchPage(useRoute().path, { query: useRoute().query })
+const messages = getMessages()
 </script>
