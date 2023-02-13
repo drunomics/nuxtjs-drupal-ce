@@ -12,6 +12,10 @@ Please refer to https://stack.lupus.digital for more info.
 
 [📖 **Release Notes**](./CHANGELOG.md)
 
+## Versions
+* 1.x is for Nuxt-2, stable
+* 2.x is for Nuxt-3, in-dev
+
 ## Pre-requisites
 
 * A [Drupal](https://drupal.org) backend with the 
