@@ -1,46 +1,25 @@
 name: ci
 
 on:
-  push:
-    branches:
-      - 1.x
   pull_request:
     branches:
-      - 1.x
+      - 2.x
 
 jobs:
   ci:
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
 
     strategy:
       matrix:
-        # Todo: Fix tests on windows and re-enable.
-        os: [ubuntu-latest, macos-latest]
-        node: [14, 16]
+        node-version: [16.x]
 
     steps:
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v3
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
         with:
-          node-version: ${{ matrix.node }}
-
-      - name: checkout
-        uses: actions/checkout@master
-
-      - name: cache node_modules
-        uses: actions/cache@v3
-        with:
-          path: node_modules
-          key: ${{ matrix.os }}-node-v${{ matrix.node }}-deps-${{ hashFiles(format('{0}{1}', github.workspace, '/yarn.lock')) }}
-
-      - name: Install dependencies
-        if: steps.cache.outputs.cache-hit != 'true'
-        run: yarn
-
-      - name: Lint
-        run: yarn lint
-
-      - name: Test
-        run: yarn test
-
-      - name: Coverage
-        uses: drunomics/codecov-action@v1
+          node-version: ${{ matrix.node-version }}
+          cache: "npm"
+      - run: npm ci
+      - run: npm run dev:prepare
+      - run: npm run test
