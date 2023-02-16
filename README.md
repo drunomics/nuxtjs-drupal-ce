@@ -49,14 +49,14 @@ export default defineNuxtConfig({
   to the API provided by the [Rest menu items](https://www.drupal.org/project/rest_menu_items) Drupal module.
   `$$$NAME$$$` is replaced by the menu name being fetched.
 
+- `addRequestContentFormat`: If specified, the given value is added as `_content_format`
+  URL parameter to requests. Disabled by default.
+
 
 ## TODO list of options (not yet implemented)
 
 - `addRequestFormat`: If set to `true`, the `_format=custom_elements` URL parameter
   is added automatically to requests. Defaults to `true`.
-
-- `addRequestContentFormat`: If specified, the given value is added as `_content_format`
-  URL parameter to requests. Disabled by default.
 
 - `useLocalizedMenuEndpoint`: If enabled, the menu endpoint will use a language prefix as configured by [nuxtjs/i18n](https://i18n.nuxtjs.org) module. Defaults to `true`.
 
