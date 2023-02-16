@@ -4,6 +4,7 @@ import { defineNuxtModule, addPlugin, createResolver, addImportsDir } from '@nux
 export interface ModuleOptions {
   baseURL: string,
   menuEndpoint: string,
+  addRequestContentFormat?: string,
 }
 
 export default defineNuxtModule<ModuleOptions>({
@@ -23,7 +24,8 @@ export default defineNuxtModule<ModuleOptions>({
     addImportsDir(resolve(runtimeDir, 'composables'))
     nuxt.options.runtimeConfig.public.drupalCe = {
       baseURL: options.baseURL,
-      menuEndpoint: options.menuEndpoint
+      menuEndpoint: options.menuEndpoint,
+      addRequestContentFormat: options.addRequestContentFormat
     }
   }
 })
