@@ -1,4 +1,5 @@
-import { useRuntimeConfig, useState, useFetch, navigateTo, createError, useRoute, h, resolveComponent } from '#imports'
+import { callWithNuxt } from '#app'
+import { useRuntimeConfig, useState, useFetch, navigateTo, createError, useRoute, h, resolveComponent, setResponseStatus, useNuxtApp } from '#imports'
 export const useDrupalCe = () => {
   /**
    * Fetches page data from Drupal, handles redirects, errors and messages
@@ -6,6 +7,7 @@ export const useDrupalCe = () => {
    * @param useFetchOptions Optional Nuxt useFetch options
    */
   const fetchPage = async (path: string, useFetchOptions = {}) => {
+    const nuxtApp = useNuxtApp()
     const config = useRuntimeConfig()
     const baseURL = config.public.drupalCe.baseURL
 
@@ -35,6 +37,7 @@ export const useDrupalCe = () => {
     }
 
     if (error.value) {
+      callWithNuxt(nuxtApp, setResponseStatus, [error.value.status])
       page.value = error.value?.data
     }
 
