@@ -16,6 +16,10 @@ export const useDrupalCe = () => {
     useFetchOptions.key = `page-${path}`
     useFetchOptions.baseURL = baseURL
 
+    if (config.public.drupalCe.addRequestContentFormat) {
+      useFetchOptions.query.addRequestContentFormat = config.public.drupalCe.addRequestContentFormat
+    }
+
     const { data: page, error } = await useFetch(path, useFetchOptions)
 
     if (page?.value?.redirect) {
