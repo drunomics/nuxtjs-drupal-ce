@@ -8,12 +8,11 @@ describe('Module error handling', async () => {
     configFile: 'nuxt.config4test'
   })
   it('renders Drupal error page', async () => {
-    const html = await $fetch('/node/404')
-    expect(html).toContain('The requested page could not be found')
-    // This doesn't pass yet, because the module doesn't set the status code for Drupal error pages
-    // Uncomment when fixed
-    // const { status } = await fetch('/node/404')
-    // expect(status).toEqual(404)
+    const response = await fetch('/node/404')
+    expect(response.status).toEqual(404)
+    // HTML returned from SSR page to contain
+    // (same as what $fetch returns, but can't use $fetch because the promise rejects)
+    expect(await response.text()).toContain('The requested page could not be found')
   })
   it('handles 500 statusCode', async () => {
     const response = await fetch('/error500')
