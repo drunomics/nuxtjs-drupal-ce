@@ -5,6 +5,7 @@ export interface ModuleOptions {
   baseURL: string,
   menuEndpoint: string,
   addRequestContentFormat?: string,
+  customErrorPages: boolean,
 }
 
 export default defineNuxtModule<ModuleOptions>({
@@ -14,7 +15,8 @@ export default defineNuxtModule<ModuleOptions>({
   },
   defaults: {
     baseURL: 'https://8080-shaal-drupalpod-xxxxxxxxxxx.ws-xxxx.gitpod.io/ce-api',
-    menuEndpoint: 'api/menu_items/$$$NAME$$$'
+    menuEndpoint: 'api/menu_items/$$$NAME$$$',
+    customErrorPages: false
   },
   setup (options, nuxt) {
     const { resolve } = createResolver(import.meta.url)
@@ -25,7 +27,8 @@ export default defineNuxtModule<ModuleOptions>({
     nuxt.options.runtimeConfig.public.drupalCe = {
       baseURL: options.baseURL,
       menuEndpoint: options.menuEndpoint,
-      addRequestContentFormat: options.addRequestContentFormat
+      addRequestContentFormat: options.addRequestContentFormat,
+      customErrorPages: options.customErrorPages
     }
   }
 })
