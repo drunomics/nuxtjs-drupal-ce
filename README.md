@@ -52,6 +52,10 @@ export default defineNuxtConfig({
 - `addRequestContentFormat`: If specified, the given value is added as `_content_format`
   URL parameter to requests. Disabled by default.
 
+- `customErrorPages`: By default, error pages provided by Drupal (e.g. 403, 404 page) are shown,
+  while keeping the right status code. By enabling customErrorPages, the regular Nuxt error
+  pages are shown instead, such that the pages can be customized with Nuxt. Defaults to `false`.
+
 
 ## TODO list of options (not yet implemented)
 
@@ -67,10 +71,6 @@ export default defineNuxtConfig({
   `always` or false.
   Note: When using `always` the module must be added to the nuxt `modules` section instead
   of the `buildModules` section.
-
-- `customErrorPages`: By default, error pages provided by Drupal (e.g. 403, 404 page) are shown,
-  while keeping the right status code. By enabling customErrorPages, the regular Nuxt error
-  pages are shown instead, such that the pages can be customized with Nuxt. Defaults to `false`.
 
 - `pageErrorHandler`: The default page error handler can be overridden.
 

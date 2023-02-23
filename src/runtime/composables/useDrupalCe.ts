@@ -32,8 +32,8 @@ export const useDrupalCe = () => {
       return
     }
 
-    if (error.value && !error.value?.data?.content) {
-      throw createError({ statusCode: error.value.status, statusMessage: error.value.message, fatal: true })
+    if (error.value && (!error.value?.data?.content || config.public.drupalCe.customErrorPages)) {
+      throw createError({ statusCode: error.value.status, statusMessage: error.value.message, data: error.value.data, fatal: true })
     }
 
     if (error.value) {

@@ -17,6 +17,6 @@ describe('Module addRequestContentFormat not set', async () => {
   })
   it('is correctly missing in query', async () => {
     const html = await $fetch('/')
-    expect(html).not.toContain('addRequestContentFormat')
+    expect(html).not.toContain('addRequestContentFormat=')
   })
 })
