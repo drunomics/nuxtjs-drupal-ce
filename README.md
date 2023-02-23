@@ -14,7 +14,7 @@ Please refer to https://stack.lupus.digital for more info.
 
 ## Versions
 * 1.x is for Nuxt-2, stable
-* 2.x is for Nuxt-3, in-dev
+* [2.x is for Nuxt-3, in-dev](https://github.com/drunomics/nuxtjs-drupal-ce/tree/2.x)
 
 ## Pre-requisites
 
