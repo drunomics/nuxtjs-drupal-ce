@@ -6,17 +6,18 @@
 [![codecov][codecov-src]][codecov-href]
 [![License][license-src]][license-href]
 
-> Connects Nuxt.js with Drupal via the [Lupus Custom Elements Renderer](https://www.drupal.org/project/lupus_ce_renderer) 
+> Connects Nuxt v3 with Drupal via the [Lupus Custom Elements Renderer](https://www.drupal.org/project/lupus_ce_renderer) 
 
-Please refer to https://stack.lupus.digital for more info.
+Please refer to https://www.drupal.org/project/lupus_decoupled for more info.
 
-[📖 **Release Notes**](./CHANGELOG.md)
+The 2.x version of the module is compatible with Nuxt 3. For a Nuxt 2 compatible version, please checkout the [1.x version](https://github.com/drunomics/nuxtjs-drupal-ce/tree/1.x)
+
 
 ## Pre-requisites
 
 * A [Drupal](https://drupal.org) backend with the 
   [Lupus Custom Elements Renderer](https://www.drupal.org/project/lupus_ce_renderer) 
-  module installed. 
+  module or [Lupus Decoupled Drupal](https://www.drupal.org/project/lupus_decoupled) installed. 
 
 ## Setup
 
@@ -40,10 +41,29 @@ export default defineNuxtConfig({
 })
 ```
 
+The module defaults work well with [Lupus Decoupled Drupal](https://www.drupal.org/project/lupus_decoupled), so setting the `baseURL` is usually enough.
+
+
+## Features
+
+* Fetches pages via the custom elements API provided by the [Lupus Custom Elements Renderer](https://www.drupal.org/project/lupus_ce_renderer) 
+* Provides a Nuxt-wildcard route, so all Drupal pages can be rendered via Nuxt.js and vue-router.
+* Integrates page metadata and the page title with Nuxt.
+* Supports breadcrumbs and local tasks ("Tabs")
+* Supports authenticated requests. Cookies are passed through to Drupal by default.
+* Supports display of Drupal messages in the frontend.
+* Provides unstyled skeleton components for getting started quickly.
+* Supports fetching and display of Drupal menus via the [Rest menu items](https://www.drupal.org/project/rest_menu_items) module.
+
 ## Options
 
 - `baseURL`: The Drupal base URL. Defaults to the `DRUPAL_BASE_URL`
    environment variable if provided, otherwise to `http://localhost:8888`.
+
+- `fetchOptions`: The default [fetchOptions](https://nuxt.com/docs/api/composables/use-fetch#params)
+   to apply when fetching from the Drupal. Defaults to `{ credentials: 'include' }`.
+
+- `fetchProxyHeaders`: The HTTP request headers to pass through to Drupal, via [useRequestHeaders](https://nuxt.com/docs/api/composables/use-request-headers#userequestheaders). Defaults to `['cookie']`.
 
 - `menuEndpoint`: The menu endpoint pattern used for fetching menus. Defaults to 'api/menu_items/$$$NAME$$$' as fitting
   to the API provided by the [Rest menu items](https://www.drupal.org/project/rest_menu_items) Drupal module.
@@ -57,12 +77,28 @@ export default defineNuxtConfig({
   pages are shown instead, such that the pages can be customized with Nuxt. Defaults to `false`.
 
 
-## TODO list of options (not yet implemented)
+## TODO - List of 1.x options not yet implemented
 
 - `addRequestFormat`: If set to `true`, the `_format=custom_elements` URL parameter
   is added automatically to requests. Defaults to `true`.
 
 - `useLocalizedMenuEndpoint`: If enabled, the menu endpoint will use a language prefix as configured by [nuxtjs/i18n](https://i18n.nuxtjs.org) module. Defaults to `true`.
+
+- `pageErrorHandler`: The default page error handler can be overridden.
+
+- `menuErrorHandler`: The default menu error handler can be overridden.
+
+
+## Previous options not supported in 2.x version
+
+The following options were support in 1.x but got dropped:
+
+- `addVueCompiler`: This is necessary if you want to render custom elements markup on runtime;
+  i.e. use the 'markup' content format. If you need this, you may find a solution in this
+  [GitHub issue](https://github.com/nuxt/nuxt/issues/13843).
+
+- `axios`: Options to pass-through to the `drupal-ce`
+  [axios](https://github.com/nuxt-community/axios-module) instance. Use `fetchOptions` instead.
 
 - `useProxy`: If set to `dev-only` and nuxt is in dev-mode, the module automatically
   configures `/api` to the Drupal backend via
@@ -71,20 +107,6 @@ export default defineNuxtConfig({
   `always` or false.
   Note: When using `always` the module must be added to the nuxt `modules` section instead
   of the `buildModules` section.
-
-- `pageErrorHandler`: The default page error handler can be overridden.
-
-- `menuErrorHandler`: The default menu error handler can be overridden.
-
-
-## Options not supported in 2.x version
-
-- `addVueCompiler`: This is necessary if you want to render custom elements markup on runtime.
-  If you need this, you may find a solution in this [GitHub issue](https://github.com/nuxt/nuxt/issues/13843).
-
-- `axios`: Options to pass-through to the `drupal-ce`
-  [axios](https://github.com/nuxt-community/axios-module) instance.
-
 
 ## Development
 
