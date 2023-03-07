@@ -41,7 +41,6 @@ export const useDrupalCe = () => {
       useFetchOptions.query.addRequestContentFormat = config.addRequestContentFormat
     }
 
-    console.log(useFetchOptions)
     const { data: page, error } = await useFetch(path, useFetchOptions)
     
     if (page?.value?.redirect) {
