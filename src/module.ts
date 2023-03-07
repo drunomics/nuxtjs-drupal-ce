@@ -20,9 +20,7 @@ export default defineNuxtModule<ModuleOptions>({
     baseURL: 'https://8080-shaal-drupalpod-xxxxxxxxxxx.ws-xxxx.gitpod.io/ce-api',
     menuEndpoint: 'api/menu_items/$$$NAME$$$',
     customErrorPages: false,
-    fetchOptions: {
-      credentials: 'include'
-    },
+    fetchOptions: {},
     fetchProxyHeaders: ['cookie']
   },
   setup (options, nuxt) {
