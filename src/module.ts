@@ -1,11 +1,14 @@
 import { fileURLToPath } from 'url'
 import { defineNuxtModule, addPlugin, createResolver, addImportsDir } from '@nuxt/kit'
+import { UseFetchOptions } from 'nuxt/dist/app/composables'
 
 export interface ModuleOptions {
   baseURL: string,
   menuEndpoint: string,
   addRequestContentFormat?: string,
   customErrorPages: boolean,
+  fetchOptions: UseFetchOptions<any>,
+  fetchProxyHeaders: string[],
 }
 
 export default defineNuxtModule<ModuleOptions>({
@@ -16,7 +19,9 @@ export default defineNuxtModule<ModuleOptions>({
   defaults: {
     baseURL: 'https://8080-shaal-drupalpod-xxxxxxxxxxx.ws-xxxx.gitpod.io/ce-api',
     menuEndpoint: 'api/menu_items/$$$NAME$$$',
-    customErrorPages: false
+    customErrorPages: false,
+    fetchOptions: {},
+    fetchProxyHeaders: ['cookie']
   },
   setup (options, nuxt) {
     const { resolve } = createResolver(import.meta.url)
@@ -28,7 +33,9 @@ export default defineNuxtModule<ModuleOptions>({
       baseURL: options.baseURL,
       menuEndpoint: options.menuEndpoint,
       addRequestContentFormat: options.addRequestContentFormat,
-      customErrorPages: options.customErrorPages
+      customErrorPages: options.customErrorPages,
+      fetchOptions: options.fetchOptions,
+      fetchProxyHeaders: options.fetchProxyHeaders
     }
   }
 })
