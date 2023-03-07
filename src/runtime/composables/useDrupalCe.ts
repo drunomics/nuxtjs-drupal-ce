@@ -1,29 +1,49 @@
 import { callWithNuxt } from '#app'
+import { defu } from 'defu'
 import { useRuntimeConfig, useState, useFetch, navigateTo, createError, useRoute, h, resolveComponent, setResponseStatus, useNuxtApp } from '#imports'
+import { UseFetchOptions } from 'nuxt/dist/app/composables'
+
 export const useDrupalCe = () => {
+
+  const config = useRuntimeConfig().public.drupalCe
+
+  /**
+   * Processes the given fetchOptions to apply module defaults
+   * @param fetchOptions Optional Nuxt useFetch options
+   * @returns UseFetchOptions<any>
+   */
+  const processFetchOptions = (fetchOptions:UseFetchOptions<any> = {}) => {
+    fetchOptions.baseURL = fetchOptions.baseURL ?? config.baseURL
+    fetchOptions = defu(fetchOptions, config.fetchOptions)
+
+    // Apply the request headers of current request, if configured.
+    if (config.fetchProxyHeaders) {
+      fetchOptions.headers = defu(fetchOptions.headers ?? {}, useRequestHeaders(config.fetchProxyHeaders))
+    }
+    return fetchOptions
+  }
+
   /**
    * Fetches page data from Drupal, handles redirects, errors and messages
    * @param path Path of the Drupal page to fetch
    * @param useFetchOptions Optional Nuxt useFetch options
    */
-  const fetchPage = async (path: string, useFetchOptions = {}) => {
+  const fetchPage = async (path: string, useFetchOptions:UseFetchOptions<any> = {}) => {
     const nuxtApp = useNuxtApp()
-    const config = useRuntimeConfig()
-    const baseURL = config.public.drupalCe.baseURL
 
     // Workaround for issue - useState is not available after async call (Nuxt instance unavailable)
     const pageState = useState(`page-${path}`, () => {})
-
-    useFetchOptions.query = useFetchOptions.query ?? {}
     useFetchOptions.key = `page-${path}`
-    useFetchOptions.baseURL = baseURL
+    useFetchOptions = processFetchOptions(useFetchOptions)
 
-    if (config.public.drupalCe.addRequestContentFormat) {
-      useFetchOptions.query.addRequestContentFormat = config.public.drupalCe.addRequestContentFormat
+    if (config.addRequestContentFormat) {
+      useFetchOptions.query = useFetchOptions.query ?? {}
+      useFetchOptions.query.addRequestContentFormat = config.addRequestContentFormat
     }
 
+    console.log(useFetchOptions)
     const { data: page, error } = await useFetch(path, useFetchOptions)
-
+    
     if (page?.value?.redirect) {
       await navigateTo(page.value.redirect.url, {
         external: page.value.redirect.external,
@@ -32,7 +52,7 @@ export const useDrupalCe = () => {
       return
     }
 
-    if (error.value && (!error.value?.data?.content || config.public.drupalCe.customErrorPages)) {
+    if (error.value && (!error.value?.data?.content || config.customErrorPages)) {
       throw createError({ statusCode: error.value.status, statusMessage: error.value.message, data: error.value.data, fatal: true })
     }
 
@@ -50,23 +70,19 @@ export const useDrupalCe = () => {
   /**
    * Fetches menu data from Drupal (configured by menuEndpoint option), handles errors
    * @param name Menu name being fetched
+   * @param useFetchOptions Optional Nuxt useFetch options
    */
-  const fetchMenu = async (name: string) => {
-    const config = useRuntimeConfig()
-    const baseURL = config.public.drupalCe.baseURL
-    const menuEndpoint = config.public.drupalCe.menuEndpoint
-    const menuPath = menuEndpoint.replace('$$$NAME$$$', name)
+  const fetchMenu = async (name: string, useFetchOptions:UseFetchOptions<any> = {}) => {
+    const menuPath = config.menuEndpoint.replace('$$$NAME$$$', name)
+    useFetchOptions = processFetchOptions(useFetchOptions)
+    useFetchOptions.key = `menu-${name}`
 
-    const { data: menu, error } = await useFetch(menuPath, {
-      key: `menu-${name}`,
-      baseURL
-    })
+    const { data: menu, error } = await useFetch(menuPath, useFetchOptions)
 
     if (error.value) {
       errorMenuHandler(error)
       return
     }
-
     return menu
   }
 
