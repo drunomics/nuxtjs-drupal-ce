@@ -15,13 +15,18 @@ export interface ModuleOptions {
 export default defineNuxtModule<ModuleOptions>({
   meta: {
     name: 'nuxtjs-drupal-ce',
-    configKey: 'drupalCe'
+    configKey: 'drupalCe',
+    compatibility: {
+      nuxt: '^3.2.2'
+    },
   },
   defaults: {
     baseURL: 'https://8080-shaal-drupalpod-xxxxxxxxxxx.ws-xxxx.gitpod.io/ce-api',
     menuEndpoint: 'api/menu_items/$$$NAME$$$',
     customErrorPages: false,
-    fetchOptions: {},
+    fetchOptions: {
+      credentials: 'include',
+    },
     fetchProxyHeaders: ['cookie']
   },
   setup (options, nuxt) {
