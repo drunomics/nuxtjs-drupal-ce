@@ -1,6 +1,7 @@
 import { fileURLToPath } from 'url'
 import { defineNuxtModule, addPlugin, createResolver, addImportsDir } from '@nuxt/kit'
 import { UseFetchOptions } from 'nuxt/dist/app/composables'
+import { defu } from 'defu'
 
 export interface ModuleOptions {
   baseURL: string,
@@ -29,13 +30,15 @@ export default defineNuxtModule<ModuleOptions>({
     nuxt.options.build.transpile.push(runtimeDir)
     addPlugin(resolve(runtimeDir, 'plugin'))
     addImportsDir(resolve(runtimeDir, 'composables'))
-    nuxt.options.runtimeConfig.public.drupalCe = {
-      baseURL: options.baseURL,
-      menuEndpoint: options.menuEndpoint,
-      addRequestContentFormat: options.addRequestContentFormat,
-      customErrorPages: options.customErrorPages,
-      fetchOptions: options.fetchOptions,
-      fetchProxyHeaders: options.fetchProxyHeaders
-    }
+
+    nuxt.options.runtimeConfig.public.drupalCe = defu(nuxt.options.runtimeConfig.public.drupalCe ?? {}, options)
   }
 })
+
+// Define the type for the runtime-config,.
+// see https://nuxt.com/docs/guide/going-further/runtime-config#manually-typing-runtime-config
+declare module 'nuxt/schema' {
+  interface PublicRuntimeConfig {
+    drupalCe: ModuleOptions,
+  }
+}
