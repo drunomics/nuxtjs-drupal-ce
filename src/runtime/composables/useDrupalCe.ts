@@ -37,11 +37,11 @@ export const useDrupalCe = () => {
 
     if (config.addRequestContentFormat) {
       useFetchOptions.query = useFetchOptions.query ?? {}
-      useFetchOptions.query.addRequestContentFormat = config.addRequestContentFormat
+      useFetchOptions.query._content_format = config.addRequestContentFormat
     }
 
     const { data: page, error } = await useFetch(path, useFetchOptions)
-    
+
     if (page?.value?.redirect) {
       await navigateTo(page.value.redirect.url, {
         external: page.value.redirect.external,
