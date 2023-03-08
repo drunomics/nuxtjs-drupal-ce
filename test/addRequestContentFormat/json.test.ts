@@ -18,7 +18,7 @@ describe('Module addRequestContentFormat option set to json', async () => {
   })
   it('is correctly set in query', async () => {
     const html = await $fetch('/')
-    expect(html).toContain('addRequestContentFormat=json')
-    expect(html).not.toContain('addRequestContentFormat=markup')
+    expect(html).toContain('_content_format=json')
+    expect(html).not.toContain('_content_format=markup')
   })
 })
