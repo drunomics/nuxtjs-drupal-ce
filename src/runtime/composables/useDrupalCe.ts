@@ -43,10 +43,10 @@ export const useDrupalCe = () => {
     const { data: page, error } = await useFetch(path, useFetchOptions)
 
     if (page?.value?.redirect) {
-      await navigateTo(page.value.redirect.url, {
-        external: page.value.redirect.external,
-        redirectCode: page.value.redirect.statusCode
-      })
+      await callWithNuxt(nuxtApp, navigateTo, [
+        page.value.redirect.url,
+        { external: page.value.redirect.external, redirectCode: page.value.redirect.statusCode, replace: true }
+      ])
       return
     }
 
