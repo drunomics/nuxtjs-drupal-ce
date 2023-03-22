@@ -31,7 +31,7 @@ export const useDrupalCe = () => {
     const nuxtApp = useNuxtApp()
 
     // Workaround for issue - useState is not available after async call (Nuxt instance unavailable)
-    const pageState = useState(`page-${path}`, () => {})
+    const pageState = useState('drupal-ce-page-data', () => {})
     useFetchOptions.key = `page-${path}`
     useFetchOptions = processFetchOptions(useFetchOptions)
 
@@ -92,7 +92,7 @@ export const useDrupalCe = () => {
   /**
    * Use page data
    */
-  const getPage = () => useState(`page-${useRoute().path}`)
+  const getPage = () => useState('drupal-ce-page-data')
 
   /**
    * Render elements from page data returned from fetchPage
