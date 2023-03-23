@@ -92,7 +92,7 @@ export const useDrupalCe = () => {
   /**
    * Use page data
    */
-  const getPage = () => useState('drupal-ce-page-data')
+  const getPage = () => useState('drupal-ce-page-data', () => ({}))
 
   /**
    * Render elements from page data returned from fetchPage
