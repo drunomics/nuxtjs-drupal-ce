@@ -10,6 +10,7 @@ export interface ModuleOptions {
   customErrorPages: boolean,
   fetchOptions: UseFetchOptions<any>,
   fetchProxyHeaders: string[],
+  useLocalizedMenuEndpoint: boolean,
 }
 
 export default defineNuxtModule<ModuleOptions>({
@@ -27,7 +28,8 @@ export default defineNuxtModule<ModuleOptions>({
     fetchOptions: {
       credentials: 'include',
     },
-    fetchProxyHeaders: ['cookie']
+    fetchProxyHeaders: ['cookie'],
+    useLocalizedMenuEndpoint: true
   },
   setup (options, nuxt) {
     const { resolve } = createResolver(import.meta.url)

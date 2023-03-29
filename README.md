@@ -76,13 +76,13 @@ The module defaults work well with [Lupus Decoupled Drupal](https://www.drupal.o
   while keeping the right status code. By enabling customErrorPages, the regular Nuxt error
   pages are shown instead, such that the pages can be customized with Nuxt. Defaults to `false`.
 
+- `useLocalizedMenuEndpoint`: If enabled, the menu endpoint will use a language prefix as configured by [nuxtjs/i18n](https://v8.i18n.nuxtjs.org) module. Defaults to `true`.
+
 
 ## TODO - List of 1.x options not yet implemented
 
 - `addRequestFormat`: If set to `true`, the `_format=custom_elements` URL parameter
   is added automatically to requests. Defaults to `true`.
-
-- `useLocalizedMenuEndpoint`: If enabled, the menu endpoint will use a language prefix as configured by [nuxtjs/i18n](https://i18n.nuxtjs.org) module. Defaults to `true`.
 
 - `pageErrorHandler`: The default page error handler can be overridden.
 

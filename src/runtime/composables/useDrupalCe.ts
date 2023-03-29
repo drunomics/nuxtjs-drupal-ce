@@ -1,6 +1,6 @@
 import { callWithNuxt } from '#app'
 import { defu } from 'defu'
-import { useRuntimeConfig, useState, useFetch, navigateTo, createError, useRoute, h, resolveComponent, setResponseStatus, useNuxtApp, useRequestHeaders, UseFetchOptions } from '#imports'
+import { useRuntimeConfig, useState, useFetch, navigateTo, createError, h, resolveComponent, setResponseStatus, useNuxtApp, useRequestHeaders, UseFetchOptions, ref, watch } from '#imports'
 
 export const useDrupalCe = () => {
 
@@ -71,9 +71,20 @@ export const useDrupalCe = () => {
    * @param useFetchOptions Optional Nuxt useFetch options
    */
   const fetchMenu = async (name: string, useFetchOptions:UseFetchOptions<any> = {}) => {
-    const menuPath = config.menuEndpoint.replace('$$$NAME$$$', name)
+    const nuxtApp = useNuxtApp()
     useFetchOptions = processFetchOptions(useFetchOptions)
     useFetchOptions.key = `menu-${name}`
+
+    const baseMenuPath = config.menuEndpoint.replace('$$$NAME$$$', name)
+    const menuPath = ref(baseMenuPath)
+
+    if (config.useLocalizedMenuEndpoint && nuxtApp.$i18n) {
+      // API path with localization
+      menuPath.value = nuxtApp.$localePath('/' + baseMenuPath)
+      watch(nuxtApp.$i18n.locale, () => {
+        menuPath.value = nuxtApp.$localePath('/' + baseMenuPath)
+      })
+    }
 
     const { data: menu, error } = await useFetch(menuPath, useFetchOptions)
 
