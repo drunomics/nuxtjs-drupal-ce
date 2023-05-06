@@ -22,16 +22,16 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@nuxt/kit": "^3.0.0",
+    "@nuxt/kit": "^3.4.3",
     "defu": "^6.1.2"
   },
   "devDependencies": {
-    "@nuxt/module-builder": "^0.2.1",
-    "@nuxt/schema": "^3.0.0",
-    "@nuxt/test-utils": "^3.2.2",
+    "@nuxt/module-builder": "^0.3.1",
+    "@nuxt/schema": "^3.4.3",
+    "@nuxt/test-utils": "^3.4.3",
     "@nuxtjs/eslint-config-typescript": "^12.0.0",
-    "eslint": "^8.29.0",
-    "nuxt": "^3.2.2",
-    "vitest": "^0.28.5"
+    "eslint": "^8.40.0",
+    "nuxt": "^3.4.3",
+    "vitest": "^0.31.0"
   }
 }
