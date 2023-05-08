@@ -2,6 +2,9 @@
   "name": "nuxtjs-drupal-ce",
   "version": "2.0.0",
   "license": "MIT",
+  "bin": {
+    "nuxt-drupal-ce-init": "bin/nuxt-drupal-ce-init.cjs"
+  },
   "type": "module",
   "exports": {
     ".": {
@@ -12,7 +15,10 @@
   "main": "./dist/module.cjs",
   "types": "./dist/types.d.ts",
   "files": [
-    "dist"
+    "dist",
+    "playground/components",
+    "playground/pages",
+    "playground/app.vue"
   ],
   "scripts": {
     "prepack": "nuxt-module-build",
