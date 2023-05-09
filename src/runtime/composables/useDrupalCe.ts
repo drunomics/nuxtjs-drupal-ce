@@ -51,11 +51,11 @@ export const useDrupalCe = () => {
     }
 
     if (error.value && (!error.value?.data?.content || config.customErrorPages)) {
-      throw createError({ statusCode: error.value.status, statusMessage: error.value.message, data: error.value.data, fatal: true })
+      throw createError({ statusCode: error.value.statusCode, statusMessage: error.value.message, data: error.value.data, fatal: true })
     }
 
     if (error.value) {
-      callWithNuxt(nuxtApp, setResponseStatus, [error.value.status])
+      callWithNuxt(nuxtApp, setResponseStatus, [error.value.statusCode])
       page.value = error.value?.data
     }
 
