@@ -31,7 +31,26 @@ export const useDrupalCe = () => {
     const nuxtApp = useNuxtApp()
 
     // Workaround for issue - useState is not available after async call (Nuxt instance unavailable)
-    const pageState = useState('drupal-ce-page-data', () => {})
+    // Initialize state with default values
+    const pageState = useState('drupal-ce-page-data', () => ({
+      breadcrumbs: [],
+      content: {
+        element: 'node'
+      },
+      content_format: 'json',
+      local_tasks: {
+        primary: [],
+        secondary: []
+      },
+      messages: [],
+      metatags: {
+        meta: [],
+        link: [],
+        jsonld: []
+      },
+      page_layout: 'default',
+      title: ''
+    }))
     useFetchOptions.key = `page-${path}`
     useFetchOptions = processFetchOptions(useFetchOptions)
 
@@ -47,7 +66,7 @@ export const useDrupalCe = () => {
         page.value.redirect.url,
         { external: page.value.redirect.external, redirectCode: page.value.redirect.statusCode, replace: true }
       ])
-      return
+      return pageState
     }
 
     if (error.value && (!error.value?.data?.content || config.customErrorPages)) {
