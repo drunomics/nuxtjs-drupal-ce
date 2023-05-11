@@ -34,10 +34,14 @@ export const useDrupalCe = () => {
     const pageState = useState('drupal-ce-page-data', () => {})
     useFetchOptions.key = `page-${path}`
     useFetchOptions = processFetchOptions(useFetchOptions)
+    useFetchOptions.query = useFetchOptions.query ?? {}
 
     if (config.addRequestContentFormat) {
-      useFetchOptions.query = useFetchOptions.query ?? {}
       useFetchOptions.query._content_format = config.addRequestContentFormat
+    }
+
+    if (config.addRequestFormat) {
+      useFetchOptions.query._format = 'custom_elements'
     }
 
     const { data: page, error } = await useFetch(path, useFetchOptions)
