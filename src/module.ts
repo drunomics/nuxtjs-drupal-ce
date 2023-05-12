@@ -7,6 +7,7 @@ export interface ModuleOptions {
   baseURL: string,
   menuEndpoint: string,
   addRequestContentFormat?: string,
+  addRequestFormat: boolean,
   customErrorPages: boolean,
   fetchOptions: UseFetchOptions<any>,
   fetchProxyHeaders: string[],
@@ -29,7 +30,8 @@ export default defineNuxtModule<ModuleOptions>({
       credentials: 'include',
     },
     fetchProxyHeaders: ['cookie'],
-    useLocalizedMenuEndpoint: true
+    useLocalizedMenuEndpoint: true,
+    addRequestFormat: false
   },
   setup (options, nuxt) {
     const { resolve } = createResolver(import.meta.url)
