@@ -7,7 +7,7 @@ export interface ModuleOptions {
   baseURL: string,
   menuEndpoint: string,
   addRequestContentFormat?: string,
-  addRequestFormat: boolean
+  addRequestFormat: boolean,
   customErrorPages: boolean,
   fetchOptions: UseFetchOptions<any>,
   fetchProxyHeaders: string[],
