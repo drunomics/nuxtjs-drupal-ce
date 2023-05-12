@@ -107,10 +107,12 @@ export const useDrupalCe = () => {
 
   /**
    * Render elements from page data returned from fetchPage
-   * @param customElement
+   * @param customElements
    */
-  const renderCustomElements = (customElement) => {
-    return h(resolveComponent(customElement.element), customElement)
+  const renderCustomElements = (customElements: Record<string, any> | Array<Object>) => {
+    return Array.isArray(customElements)
+      ? customElements.map(customElement => h(resolveComponent(customElement.element), customElement))
+      : h(resolveComponent(customElements.element), customElements)
   }
 
   return {
