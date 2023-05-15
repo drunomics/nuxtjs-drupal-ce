@@ -86,13 +86,27 @@ is added automatically to requests. Defaults to `false`.
 
 - `useLocalizedMenuEndpoint`: If enabled, the menu endpoint will use a language prefix as configured by [nuxtjs/i18n](https://v8.i18n.nuxtjs.org) module. Defaults to `true`.
 
+- `pageErrorHandler`: The page error handler can be called. Example:
+  ```javascript
+  const error = {
+    value: {
+      type: 'error',
+      message: 'Custom error message'
+    }
+  }
+  pageErrorHandler(error)
+  ```
 
-## TODO - List of 1.x options not yet implemented
-
-- `pageErrorHandler`: The default page error handler can be overridden.
-
-- `menuErrorHandler`: The default menu error handler can be overridden.
-
+- `menuErrorHandler`: The menu error handler can be called. Example:
+  ```javascript
+  const error = {
+    value: {
+      type: 'error',
+      message: 'Custom error message'
+    }
+  }
+  menuErrorHandler(error)
+  ```
 
 ## Previous options not supported in 2.x version
 
