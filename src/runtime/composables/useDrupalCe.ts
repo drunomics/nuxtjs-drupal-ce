@@ -111,7 +111,7 @@ export const useDrupalCe = () => {
    */
   const renderCustomElements = (customElements: Record<string, any> | Array<Object>) => {
     return Array.isArray(customElements)
-      ? customElements.map(customElement => h(resolveComponent(customElement.element), customElement))
+      ? h('div', customElements.map(customElement => h(resolveComponent(customElement.element), customElement)))
       : h(resolveComponent(customElements.element), customElements)
   }
 
