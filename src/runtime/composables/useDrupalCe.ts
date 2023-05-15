@@ -93,7 +93,7 @@ export const useDrupalCe = () => {
     const { data: menu, error } = await useFetch(menuPath, useFetchOptions)
 
     if (error.value) {
-      errorMenuHandler(error)
+      menuErrorHandler(error)
       return
     }
     return menu
@@ -138,9 +138,16 @@ const pushMessagesToState = (messages) => {
   process.client && useDrupalCe().getMessages().value.push(...messagesArray)
 }
 
-const errorMenuHandler = (error) => {
+export const menuErrorHandler = (error: Object) => {
   process.client && useDrupalCe().getMessages().value.push({
     type: 'error',
     message: `Menu error: ${error.value.message}.`
+  })
+}
+
+export const pageErrorHandler = (error: Object) => {
+  process.client && useDrupalCe().getMessages().value.push({
+    type: 'error',
+    message: `Page error: ${error.value.message}.`
   })
 }
