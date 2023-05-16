@@ -34,9 +34,7 @@ export const useDrupalCe = () => {
     // Initialize state with default values
     const pageState = useState('drupal-ce-page-data', () => ({
       breadcrumbs: [],
-      content: {
-        element: 'node'
-      },
+      content: {},
       content_format: 'json',
       local_tasks: {
         primary: [],
@@ -133,6 +131,9 @@ export const useDrupalCe = () => {
    * @param customElements
    */
   const renderCustomElements = (customElements: Record<string, any> | Array<Object>) => {
+    if (!customElements) {
+      return
+    }
     return Array.isArray(customElements)
       ? h('div', customElements.map(customElement => h(resolveComponent(customElement.element), customElement)))
       : h(resolveComponent(customElements.element), customElements)
