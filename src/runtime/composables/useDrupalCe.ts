@@ -53,10 +53,14 @@ export const useDrupalCe = () => {
     }))
     useFetchOptions.key = `page-${path}`
     useFetchOptions = processFetchOptions(useFetchOptions)
+    useFetchOptions.query = useFetchOptions.query ?? {}
 
     if (config.addRequestContentFormat) {
-      useFetchOptions.query = useFetchOptions.query ?? {}
       useFetchOptions.query._content_format = config.addRequestContentFormat
+    }
+
+    if (config.addRequestFormat) {
+      useFetchOptions.query._format = 'custom_elements'
     }
 
     const { data: page, error } = await useFetch(path, useFetchOptions)
@@ -126,10 +130,12 @@ export const useDrupalCe = () => {
 
   /**
    * Render elements from page data returned from fetchPage
-   * @param customElement
+   * @param customElements
    */
-  const renderCustomElements = (customElement) => {
-    return h(resolveComponent(customElement.element), customElement)
+  const renderCustomElements = (customElements: Record<string, any> | Array<Object>) => {
+    return Array.isArray(customElements)
+      ? h('div', customElements.map(customElement => h(resolveComponent(customElement.element), customElement)))
+      : h(resolveComponent(customElements.element), customElements)
   }
 
   return {

@@ -77,6 +77,9 @@ rm -f app.vue && npx nuxt-drupal-ce-init
 - `addRequestContentFormat`: If specified, the given value is added as `_content_format`
   URL parameter to requests. Disabled by default.
 
+- `addRequestFormat`: If set to `true`, the `_format=custom_elements` URL parameter
+is added automatically to requests. Defaults to `false`.
+
 - `customErrorPages`: By default, error pages provided by Drupal (e.g. 403, 404 page) are shown,
   while keeping the right status code. By enabling customErrorPages, the regular Nuxt error
   pages are shown instead, such that the pages can be customized with Nuxt. Defaults to `false`.
@@ -85,9 +88,6 @@ rm -f app.vue && npx nuxt-drupal-ce-init
 
 
 ## TODO - List of 1.x options not yet implemented
-
-- `addRequestFormat`: If set to `true`, the `_format=custom_elements` URL parameter
-  is added automatically to requests. Defaults to `true`.
 
 - `pageErrorHandler`: The default page error handler can be overridden.
 
