@@ -131,7 +131,7 @@ export const useDrupalCe = () => {
    * @param customElements
    */
   const renderCustomElements = (customElements: Record<string, any> | Array<Object>) => {
-    if (!customElements) {
+    if (Object.keys(customElements).length === 0) {
       return
     }
     return Array.isArray(customElements)
