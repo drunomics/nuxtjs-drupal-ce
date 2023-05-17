@@ -1,6 +1,6 @@
 <template>
   <div class="node">
-    <h2>Title: {{ title }}</h2>
+    <h2>Node: {{ title }}</h2>
     <div v-if="image" v-html="image.content" />
     <div v-if="body" v-html="body" />
   </div>
