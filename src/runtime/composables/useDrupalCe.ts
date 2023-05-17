@@ -31,7 +31,24 @@ export const useDrupalCe = () => {
     const nuxtApp = useNuxtApp()
 
     // Workaround for issue - useState is not available after async call (Nuxt instance unavailable)
-    const pageState = useState('drupal-ce-page-data', () => {})
+    // Initialize state with default values
+    const pageState = useState('drupal-ce-page-data', () => ({
+      breadcrumbs: [],
+      content: {},
+      content_format: 'json',
+      local_tasks: {
+        primary: [],
+        secondary: []
+      },
+      messages: [],
+      metatags: {
+        meta: [],
+        link: [],
+        jsonld: []
+      },
+      page_layout: 'default',
+      title: ''
+    }))
     useFetchOptions.key = `page-${path}`
     useFetchOptions = processFetchOptions(useFetchOptions)
     useFetchOptions.query = useFetchOptions.query ?? {}
@@ -51,7 +68,7 @@ export const useDrupalCe = () => {
         page.value.redirect.url,
         { external: page.value.redirect.external, redirectCode: page.value.redirect.statusCode, replace: true }
       ])
-      return
+      return pageState
     }
 
     if (error.value && (!error.value?.data?.content || config.customErrorPages)) {
@@ -111,10 +128,15 @@ export const useDrupalCe = () => {
 
   /**
    * Render elements from page data returned from fetchPage
-   * @param customElement
+   * @param customElements
    */
-  const renderCustomElements = (customElement) => {
-    return h(resolveComponent(customElement.element), customElement)
+  const renderCustomElements = (customElements: Record<string, any> | Array<Object>) => {
+    if (Object.keys(customElements).length === 0) {
+      return
+    }
+    return Array.isArray(customElements)
+      ? h('div', customElements.map(customElement => h(resolveComponent(customElement.element), customElement)))
+      : h(resolveComponent(customElements.element), customElements)
   }
 
   return {

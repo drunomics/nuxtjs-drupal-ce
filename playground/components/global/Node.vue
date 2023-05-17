@@ -12,7 +12,10 @@ export default {
       type: String,
       required: true
     },
-    body: String
+    body: {
+      type: [Array, String],
+      default: ''
+    }
   }
 }
 </script>
