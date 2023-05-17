@@ -27,7 +27,7 @@ export const useDrupalCe = () => {
    * @param path Path of the Drupal page to fetch
    * @param useFetchOptions Optional Nuxt useFetch options
    */
-  const fetchPage = async (path: string, useFetchOptions:UseFetchOptions<any> = {}) => {
+  const fetchPage = async (path: string, useFetchOptions:UseFetchOptions<any> = {}, overrideErrorHandler?: () => void) => {
     const nuxtApp = useNuxtApp()
 
     // Workaround for issue - useState is not available after async call (Nuxt instance unavailable)
@@ -71,12 +71,8 @@ export const useDrupalCe = () => {
       return pageState
     }
 
-    if (error.value && (!error.value?.data?.content || config.customErrorPages)) {
-      throw createError({ statusCode: error.value.statusCode, statusMessage: error.value.message, data: error.value.data, fatal: true })
-    }
-
     if (error.value) {
-      callWithNuxt(nuxtApp, setResponseStatus, [error.value.statusCode])
+      overrideErrorHandler ? overrideErrorHandler() : pageErrorHandler(error, { config, nuxtApp })
       page.value = error.value?.data
     }
 
@@ -91,7 +87,7 @@ export const useDrupalCe = () => {
    * @param name Menu name being fetched
    * @param useFetchOptions Optional Nuxt useFetch options
    */
-  const fetchMenu = async (name: string, useFetchOptions:UseFetchOptions<any> = {}) => {
+  const fetchMenu = async (name: string, useFetchOptions:UseFetchOptions<any> = {}, overrideErrorHandler?: () => void) => {
     const nuxtApp = useNuxtApp()
     useFetchOptions = processFetchOptions(useFetchOptions)
     useFetchOptions.key = `menu-${name}`
@@ -110,8 +106,7 @@ export const useDrupalCe = () => {
     const { data: menu, error } = await useFetch(menuPath, useFetchOptions)
 
     if (error.value) {
-      menuErrorHandler(error)
-      return
+      overrideErrorHandler ? overrideErrorHandler() : menuErrorHandler(error)
     }
     return menu
   }
@@ -119,12 +114,12 @@ export const useDrupalCe = () => {
   /**
    * Use messages state
    */
-  const getMessages = () => useState('drupal-ce-messages', () => [])
+  const getMessages = (): Ref => useState('drupal-ce-messages', () => [])
 
   /**
    * Use page data
    */
-  const getPage = () => useState('drupal-ce-page-data', () => ({}))
+  const getPage = (): Ref => useState('drupal-ce-page-data', () => ({}))
 
   /**
    * Render elements from page data returned from fetchPage
@@ -160,16 +155,16 @@ const pushMessagesToState = (messages) => {
   process.client && useDrupalCe().getMessages().value.push(...messagesArray)
 }
 
-export const menuErrorHandler = (error: Object) => {
+const menuErrorHandler = (error: Record<string, any>) => {
   process.client && useDrupalCe().getMessages().value.push({
     type: 'error',
     message: `Menu error: ${error.value.message}.`
   })
 }
 
-export const pageErrorHandler = (error: Object) => {
-  process.client && useDrupalCe().getMessages().value.push({
-    type: 'error',
-    message: `Page error: ${error.value.message}.`
-  })
+const pageErrorHandler = (error: Record<string, any>, context: Record<string, any>) => {
+  if (error.value && (!error.value?.data?.content || context.config.customErrorPages)) {
+    throw createError({ statusCode: error.value.statusCode, statusMessage: error.value.message, data: error.value.data, fatal: true })
+  }
+  callWithNuxt(context.nuxtApp, setResponseStatus, [error.value.statusCode])
 }

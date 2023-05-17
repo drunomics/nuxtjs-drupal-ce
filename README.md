@@ -86,26 +86,27 @@ is added automatically to requests. Defaults to `false`.
 
 - `useLocalizedMenuEndpoint`: If enabled, the menu endpoint will use a language prefix as configured by [nuxtjs/i18n](https://v8.i18n.nuxtjs.org) module. Defaults to `true`.
 
-- `pageErrorHandler`: The page error handler can be called. Example:
+## Override error handlers
+
+You have the option to override the default error handlers by using a parameter for the `fetchPage` and `fetchMenu` methods.
+
+- `fetchPage`:
   ```javascript
-  const error = {
-    value: {
-      type: 'error',
-      message: 'Custom error message'
-    }
+  function customPageError () {
+    throw createError({ statusCode: 401, statusMessage: 'No access.', data: {}, fatal: true })
   }
-  pageErrorHandler(error)
+  const page = await fetchPage(useRoute().path, {}, customPageError)
   ```
 
-- `menuErrorHandler`: The menu error handler can be called. Example:
+- `fetchMenu`:
   ```javascript
-  const error = {
-    value: {
+  function customMenuError () {
+    useDrupalCe().getMessages().value.push({
       type: 'error',
-      message: 'Custom error message'
-    }
+      message: `Menu error: Unavailable.`
+    })
   }
-  menuErrorHandler(error)
+  const mainMenu = await fetchMenu('main', {}, customMenuError)
   ```
 
 ## Previous options not supported in 2.x version
