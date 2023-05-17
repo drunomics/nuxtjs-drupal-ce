@@ -7,22 +7,13 @@
   </div>
 </template>
 
-<script setup>
-const props = defineProps({
-  type: {
-    type: String,
-    required: true,
-    validator: type => ['error', 'success'].includes(type)
-  },
-  id: {
-    type: String,
-    required: true
-  },
-  message: {
-    type: String,
-    required: true
-  }
-})
+<script setup lang="ts">
+const props = defineProps<{
+  type: String;
+  id: String;
+  message: String;
+}>()
+
 const emit = defineEmits(['dismiss'])
 
 onMounted(() => {

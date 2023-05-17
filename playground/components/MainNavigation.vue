@@ -21,7 +21,7 @@
   </ul>
 </template>
 
-<script lang="ts" setup>
+<script setup lang="ts">
 const { fetchMenu } = useDrupalCe()
 const mainMenu = await fetchMenu('main')
 </script>

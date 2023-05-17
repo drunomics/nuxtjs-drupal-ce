@@ -5,17 +5,10 @@
   </div>
 </template>
 
-<script>
-export default {
-  props: {
-    title: {
-      type: String,
-      required: true
-    },
-    body: {
-      type: [Array, String],
-      default: ''
-    }
-  }
-}
+<script setup lang="ts">
+const props = defineProps<{
+  title: String;
+  body?: Array<Object>;
+}>()
+const { renderCustomElements } = useDrupalCe()
 </script>

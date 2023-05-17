@@ -16,10 +16,10 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 const { getMessages } = useDrupalCe()
 const messages = getMessages()
-const dismiss = (id) => messages.value.splice(id, 1)
+const dismiss = (id: number) => messages.value.splice(id, 1)
 </script>
 
 <style lang="css" scoped>
