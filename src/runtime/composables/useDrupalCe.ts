@@ -27,7 +27,7 @@ export const useDrupalCe = () => {
    * @param path Path of the Drupal page to fetch
    * @param useFetchOptions Optional Nuxt useFetch options
    */
-  const fetchPage = async (path: string, useFetchOptions:UseFetchOptions<any> = {}, overrideErrorHandler?: () => void) => {
+  const fetchPage = async (path: string, useFetchOptions: UseFetchOptions<any> = {}, overrideErrorHandler?: (error?: any) => void) => {
     const nuxtApp = useNuxtApp()
 
     // Workaround for issue - useState is not available after async call (Nuxt instance unavailable)
@@ -72,7 +72,7 @@ export const useDrupalCe = () => {
     }
 
     if (error.value) {
-      overrideErrorHandler ? overrideErrorHandler() : pageErrorHandler(error, { config, nuxtApp })
+      overrideErrorHandler ? overrideErrorHandler(error) : pageErrorHandler(error, { config, nuxtApp })
       page.value = error.value?.data
     }
 
@@ -87,7 +87,7 @@ export const useDrupalCe = () => {
    * @param name Menu name being fetched
    * @param useFetchOptions Optional Nuxt useFetch options
    */
-  const fetchMenu = async (name: string, useFetchOptions:UseFetchOptions<any> = {}, overrideErrorHandler?: () => void) => {
+  const fetchMenu = async (name: string, useFetchOptions: UseFetchOptions<any> = {}, overrideErrorHandler?: (error?: any) => void) => {
     const nuxtApp = useNuxtApp()
     useFetchOptions = processFetchOptions(useFetchOptions)
     useFetchOptions.key = `menu-${name}`
@@ -106,7 +106,7 @@ export const useDrupalCe = () => {
     const { data: menu, error } = await useFetch(menuPath, useFetchOptions)
 
     if (error.value) {
-      overrideErrorHandler ? overrideErrorHandler() : menuErrorHandler(error)
+      overrideErrorHandler ? overrideErrorHandler(error) : menuErrorHandler(error)
     }
     return menu
   }

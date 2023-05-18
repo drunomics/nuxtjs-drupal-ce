@@ -92,22 +92,24 @@ You have the option to override the default error handlers by using a parameter 
 
 - `fetchPage`:
   ```javascript
-  function customPageError () {
-    throw createError({ statusCode: 401, statusMessage: 'No access.', data: {}, fatal: true })
+  function customPageError (error: Record<string, any>) {
+    throw createError({ statusCode: error.value.statusCode, statusMessage: 'No access.', data: {}, fatal: true })
   }
   const page = await fetchPage(useRoute().path, {}, customPageError)
   ```
 
 - `fetchMenu`:
   ```javascript
-  function customMenuError () {
-    useDrupalCe().getMessages().value.push({
+  function customMenuError (error: Record<string, any>) {
+    messages.value.push({
       type: 'error',
-      message: `Menu error: Unavailable.`
+      message: `Menu error: Unavailable. ${error.value.statusCode}`
     })
   }
   const mainMenu = await fetchMenu('main', {}, customMenuError)
   ```
+
+Note: The `error` parameter is optional and can be omitted.
 
 ## Previous options not supported in 2.x version
 
