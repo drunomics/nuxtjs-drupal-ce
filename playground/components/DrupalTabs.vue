@@ -20,15 +20,10 @@
   </div>
 </template>
 
-<script>
-export default {
-  props: {
-    tabs: {
-      type: [Object, Array],
-      required: true
-    }
-  }
-}
+<script setup lang="ts">
+const props = defineProps<{
+  tabs: Object;
+}>()
 </script>
 
 <style lang="css" scoped>

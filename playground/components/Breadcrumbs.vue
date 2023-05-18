@@ -22,7 +22,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 const { getPage } = useDrupalCe()
 const page = getPage()
 </script>
