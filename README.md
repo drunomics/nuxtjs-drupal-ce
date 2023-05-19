@@ -86,13 +86,47 @@ is added automatically to requests. Defaults to `false`.
 
 - `useLocalizedMenuEndpoint`: If enabled, the menu endpoint will use a language prefix as configured by [nuxtjs/i18n](https://v8.i18n.nuxtjs.org) module. Defaults to `true`.
 
+## Error handling
 
-## TODO - List of 1.x options not yet implemented
+The module provides a default error handler for the `fetchPage` and `fetchMenu` methods:
 
-- `pageErrorHandler`: The default page error handler can be overridden.
+- `fetchPage`: Throws an error with the status code and message provided by Drupal.
+- `fetchMenu`: Logs an error message to the console and displays a message in the frontend.
 
-- `menuErrorHandler`: The default menu error handler can be overridden.
+## Customizing error handling
 
+You have the option to override the default error handlers by using a parameter when calling the `fetch` methods.
+
+- `fetchPage`:
+  ```javascript
+  <script lang="ts" setup>
+    const { fetchPage } = useDrupalCe()
+
+    function customPageError (error: Record<string, any>) {
+      throw createError({ statusCode: error.value.statusCode, statusMessage: 'No access.', data: {}, fatal: true })
+    }
+    const page = await fetchPage(useRoute().path, { query: useRoute().query }, customPageError)
+  </script>
+  ```
+
+- `fetchMenu`:
+  ```javascript
+  <script lang="ts" setup>
+    const { fetchMenu } = useDrupalCe()
+    const { getMessages } = useDrupalCe()
+    const messages = getMessages()
+
+    function customMenuError (error: Record<string, any>) {
+      messages.value.push({
+        type: 'error',
+        message: `Menu error: Unavailable. ${error.value.statusCode}`
+      })
+    }
+    const mainMenu = await fetchMenu('main', {}, customMenuError)
+  </script>
+  ```
+
+Note: The `error` parameter is optional and can be omitted.
 
 ## Previous options not supported in 2.x version
 
