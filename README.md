@@ -86,27 +86,44 @@ is added automatically to requests. Defaults to `false`.
 
 - `useLocalizedMenuEndpoint`: If enabled, the menu endpoint will use a language prefix as configured by [nuxtjs/i18n](https://v8.i18n.nuxtjs.org) module. Defaults to `true`.
 
-## Override error handlers
+## Error handling
 
-You have the option to override the default error handlers by using a parameter for the `fetchPage` and `fetchMenu` methods.
+The module provides a default error handler for the `fetchPage` and `fetchMenu` methods:
+
+- `fetchPage`: Throws an error with the status code and message provided by Drupal.
+- `fetchMenu`: Logs an error message to the console and displays a message in the frontend.
+
+## Customizing error handling
+
+You have the option to override the default error handlers by using a parameter when calling the `fetch` methods.
 
 - `fetchPage`:
   ```javascript
-  function customPageError (error: Record<string, any>) {
-    throw createError({ statusCode: error.value.statusCode, statusMessage: 'No access.', data: {}, fatal: true })
-  }
-  const page = await fetchPage(useRoute().path, {}, customPageError)
+  <script lang="ts" setup>
+    const { fetchPage } = useDrupalCe()
+
+    function customPageError (error: Record<string, any>) {
+      throw createError({ statusCode: error.value.statusCode, statusMessage: 'No access.', data: {}, fatal: true })
+    }
+    const page = await fetchPage(useRoute().path, { query: useRoute().query }, customPageError)
+  </script>
   ```
 
 - `fetchMenu`:
   ```javascript
-  function customMenuError (error: Record<string, any>) {
-    messages.value.push({
-      type: 'error',
-      message: `Menu error: Unavailable. ${error.value.statusCode}`
-    })
-  }
-  const mainMenu = await fetchMenu('main', {}, customMenuError)
+  <script lang="ts" setup>
+    const { fetchMenu } = useDrupalCe()
+    const { getMessages } = useDrupalCe()
+    const messages = getMessages()
+
+    function customMenuError (error: Record<string, any>) {
+      messages.value.push({
+        type: 'error',
+        message: `Menu error: Unavailable. ${error.value.statusCode}`
+      })
+    }
+    const mainMenu = await fetchMenu('main', {}, customMenuError)
+  </script>
   ```
 
 Note: The `error` parameter is optional and can be omitted.

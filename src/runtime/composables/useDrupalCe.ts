@@ -156,6 +156,7 @@ const pushMessagesToState = (messages) => {
 }
 
 const menuErrorHandler = (error: Record<string, any>) => {
+  console.error({ statusCode: error.value.statusCode, statusMessage: error.value.message, data: error.value.data })
   process.client && useDrupalCe().getMessages().value.push({
     type: 'error',
     message: `Menu error: ${error.value.message}.`
