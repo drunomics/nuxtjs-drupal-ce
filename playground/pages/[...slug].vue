@@ -1,6 +1,6 @@
 <template>
   <div>
-    <NuxtLayout :name="page.page_layout">
+    <NuxtLayout :name="layout">
       <main>
         <Breadcrumbs />
         <DrupalTabs v-if="page.local_tasks" :tabs="page.local_tasks" />
@@ -16,6 +16,9 @@ const page = await fetchPage(useRoute().path, { query: useRoute().query })
 // Set to false to support custom layouts, using <NuxtLayout> instead.
 definePageMeta({
   layout: false,
+})
+const layout = computed(() => {
+  return page.value.page_layout || 'default'
 })
 useHead({
   title: page.value.title,
