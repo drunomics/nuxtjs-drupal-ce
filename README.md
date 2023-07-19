@@ -24,7 +24,7 @@ The 2.x version of the module is compatible with Nuxt 3. For a Nuxt 2 compatible
 1. Add `nuxtjs-drupal-ce` dependency to your Nuxt project
 
 ```bash
-yarn add nuxtjs-drupal-ce@alpha # or npm install nuxtjs-drupal-ce@alpha
+yarn add nuxtjs-drupal-ce@beta # or npm install nuxtjs-drupal-ce@beta
 ```
 
 2. Add `nuxtjs-drupal-ce` to the `modules` section of `nuxt.config.js`
