@@ -12,6 +12,7 @@ export interface ModuleOptions {
   fetchOptions: UseFetchOptions<any>,
   fetchProxyHeaders: string[],
   useLocalizedMenuEndpoint: boolean,
+  exposeAPIRouteRules: boolean,
 }
 
 export default defineNuxtModule<ModuleOptions>({
@@ -31,9 +32,15 @@ export default defineNuxtModule<ModuleOptions>({
     },
     fetchProxyHeaders: ['cookie'],
     useLocalizedMenuEndpoint: true,
-    addRequestFormat: false
+    addRequestFormat: false,
+    exposeAPIRouteRules: true
   },
   setup (options, nuxt) {
+    if (nuxt.options._generate) {
+      // Disable the route rules for static sites.
+      options.exposeAPIRouteRules = false
+    }
+
     const { resolve } = createResolver(import.meta.url)
     const runtimeDir = fileURLToPath(new URL('./runtime', import.meta.url))
     nuxt.options.build.transpile.push(runtimeDir)
@@ -41,6 +48,21 @@ export default defineNuxtModule<ModuleOptions>({
     addImportsDir(resolve(runtimeDir, 'composables'))
 
     nuxt.options.runtimeConfig.public.drupalCe = defu(nuxt.options.runtimeConfig.public.drupalCe ?? {}, options)
+
+    if (options.exposeAPIRouteRules === true) {
+      const baseURLOrigin = new URL(options.baseURL).origin
+      const defaultRouteRules: Record<string, { proxy: string, swr?: number }> = {
+        '/api/drupal/**': { proxy: baseURLOrigin + '/**' },
+        '/api/drupal-ce/**': { proxy: options.baseURL + '/**' },
+        '/api/menu/**': { proxy: baseURLOrigin + '/api/menu_items/**', swr: 300 }
+      }
+
+      if (nuxt.options.nitro?.routeRules) {
+        nuxt.options.nitro.routeRules = defu(nuxt.options.nitro.routeRules, defaultRouteRules) as { [path: string]: { proxy: string, swr?: number } }
+      } else {
+        nuxt.options.nitro = { routeRules: defaultRouteRules }
+      }
+    }
   }
 })
 

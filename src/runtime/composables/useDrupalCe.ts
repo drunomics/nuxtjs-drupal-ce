@@ -12,7 +12,11 @@ export const useDrupalCe = () => {
    * @returns UseFetchOptions<any>
    */
   const processFetchOptions = (fetchOptions:UseFetchOptions<any> = {}) => {
-    fetchOptions.baseURL = fetchOptions.baseURL ?? config.baseURL
+    if (config.exposeAPIRouteRules) {
+      fetchOptions.baseURL = useRequestURL().origin + '/api/drupal-ce'
+    } else {
+      fetchOptions.baseURL = fetchOptions.baseURL ?? config.baseURL
+    }
     fetchOptions = defu(fetchOptions, config.fetchOptions)
 
     // Apply the request headers of current request, if configured.
