@@ -50,7 +50,8 @@ export default defineNuxtModule<ModuleOptions>({
     nuxt.options.runtimeConfig.public.drupalCe = defu(nuxt.options.runtimeConfig.public.drupalCe ?? {}, options)
 
     if (options.exposeAPIRouteRules === true) {
-      const baseURLOrigin = new URL(options.baseURL).origin
+      // Check if absolute URL or path, if an absolute then extract the origin.
+      const baseURLOrigin = /^(http|https):\/\//.test(options.baseURL) ? new URL(options.baseURL).origin : options.baseURL
       const defaultRouteRules: Record<string, { proxy: string, swr?: number }> = {
         '/api/drupal/**': { proxy: baseURLOrigin + '/**' },
         '/api/drupal-ce/**': { proxy: options.baseURL + '/**' },
