@@ -128,6 +128,18 @@ You have the option to override the default error handlers by using a parameter 
 
 Note: The `error` parameter is optional and can be omitted.
 
+## Customizing API route rules
+
+```javascript
+export default defineNuxtConfig({
+  routeRules: {
+    '/drupal-ce/**': { swr: true },
+  }
+})
+```
+
+For more options, see [Nitro route rules](https://nitro.unjs.io/guide/routing).
+
 ## Previous options not supported in 2.x version
 
 The following options were support in 1.x but got dropped:

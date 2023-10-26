@@ -55,7 +55,7 @@ export default defineNuxtModule<ModuleOptions>({
       const defaultRouteRules: Record<string, { proxy: string, swr?: number }> = {
         '/api/drupal/**': { proxy: baseURLOrigin + '/**' },
         '/api/drupal-ce/**': { proxy: options.baseURL + '/**' },
-        '/api/menu/**': { proxy: baseURLOrigin + '/api/menu_items/**', swr: 300 }
+        '/api/menu/**': { proxy: options.baseURL + '/**', swr: nuxt.options.dev ? 0 : 300 }
       }
 
       if (nuxt.options.nitro?.routeRules) {

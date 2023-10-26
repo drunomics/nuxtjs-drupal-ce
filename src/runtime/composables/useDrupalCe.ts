@@ -13,7 +13,7 @@ export const useDrupalCe = () => {
    */
   const processFetchOptions = (fetchOptions:UseFetchOptions<any> = {}) => {
     if (config.exposeAPIRouteRules) {
-      fetchOptions.baseURL = useRequestURL().origin + '/api/drupal-ce'
+      fetchOptions.baseURL = '/api/drupal-ce'
     } else {
       fetchOptions.baseURL = fetchOptions.baseURL ?? config.baseURL
     }
@@ -105,6 +105,10 @@ export const useDrupalCe = () => {
       watch(nuxtApp.$i18n.locale, () => {
         menuPath.value = nuxtApp.$localePath('/' + baseMenuPath)
       })
+    }
+
+    if (config.exposeAPIRouteRules) {
+      useFetchOptions.baseURL = useRequestURL().origin + '/api/menu'
     }
 
     const { data: menu, error } = await useFetch(menuPath, useFetchOptions)
