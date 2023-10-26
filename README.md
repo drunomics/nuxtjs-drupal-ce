@@ -130,10 +130,32 @@ Note: The `error` parameter is optional and can be omitted.
 
 ## Customizing API route rules
 
+API route rules can be customized by using the `routeRules` option in Nuxt config:
+
 ```javascript
 export default defineNuxtConfig({
-  routeRules: {
-    '/drupal-ce/**': { swr: true },
+  nitro: {
+    routeRules: {
+      '/drupal-ce/**': { swr: true },
+    }
+  }
+})
+```
+
+The default route rules implemented are:
+
+```javascript
+'/api/drupal/**': { proxy: baseURLOrigin + '/**' }, // Base URL proxy.
+'/api/drupal-ce/**': { proxy: options.baseURL + '/**' }, // Fetch page proxy.
+'/api/menu/**': { proxy: options.baseURL + '/**', swr: nuxt.options.dev ? 0 : 300 } // Fetch menu proxy.
+```
+
+In order to disable this feature, `drupalCe.exposeAPIRouteRules` can be set to false:
+
+```javascript
+export default defineNuxtConfig({
+  drupalCe: {
+    exposeAPIRouteRules: false
   }
 })
 ```

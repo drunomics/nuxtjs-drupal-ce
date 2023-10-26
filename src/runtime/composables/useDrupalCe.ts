@@ -108,7 +108,7 @@ export const useDrupalCe = () => {
     }
 
     if (config.exposeAPIRouteRules) {
-      useFetchOptions.baseURL = useRequestURL().origin + '/api/menu'
+      useFetchOptions.baseURL = '/api/menu'
     }
 
     const { data: menu, error } = await useFetch(menuPath, useFetchOptions)
