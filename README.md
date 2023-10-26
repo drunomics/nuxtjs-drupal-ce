@@ -130,7 +130,7 @@ Note: The `error` parameter is optional and can be omitted.
 
 ## Customizing API route rules
 
-API route rules can be customized by using the `routeRules` option in Nuxt config:
+API route rules can be customized by adding `nitro.routeRules` in Nuxt config:
 
 ```javascript
 export default defineNuxtConfig({
