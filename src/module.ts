@@ -1,6 +1,6 @@
 import { fileURLToPath } from 'url'
 import { defineNuxtModule, addPlugin, createResolver, addImportsDir } from '@nuxt/kit'
-import { UseFetchOptions } from 'nuxt/dist/app/composables'
+import type { UseFetchOptions } from 'nuxt/dist/app/composables'
 import { defu } from 'defu'
 
 export interface ModuleOptions {
