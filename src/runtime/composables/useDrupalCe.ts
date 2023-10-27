@@ -1,6 +1,6 @@
 import { callWithNuxt } from '#app'
 import { defu } from 'defu'
-import { useRuntimeConfig, useState, useFetch, navigateTo, createError, h, resolveComponent, setResponseStatus, useNuxtApp, useRequestHeaders, UseFetchOptions, ref, watch } from '#imports'
+import { useRuntimeConfig, useRequestURL, useState, useFetch, navigateTo, createError, h, resolveComponent, setResponseStatus, useNuxtApp, useRequestHeaders, UseFetchOptions, ref, watch } from '#imports'
 
 export const useDrupalCe = () => {
 
@@ -13,7 +13,7 @@ export const useDrupalCe = () => {
    */
   const processFetchOptions = (fetchOptions:UseFetchOptions<any> = {}) => {
     if (config.exposeAPIRouteRules) {
-      fetchOptions.baseURL = '/api/drupal-ce'
+      fetchOptions.baseURL = useRequestURL().origin + '/api/drupal-ce'
     } else {
       fetchOptions.baseURL = fetchOptions.baseURL ?? config.baseURL
     }
@@ -108,7 +108,7 @@ export const useDrupalCe = () => {
     }
 
     if (config.exposeAPIRouteRules) {
-      useFetchOptions.baseURL = '/api/menu'
+      useFetchOptions.baseURL = useRequestURL().origin + '/api/menu'
     }
 
     const { data: menu, error } = await useFetch(menuPath, useFetchOptions)
