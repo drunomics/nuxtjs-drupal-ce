@@ -5,7 +5,11 @@ import { defu } from 'defu'
 
 export interface ModuleOptions {
   baseURL: string,
+  drupalBaseUrl?: string,
+  serverDrupalBaseUrl?: string,
+  ceApiEndpoint?: string,
   menuEndpoint: string,
+  menuBaseUrl?: string,
   addRequestContentFormat?: string,
   addRequestFormat: boolean,
   customErrorPages: boolean,
@@ -25,6 +29,8 @@ export default defineNuxtModule<ModuleOptions>({
   },
   defaults: {
     baseURL: 'https://8080-shaal-drupalpod-xxxxxxxxxxx.ws-xxxx.gitpod.io/ce-api',
+    drupalBaseUrl: 'https://8080-shaal-drupalpod-xxxxxxxxxxx.ws-xxxx.gitpod.io',
+    ceApiEndpoint: '/ce-api',
     menuEndpoint: 'api/menu_items/$$$NAME$$$',
     customErrorPages: false,
     fetchOptions: {
@@ -41,6 +47,22 @@ export default defineNuxtModule<ModuleOptions>({
       options.exposeAPIRouteRules = false
     }
 
+    if (options.baseURL) {
+      const baseURL = new URL(options.baseURL)
+      if (!options.drupalBaseUrl) {
+        options.drupalBaseUrl = baseURL.origin
+      }
+      if (!options.ceApiEndpoint) {
+        options.ceApiEndpoint = baseURL.pathname
+      }
+    } else {
+      options.baseURL = options.drupalBaseUrl + options.ceApiEndpoint
+    }
+
+    if (!options.menuBaseUrl) {
+      options.menuBaseUrl = options.drupalBaseUrl + options.ceApiEndpoint
+    }
+
     const { resolve } = createResolver(import.meta.url)
     const runtimeDir = fileURLToPath(new URL('./runtime', import.meta.url))
     nuxt.options.build.transpile.push(runtimeDir)
@@ -50,10 +72,7 @@ export default defineNuxtModule<ModuleOptions>({
     nuxt.options.runtimeConfig.public.drupalCe = defu(nuxt.options.runtimeConfig.public.drupalCe ?? {}, options)
 
     if (options.exposeAPIRouteRules === true) {
-      // Check if absolute URL or path, if an absolute then extract the origin.
-      const baseURLOrigin = /^(http|https):\/\//.test(options.baseURL) ? new URL(options.baseURL).origin : options.baseURL
       const defaultRouteRules: Record<string, { proxy: string, swr?: number }> = {
-        '/api/drupal/**': { proxy: baseURLOrigin + '/**' },
         '/api/drupal-ce/**': { proxy: options.baseURL + '/**' },
         '/api/menu/**': { proxy: options.baseURL + '/**', swr: nuxt.options.dev ? 0 : 300 }
       }

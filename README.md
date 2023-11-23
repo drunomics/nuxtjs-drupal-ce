@@ -65,6 +65,12 @@ rm -f app.vue && npx nuxt-drupal-ce-init
 - `baseURL`: The Drupal base URL. Defaults to the `DRUPAL_BASE_URL`
    environment variable if provided, otherwise to `http://localhost:8888`.
 
+- `drupalBaseUrl`: The Drupal origin. Defaults to parsing the origin from `baseURL` if unset.
+
+- `serverDrupalBaseUrl`: The Node.js server base URL(optional).
+
+- `ceApiEndpoint`: The custom elements API endpoint. Defaults to `/ce-api`.
+
 - `fetchOptions`: The default [fetchOptions](https://nuxt.com/docs/api/composables/use-fetch#params)
    to apply when fetching from the Drupal. Defaults to `{ credentials: 'include' }`.
 
@@ -73,6 +79,8 @@ rm -f app.vue && npx nuxt-drupal-ce-init
 - `menuEndpoint`: The menu endpoint pattern used for fetching menus. Defaults to 'api/menu_items/$$$NAME$$$' as fitting
   to the API provided by the [Rest menu items](https://www.drupal.org/project/rest_menu_items) Drupal module.
   `$$$NAME$$$` is replaced by the menu name being fetched.
+
+- `menuBaseUrl`: The menu base URL. Defaults to drupalBaseUrl + ceApiEndpoint.
 
 - `addRequestContentFormat`: If specified, the given value is added as `_content_format`
   URL parameter to requests. Disabled by default.
