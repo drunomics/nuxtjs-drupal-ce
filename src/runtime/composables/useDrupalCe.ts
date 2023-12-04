@@ -40,6 +40,9 @@ export const useDrupalCe = () => {
         primary: [],
         secondary: []
       },
+      settings: {
+        display_title: '0'
+      },
       messages: [],
       metatags: {
         meta: [],
