@@ -1,5 +1,5 @@
 import { fileURLToPath } from 'url'
-import { defineNuxtModule, addPlugin, createResolver, addImportsDir } from '@nuxt/kit'
+import { defineNuxtModule, addPlugin, createResolver, addImportsDir, addServerHandler } from '@nuxt/kit'
 import type { UseFetchOptions } from 'nuxt/dist/app/composables'
 import { defu } from 'defu'
 
@@ -72,16 +72,14 @@ export default defineNuxtModule<ModuleOptions>({
     nuxt.options.runtimeConfig.public.drupalCe = defu(nuxt.options.runtimeConfig.public.drupalCe ?? {}, options)
 
     if (options.exposeAPIRouteRules === true) {
-      const defaultRouteRules: Record<string, { proxy: string, swr?: number }> = {
-        '/api/drupal-ce/**': { proxy: options.baseURL + '/**' },
-        '/api/menu/**': { proxy: options.baseURL + '/**', swr: nuxt.options.dev ? 0 : 300 }
-      }
-
-      if (nuxt.options.nitro?.routeRules) {
-        nuxt.options.nitro.routeRules = defu(nuxt.options.nitro.routeRules, defaultRouteRules) as { [path: string]: { proxy: string, swr?: number } }
-      } else {
-        nuxt.options.nitro = { routeRules: defaultRouteRules }
-      }
+      addServerHandler({
+        route: '/api/drupal-ce/**',
+        handler: resolve(resolve(runtimeDir, 'server/api/drupalCe.ts')),
+      })
+      addServerHandler({
+        route: '/api/menu/**',
+        handler: resolve(resolve(runtimeDir, 'server/api/menu.ts'))
+      })
     }
   }
 })

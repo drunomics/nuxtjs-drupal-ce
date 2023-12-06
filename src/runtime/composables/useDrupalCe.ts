@@ -65,6 +65,10 @@ export const useDrupalCe = () => {
       useFetchOptions.query._format = 'custom_elements'
     }
 
+    if (config.exposeAPIRouteRules && path === '/') {
+      // The root path needs to be rewritten to /api/drupal-ce.
+      path = '/api/drupal-ce'
+    }
     const { data: page, error } = await useFetch(path, useFetchOptions)
 
     if (page?.value?.redirect) {
@@ -109,6 +113,7 @@ export const useDrupalCe = () => {
 
     if (config.exposeAPIRouteRules) {
       useFetchOptions.baseURL = useRequestURL().origin + '/api/menu'
+      menuPath.value = name
     }
 
     const { data: menu, error } = await useFetch(menuPath, useFetchOptions)
