@@ -60,14 +60,13 @@ rm -f app.vue && npx nuxt-drupal-ce-init
 * Provides unstyled skeleton components for getting started quickly.
 * Supports fetching and display of Drupal menus via the [Rest menu items](https://www.drupal.org/project/rest_menu_items) module.
 
+
 ## Options
 
-- `baseURL`: The Drupal base URL. Defaults to the `DRUPAL_BASE_URL`
+- `drupalBaseUrl`: The Drupal base URL. Defaults to the `DRUPAL_BASE_URL`
    environment variable if provided, otherwise to `http://localhost:8888`.
 
-- `drupalBaseUrl`: The Drupal origin. Defaults to parsing the origin from `baseURL` if unset.
-
-- `serverDrupalBaseUrl`: The Node.js server base URL(optional).
+- `serverDrupalBaseUrl`: Optionally, an alternative drupal base URL to apply in server context.
 
 - `ceApiEndpoint`: The custom elements API endpoint. Defaults to `/ce-api`.
 
@@ -93,6 +92,14 @@ is added automatically to requests. Defaults to `false`.
   pages are shown instead, such that the pages can be customized with Nuxt. Defaults to `false`.
 
 - `useLocalizedMenuEndpoint`: If enabled, the menu endpoint will use a language prefix as configured by [nuxtjs/i18n](https://v8.i18n.nuxtjs.org) module. Defaults to `true`.
+
+## Deprecated options
+
+The following options are deprecated and only there for improved backwards compatibility.
+
+- `baseURL`: The base URL of the Drupal /ce-api endpoint, e.g. http://localhost:8888/ce-api.
+   If set, `drupalBaseUrl` is set with the origin of the provided URL.
+
 
 ## Error handling
 
