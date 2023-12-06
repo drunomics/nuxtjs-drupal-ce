@@ -42,12 +42,7 @@ export default defineNuxtModule<ModuleOptions>({
     exposeAPIRouteRules: true
   },
   setup (options, nuxt) {
-    if (nuxt.options._generate) {
-      // Disable the route rules for static sites.
-      options.exposeAPIRouteRules = false
-    }
-
-    if (options.baseURL) {
+    if (options.baseURL && options.baseURL.startsWith('http')) {
       const baseURL = new URL(options.baseURL)
       if (!options.drupalBaseUrl) {
         options.drupalBaseUrl = baseURL.origin
@@ -55,12 +50,17 @@ export default defineNuxtModule<ModuleOptions>({
       if (!options.ceApiEndpoint) {
         options.ceApiEndpoint = baseURL.pathname
       }
-    } else {
+    } else if (!options.baseURL) {
       options.baseURL = options.drupalBaseUrl + options.ceApiEndpoint
     }
 
     if (!options.menuBaseUrl) {
       options.menuBaseUrl = options.drupalBaseUrl + options.ceApiEndpoint
+    }
+
+    // Disable the server routes for static sites OR when baseURL is not a full URL.
+    if (nuxt.options._generate || !options.baseURL.startsWith('http')) {
+      options.exposeAPIRouteRules = false
     }
 
     const { resolve } = createResolver(import.meta.url)
@@ -74,7 +74,7 @@ export default defineNuxtModule<ModuleOptions>({
     if (options.exposeAPIRouteRules === true) {
       addServerHandler({
         route: '/api/drupal-ce/**',
-        handler: resolve(resolve(runtimeDir, 'server/api/drupalCe.ts')),
+        handler: resolve(resolve(runtimeDir, 'server/api/drupalCe.ts'))
       })
       addServerHandler({
         route: '/api/menu/**',
