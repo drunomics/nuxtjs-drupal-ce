@@ -1,11 +1,9 @@
 export default defineEventHandler(async (event) => {
   const menuBaseUrl = useRuntimeConfig().public.drupalCe.menuBaseUrl
-  let menuEndpoint = useRuntimeConfig().public.drupalCe.menuEndpoint
-  const menuName = event.context.params._
-  menuEndpoint = menuEndpoint.replace('$$$NAME$$$', menuName)
-  return await proxyRequest(event, `${menuBaseUrl}/${menuEndpoint}`, {
+  const menu = event.context.params._
+  return await proxyRequest(event, `${menuBaseUrl}/${menu}`, {
     headers: {
-      'Cache-Control': 'max-age=300',
+      'Cache-Control': 'max-age=300'
     }
   })
 });

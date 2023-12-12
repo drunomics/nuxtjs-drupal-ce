@@ -63,8 +63,7 @@ rm -f app.vue && npx nuxt-drupal-ce-init
 
 ## Options
 
-- `drupalBaseUrl`: The Drupal base URL. Defaults to the `DRUPAL_BASE_URL`
-   environment variable if provided, otherwise to `http://localhost:8888`.
+- `drupalBaseUrl`: The Drupal base URL.
 
 - `serverDrupalBaseUrl`: Optionally, an alternative drupal base URL to apply in server context.
 
@@ -92,6 +91,9 @@ is added automatically to requests. Defaults to `false`.
   pages are shown instead, such that the pages can be customized with Nuxt. Defaults to `false`.
 
 - `useLocalizedMenuEndpoint`: If enabled, the menu endpoint will use a language prefix as configured by [nuxtjs/i18n](https://v8.i18n.nuxtjs.org) module. Defaults to `true`.
+
+## Overriding options with environment variables
+Runtime config values can be overriden with environment variables via `NUXT_PUBLIC_` prefix, e.g. `NUXT_PUBLIC_DRUPAL_BASE_URL`.
 
 ## Deprecated options
 
