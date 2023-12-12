@@ -93,7 +93,11 @@ is added automatically to requests. Defaults to `false`.
 - `useLocalizedMenuEndpoint`: If enabled, the menu endpoint will use a language prefix as configured by [nuxtjs/i18n](https://v8.i18n.nuxtjs.org) module. Defaults to `true`.
 
 ## Overriding options with environment variables
-Runtime config values can be overriden with environment variables via `NUXT_PUBLIC_` prefix, e.g. `NUXT_PUBLIC_DRUPAL_BASE_URL`.
+Runtime config values can be overriden with environment variables via `NUXT_PUBLIC_` prefix, example overrides:
+
+- `drupalBaseUrl` -> `NUXT_PUBLIC_DRUPAL_CE_DRUPAL_BASE_URL`
+- `serverDrupalBaseUrl` -> `NUXT_PUBLIC_DRUPAL_CE_SERVER_DRUPAL_BASE_URL`
+- `menuBaseUrl` -> `NUXT_PUBLIC_DRUPAL_CE_MENU_BASE_URL`
 
 ## Deprecated options
 
