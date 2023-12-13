@@ -92,6 +92,8 @@ is added automatically to requests. Defaults to `false`.
 
 - `useLocalizedMenuEndpoint`: If enabled, the menu endpoint will use a language prefix as configured by [nuxtjs/i18n](https://v8.i18n.nuxtjs.org) module. Defaults to `true`.
 
+- `exposeAPIRouteRules`: If enabled, the module will create a server API that proxies requests through the Drupal backend. Defaults to `true`.
+
 ## Overriding options with environment variables
 Runtime config values can be overriden with environment variables via `NUXT_PUBLIC_` prefix, example overrides:
 
@@ -148,40 +150,6 @@ You have the option to override the default error handlers by using a parameter 
   ```
 
 Note: The `error` parameter is optional and can be omitted.
-
-## Customizing API route rules
-
-API route rules can be customized by adding `nitro.routeRules` in Nuxt config:
-
-```javascript
-export default defineNuxtConfig({
-  nitro: {
-    routeRules: {
-      '/drupal-ce/**': { swr: true },
-    }
-  }
-})
-```
-
-The default route rules implemented are:
-
-```javascript
-'/api/drupal/**': { proxy: baseURLOrigin + '/**' }, // Base URL proxy.
-'/api/drupal-ce/**': { proxy: options.baseURL + '/**' }, // Fetch page proxy.
-'/api/menu/**': { proxy: options.baseURL + '/**', swr: nuxt.options.dev ? 0 : 300 } // Fetch menu proxy.
-```
-
-In order to disable this feature, `drupalCe.exposeAPIRouteRules` can be set to false:
-
-```javascript
-export default defineNuxtConfig({
-  drupalCe: {
-    exposeAPIRouteRules: false
-  }
-})
-```
-
-For more options, see [Nitro route rules](https://nitro.unjs.io/guide/routing).
 
 ## Previous options not supported in 2.x version
 
