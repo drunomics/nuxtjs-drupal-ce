@@ -92,7 +92,7 @@ is added automatically to requests. Defaults to `false`.
 
 - `useLocalizedMenuEndpoint`: If enabled, the menu endpoint will use a language prefix as configured by [nuxtjs/i18n](https://v8.i18n.nuxtjs.org) module. Defaults to `true`.
 
-- `exposeAPIRouteRules`: If enabled, the module will create a server API that proxies requests through the Drupal backend. Defaults to `true`.
+- `exposeAPIRouteRules`: If enabled, the module will create a Nitro server handler that proxies API requests to Drupal backend. Defaults to `true` for SSR (it's disabled for SSG).
 
 ## Overriding options with environment variables
 Runtime config values can be overriden with environment variables via `NUXT_PUBLIC_` prefix, example overrides:
