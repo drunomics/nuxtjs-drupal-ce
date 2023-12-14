@@ -28,7 +28,7 @@ export default defineNuxtModule<ModuleOptions>({
     },
   },
   defaults: {
-    baseURL: 'https://8080-shaal-drupalpod-xxxxxxxxxxx.ws-xxxx.gitpod.io/ce-api',
+    baseURL: '',
     ceApiEndpoint: '/ce-api',
     menuEndpoint: 'api/menu_items/$$$NAME$$$',
     customErrorPages: false,
