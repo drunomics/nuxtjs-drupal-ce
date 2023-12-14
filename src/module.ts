@@ -29,7 +29,6 @@ export default defineNuxtModule<ModuleOptions>({
   },
   defaults: {
     baseURL: 'https://8080-shaal-drupalpod-xxxxxxxxxxx.ws-xxxx.gitpod.io/ce-api',
-    drupalBaseUrl: 'https://8080-shaal-drupalpod-xxxxxxxxxxx.ws-xxxx.gitpod.io',
     ceApiEndpoint: '/ce-api',
     menuEndpoint: 'api/menu_items/$$$NAME$$$',
     customErrorPages: false,
@@ -47,9 +46,7 @@ export default defineNuxtModule<ModuleOptions>({
       if (!options.drupalBaseUrl) {
         options.drupalBaseUrl = baseURL.origin
       }
-      if (!options.ceApiEndpoint) {
-        options.ceApiEndpoint = baseURL.pathname
-      }
+      options.ceApiEndpoint = baseURL.pathname
     } else if (!options.baseURL) {
       options.baseURL = options.drupalBaseUrl + options.ceApiEndpoint
     }
