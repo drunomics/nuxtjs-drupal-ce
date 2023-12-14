@@ -95,9 +95,9 @@ is added automatically to requests. Defaults to `false`.
 - `exposeAPIRouteRules`: If enabled, the module will create a Nitro server handler that proxies API requests to Drupal backend. Defaults to `true` for SSR (it's disabled for SSG).
 
 ## Overriding options with environment variables
-Runtime config values can be overriden with environment variables via `NUXT_PUBLIC_` prefix, example overrides:
+Runtime config values can be overridden with environment variables via `NUXT_PUBLIC_` prefix. Supported runtime overrides:
 
-- `drupalBaseUrl` -> `NUXT_PUBLIC_DRUPAL_CE_DRUPAL_BASE_URL`
+- `baseUrl` -> `NUXT_PUBLIC_DRUPAL_CE_BASE_URL`
 - `serverDrupalBaseUrl` -> `NUXT_PUBLIC_DRUPAL_CE_SERVER_DRUPAL_BASE_URL`
 - `menuBaseUrl` -> `NUXT_PUBLIC_DRUPAL_CE_MENU_BASE_URL`
 
