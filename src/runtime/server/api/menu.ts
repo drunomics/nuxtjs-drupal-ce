@@ -1,3 +1,6 @@
+import { defineEventHandler, proxyRequest } from 'h3'
+import { useRuntimeConfig } from '#imports'
+
 export default defineEventHandler(async (event) => {
   const drupalCe = useRuntimeConfig().public.drupalCe
   const menuBaseUrl = drupalCe.serverDrupalBaseUrl || drupalCe.menuBaseUrl
@@ -7,4 +10,4 @@ export default defineEventHandler(async (event) => {
       'Cache-Control': 'max-age=300'
     }
   })
-});
+})

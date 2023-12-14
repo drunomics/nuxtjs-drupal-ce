@@ -74,11 +74,11 @@ export default defineNuxtModule<ModuleOptions>({
     if (options.exposeAPIRouteRules === true) {
       addServerHandler({
         route: '/api/drupal-ce/**',
-        handler: resolve(resolve(runtimeDir, 'server/api/drupalCe.ts'))
+        handler: resolve(runtimeDir, 'server/api/drupalCe')
       })
       addServerHandler({
         route: '/api/menu/**',
-        handler: resolve(resolve(runtimeDir, 'server/api/menu.ts'))
+        handler: resolve(runtimeDir, 'server/api/menu')
       })
     }
   }
