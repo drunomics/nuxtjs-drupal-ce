@@ -7,7 +7,7 @@ export interface ModuleOptions {
   baseURL: string,
   drupalBaseUrl?: string,
   serverDrupalBaseUrl?: string,
-  ceApiEndpoint?: string,
+  ceApiEndpoint: string,
   menuEndpoint: string,
   menuBaseUrl?: string,
   addRequestContentFormat?: string,
