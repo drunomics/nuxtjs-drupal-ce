@@ -35,13 +35,14 @@ export default defineNuxtConfig({
     'nuxtjs-drupal-ce',
   ],
   drupalCe: {
-    baseURL: 'https://your-drupal.example.com/ce-api',
+    drupalBaseUrl: 'https://your-drupal.example.com',
     // more options...
   }
 })
 ```
 
-The module defaults work well with [Lupus Decoupled Drupal](https://www.drupal.org/project/lupus_decoupled), so setting the `baseURL` is usually enough.
+The module defaults work well with [Lupus Decoupled Drupal](https://www.drupal.org/project/lupus_decoupled) - in that case setting the
+`drupalBaseUrl` is enough to get started.
 
 3. Get started quickly by scaffolding initial files:
 ```bash
@@ -63,7 +64,7 @@ rm -f app.vue && npx nuxt-drupal-ce-init
 
 ## Options
 
-- `drupalBaseUrl`: The Drupal base URL.
+- `drupalBaseUrl`: The Drupal base URL, e.g. `https://example.com:8080`. Required.
 
 - `serverDrupalBaseUrl`: Optionally, an alternative drupal base URL to apply in server context.
 
@@ -95,6 +96,7 @@ is added automatically to requests. Defaults to `false`.
 - `exposeAPIRouteRules`: If enabled, the module will create a Nitro server handler that proxies API requests to Drupal backend. Defaults to `true` for SSR (it's disabled for SSG).
 
 ## Overriding options with environment variables
+
 Runtime config values can be overridden with environment variables via `NUXT_PUBLIC_` prefix. Supported runtime overrides:
 
 - `baseUrl` -> `NUXT_PUBLIC_DRUPAL_CE_BASE_URL`
@@ -162,13 +164,6 @@ The following options were support in 1.x but got dropped:
 - `axios`: Options to pass-through to the `drupal-ce`
   [axios](https://github.com/nuxt-community/axios-module) instance. Use `fetchOptions` instead.
 
-- `useProxy`: If set to `dev-only` and nuxt is in dev-mode, the module automatically
-  configures `/api` to the Drupal backend via
-  [@nuxtjs/proxy](https://github.com/nuxt-community/proxy-module) and uses it instead of
-  the Drupal backend, such that there are no CORS issues. Other values supported are
-  `always` or false.
-  Note: When using `always` the module must be added to the nuxt `modules` section instead
-  of the `buildModules` section.
 
 ## Development
 
