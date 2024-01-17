@@ -4,6 +4,9 @@ on:
   pull_request:
     branches:
       - 2.x
+  push:
+    branches:    
+      - 2.x
 
 jobs:
   ci:
@@ -11,7 +14,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [16.x]
+        node-version: [18.x]
 
     steps:
       - uses: actions/checkout@v4

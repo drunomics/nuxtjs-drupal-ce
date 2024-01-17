@@ -44,6 +44,7 @@ export const useDrupalCe = () => {
         primary: [],
         secondary: []
       },
+      settings: {},
       messages: [],
       metatags: {
         meta: [],
@@ -99,6 +100,11 @@ export const useDrupalCe = () => {
     const nuxtApp = useNuxtApp()
     useFetchOptions = processFetchOptions(useFetchOptions)
     useFetchOptions.key = `menu-${name}`
+    useFetchOptions.getCachedData = (key) => {
+      if (nuxtApp.payload.data[key]) {
+        return nuxtApp.payload.data[key]
+      }
+    }
 
     const baseMenuPath = config.menuEndpoint.replace('$$$NAME$$$', name)
     const menuPath = ref(baseMenuPath)

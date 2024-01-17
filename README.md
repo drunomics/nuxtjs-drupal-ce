@@ -2,7 +2,7 @@
 
 [![npm version][npm-version-src]][npm-version-href]
 [![npm downloads][npm-downloads-src]][npm-downloads-href]
-![ci](https://github.com/drunomics/nuxt-module-drupal-ce/workflows/ci/badge.svg)
+[![ci](https://github.com/drunomics/nuxtjs-drupal-ce/actions/workflows/ci.yml/badge.svg?branch=2.x)](https://github.com/drunomics/nuxtjs-drupal-ce/actions/workflows/ci.yml)
 [![codecov][codecov-src]][codecov-href]
 [![License][license-src]][license-href]
 
