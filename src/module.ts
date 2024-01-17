@@ -41,6 +41,7 @@ export default defineNuxtModule<ModuleOptions>({
     exposeAPIRouteRules: true
   },
   setup (options, nuxt) {
+    // Keep backwards compatibility for baseURL(deprecated).
     if (options.baseURL && options.baseURL.startsWith('http')) {
       const baseURL = new URL(options.baseURL)
       if (!options.drupalBaseUrl) {
