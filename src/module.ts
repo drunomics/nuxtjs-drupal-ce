@@ -4,8 +4,8 @@ import type { UseFetchOptions } from 'nuxt/dist/app/composables'
 import { defu } from 'defu'
 
 export interface ModuleOptions {
-  baseURL: string,
-  drupalBaseUrl?: string,
+  baseURL?: string,
+  drupalBaseUrl: string,
   serverDrupalBaseUrl?: string,
   ceApiEndpoint: string,
   menuEndpoint: string,
@@ -28,7 +28,7 @@ export default defineNuxtModule<ModuleOptions>({
     },
   },
   defaults: {
-    baseURL: '',
+    drupalBaseUrl: '',
     ceApiEndpoint: '/ce-api',
     menuEndpoint: 'api/menu_items/$$$NAME$$$',
     customErrorPages: false,
