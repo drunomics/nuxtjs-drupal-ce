@@ -13,7 +13,7 @@ export const useDrupalCe = () => {
    */
   const processFetchOptions = (fetchOptions:UseFetchOptions<any> = {}) => {
     if (config.exposeAPIRouteRules) {
-      fetchOptions.baseURL = useRequestURL().origin + '/api/drupal-ce'
+      fetchOptions.baseURL = '/api/drupal-ce'
     } else {
       fetchOptions.baseURL = fetchOptions.baseURL ?? config.baseURL
     }
@@ -66,10 +66,6 @@ export const useDrupalCe = () => {
       useFetchOptions.query._format = 'custom_elements'
     }
 
-    if (config.exposeAPIRouteRules && path === '/') {
-      // The root path needs to be rewritten to /api/drupal-ce.
-      path = '/api/drupal-ce'
-    }
     const { data: page, error } = await useFetch(path, useFetchOptions)
 
     if (page?.value?.redirect) {
@@ -110,7 +106,7 @@ export const useDrupalCe = () => {
     const menuPath = ref(baseMenuPath)
 
     if (config.exposeAPIRouteRules) {
-      useFetchOptions.baseURL = useRequestURL().origin + '/api/menu'
+      useFetchOptions.baseURL = '/api/menu'
     }
 
     if (config.useLocalizedMenuEndpoint && nuxtApp.$i18n) {
