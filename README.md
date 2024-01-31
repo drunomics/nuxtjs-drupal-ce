@@ -35,13 +35,14 @@ export default defineNuxtConfig({
     'nuxtjs-drupal-ce',
   ],
   drupalCe: {
-    baseURL: 'https://your-drupal.example.com/ce-api',
+    drupalBaseUrl: 'https://your-drupal.example.com',
     // more options...
   }
 })
 ```
 
-The module defaults work well with [Lupus Decoupled Drupal](https://www.drupal.org/project/lupus_decoupled), so setting the `baseURL` is usually enough.
+The module defaults work well with [Lupus Decoupled Drupal](https://www.drupal.org/project/lupus_decoupled) - in that case setting the
+`drupalBaseUrl` is enough to get started.
 
 3. Get started quickly by scaffolding initial files:
 ```bash
@@ -60,10 +61,14 @@ rm -f app.vue && npx nuxt-drupal-ce-init
 * Provides unstyled skeleton components for getting started quickly.
 * Supports fetching and display of Drupal menus via the [Rest menu items](https://www.drupal.org/project/rest_menu_items) module.
 
+
 ## Options
 
-- `baseURL`: The Drupal base URL. Defaults to the `DRUPAL_BASE_URL`
-   environment variable if provided, otherwise to `http://localhost:8888`.
+- `drupalBaseUrl`: The Drupal base URL, e.g. `https://example.com:8080`. Required.
+
+- `serverDrupalBaseUrl`: Optionally, an alternative drupal base URL to apply in server context.
+
+- `ceApiEndpoint`: The custom elements API endpoint. Defaults to `/ce-api`.
 
 - `fetchOptions`: The default [fetchOptions](https://nuxt.com/docs/api/composables/use-fetch#params)
    to apply when fetching from the Drupal. Defaults to `{ credentials: 'include' }`.
@@ -73,6 +78,8 @@ rm -f app.vue && npx nuxt-drupal-ce-init
 - `menuEndpoint`: The menu endpoint pattern used for fetching menus. Defaults to 'api/menu_items/$$$NAME$$$' as fitting
   to the API provided by the [Rest menu items](https://www.drupal.org/project/rest_menu_items) Drupal module.
   `$$$NAME$$$` is replaced by the menu name being fetched.
+
+- `menuBaseUrl`: The menu base URL. Defaults to drupalBaseUrl + ceApiEndpoint.
 
 - `addRequestContentFormat`: If specified, the given value is added as `_content_format`
   URL parameter to requests. Disabled by default.
@@ -85,6 +92,25 @@ is added automatically to requests. Defaults to `false`.
   pages are shown instead, such that the pages can be customized with Nuxt. Defaults to `false`.
 
 - `useLocalizedMenuEndpoint`: If enabled, the menu endpoint will use a language prefix as configured by [nuxtjs/i18n](https://v8.i18n.nuxtjs.org) module. Defaults to `true`.
+
+- `exposeAPIRouteRules`: If enabled, the module will create a Nitro server handler that proxies API requests to Drupal backend. Defaults to `true` for SSR (it's disabled for SSG).
+
+## Overriding options with environment variables
+
+Runtime config values can be overridden with environment variables via `NUXT_PUBLIC_` prefix. Supported runtime overrides:
+
+- `drupalBaseUrl` -> `NUXT_PUBLIC_DRUPAL_CE_DRUPAL_BASE_URL`
+- `serverDrupalBaseUrl` -> `NUXT_PUBLIC_DRUPAL_CE_SERVER_DRUPAL_BASE_URL`
+- `menuBaseUrl` -> `NUXT_PUBLIC_DRUPAL_CE_MENU_BASE_URL`
+- `ceApiEndpoint` -> `NUXT_PUBLIC_DRUPAL_CE_CE_API_ENDPOINT`
+
+## Deprecated options
+
+The following options are deprecated and only there for improved backwards compatibility.
+
+- `baseURL`: The base URL of the Drupal /ce-api endpoint, e.g. http://localhost:8888/ce-api.
+   If set, `drupalBaseUrl` is set with the origin of the provided URL.
+
 
 ## Error handling
 
@@ -139,13 +165,6 @@ The following options were support in 1.x but got dropped:
 - `axios`: Options to pass-through to the `drupal-ce`
   [axios](https://github.com/nuxt-community/axios-module) instance. Use `fetchOptions` instead.
 
-- `useProxy`: If set to `dev-only` and nuxt is in dev-mode, the module automatically
-  configures `/api` to the Drupal backend via
-  [@nuxtjs/proxy](https://github.com/nuxt-community/proxy-module) and uses it instead of
-  the Drupal backend, such that there are no CORS issues. Other values supported are
-  `always` or false.
-  Note: When using `always` the module must be added to the nuxt `modules` section instead
-  of the `buildModules` section.
 
 ## Development
 
