@@ -52,11 +52,18 @@ export const useDrupalCe = () => {
         jsonld: []
       },
       page_layout: 'default',
-      title: ''
+      title: '',
+      headers: {}
     }))
+    const headers = ref({})
+
     useFetchOptions.key = `page-${path}`
     useFetchOptions = processFetchOptions(useFetchOptions)
     useFetchOptions.query = useFetchOptions.query ?? {}
+    useFetchOptions.onResponse = (context) => {
+      const headersObject = Object.fromEntries([...context.response.headers.entries()])
+      headers.value = headersObject
+    }
 
     if (config.addRequestContentFormat) {
       useFetchOptions.query._content_format = config.addRequestContentFormat
@@ -83,7 +90,8 @@ export const useDrupalCe = () => {
 
     page.value?.messages && pushMessagesToState(page.value.messages)
 
-    pageState.value = page
+    pageState.value = page.value
+    pageState.value.headers = headers.value
     return page
   }
 

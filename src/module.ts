@@ -17,6 +17,7 @@ export interface ModuleOptions {
   fetchProxyHeaders: string[],
   useLocalizedMenuEndpoint: boolean,
   exposeAPIRouteRules: boolean,
+  passThroughHeaders?: string[],
 }
 
 export default defineNuxtModule<ModuleOptions>({
@@ -38,7 +39,8 @@ export default defineNuxtModule<ModuleOptions>({
     fetchProxyHeaders: ['cookie'],
     useLocalizedMenuEndpoint: true,
     addRequestFormat: false,
-    exposeAPIRouteRules: true
+    exposeAPIRouteRules: true,
+    passThroughHeaders: ['cache-control']
   },
   setup (options, nuxt) {
     // Keep backwards compatibility for baseURL(deprecated).
@@ -82,6 +84,10 @@ export default defineNuxtModule<ModuleOptions>({
         route: '/api/menu/**',
         handler: resolve(runtimeDir, 'server/api/menu')
       })
+    }
+
+    if (options.passThroughHeaders) {
+      addPlugin(resolve(runtimeDir, 'passThroughHeaders'))
     }
   }
 })
