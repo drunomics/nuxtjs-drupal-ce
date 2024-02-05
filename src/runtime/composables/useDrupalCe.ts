@@ -1,5 +1,6 @@
 import { callWithNuxt } from '#app'
 import { defu } from 'defu'
+import { appendResponseHeader, H3Event } from 'h3'
 import { useRuntimeConfig, useRequestURL, useState, useFetch, navigateTo, createError, h, resolveComponent, setResponseStatus, useNuxtApp, useRequestHeaders, UseFetchOptions, ref, watch } from '#imports'
 
 export const useDrupalCe = () => {
@@ -52,17 +53,20 @@ export const useDrupalCe = () => {
         jsonld: []
       },
       page_layout: 'default',
-      title: '',
-      headers: {}
+      title: ''
     }))
+
     const headers = ref({})
 
     useFetchOptions.key = `page-${path}`
     useFetchOptions = processFetchOptions(useFetchOptions)
     useFetchOptions.query = useFetchOptions.query ?? {}
-    useFetchOptions.onResponse = (context) => {
-      const headersObject = Object.fromEntries([...context.response.headers.entries()])
-      headers.value = headersObject
+
+    if (import.meta.server) {
+      useFetchOptions.onResponse = (context) => {
+        const headersObject = Object.fromEntries([...context.response.headers.entries()])
+        headers.value = headersObject
+      }
     }
 
     if (config.addRequestContentFormat) {
@@ -91,7 +95,9 @@ export const useDrupalCe = () => {
     page.value?.messages && pushMessagesToState(page.value.messages)
 
     pageState.value = page.value
-    pageState.value.headers = headers.value
+    if (import.meta.server) {
+      page.value.headers = headers.value
+    }
     return page
   }
 
@@ -156,12 +162,31 @@ export const useDrupalCe = () => {
       : h(resolveComponent(customElements.element), customElements)
   }
 
+  /**
+   * Pass through headers from Drupal to the client
+   * @param event H3Event
+   * @param pageHeaders The headers from the Drupal response
+   * @param overridePassThroughHeaders Override/unset the current passThroughHeaders
+   */
+  const passThroughHeaders = (event: H3Event, pageHeaders: Object, overridePassThroughHeaders?: Array<String>) => {
+    const { passThroughHeaders } = useRuntimeConfig().public.drupalCe
+    const passThroughHeadersArray = overridePassThroughHeaders || passThroughHeaders
+    if (pageHeaders) {
+      Object.keys(pageHeaders).forEach((key) => {
+        if (passThroughHeadersArray.includes(key)) {
+          appendResponseHeader(event, key, pageHeaders[key])
+        }
+      })
+    }
+  }
+
   return {
     fetchPage,
     fetchMenu,
     getMessages,
     getPage,
     renderCustomElements,
+    passThroughHeaders
   }
 }
 

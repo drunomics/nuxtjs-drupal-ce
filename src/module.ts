@@ -85,10 +85,6 @@ export default defineNuxtModule<ModuleOptions>({
         handler: resolve(runtimeDir, 'server/api/menu')
       })
     }
-
-    if (options.passThroughHeaders) {
-      addPlugin(resolve(runtimeDir, 'passThroughHeaders'))
-    }
   }
 })
 
