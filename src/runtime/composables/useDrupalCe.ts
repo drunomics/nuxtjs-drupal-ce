@@ -95,10 +95,11 @@ export const useDrupalCe = () => {
     page.value?.messages && pushMessagesToState(page.value.messages)
 
     pageState.value = page.value
+    // Headers should be available only on the server.
     if (import.meta.server) {
-      page.value.headers = headers.value
+      return { page, headers }
     }
-    return page
+    return { page }
   }
 
   /**
@@ -166,14 +167,12 @@ export const useDrupalCe = () => {
    * Pass through headers from Drupal to the client
    * @param event H3Event
    * @param pageHeaders The headers from the Drupal response
-   * @param overridePassThroughHeaders Override/unset the current passThroughHeaders
+   * @param passThroughHeaders The headers to pass through
    */
-  const passThroughHeaders = (event: H3Event, pageHeaders: Object, overridePassThroughHeaders?: Array<String>) => {
-    const { passThroughHeaders } = useRuntimeConfig().public.drupalCe
-    const passThroughHeadersArray = overridePassThroughHeaders || passThroughHeaders
+  const passThroughHeaders = (event: H3Event, pageHeaders: Object, passThroughHeaders: Array<String>) => {
     if (pageHeaders) {
       Object.keys(pageHeaders).forEach((key) => {
-        if (passThroughHeadersArray.includes(key)) {
+        if (passThroughHeaders.includes(key)) {
           appendResponseHeader(event, key, pageHeaders[key])
         }
       })
