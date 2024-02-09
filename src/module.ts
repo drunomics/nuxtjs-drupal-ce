@@ -17,7 +17,6 @@ export interface ModuleOptions {
   fetchProxyHeaders: string[],
   useLocalizedMenuEndpoint: boolean,
   exposeAPIRouteRules: boolean,
-  passThroughHeaders?: string[],
 }
 
 export default defineNuxtModule<ModuleOptions>({
@@ -40,7 +39,6 @@ export default defineNuxtModule<ModuleOptions>({
     useLocalizedMenuEndpoint: true,
     addRequestFormat: false,
     exposeAPIRouteRules: true,
-    passThroughHeaders: ['cache-control']
   },
   setup (options, nuxt) {
     // Keep backwards compatibility for baseURL(deprecated).
