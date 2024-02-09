@@ -8,5 +8,5 @@
 
 <script lang="ts" setup>
 const { fetchPage } = useDrupalCe()
-const page = await fetchPage(useRoute().path, { query: useRoute().query })
+const { page } = await fetchPage(useRoute().path, { query: useRoute().query })
 </script>

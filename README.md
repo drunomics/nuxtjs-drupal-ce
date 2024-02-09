@@ -133,7 +133,7 @@ You have the option to override the default error handlers by using a parameter 
     function customPageError (error: Record<string, any>) {
       throw createError({ statusCode: error.value.statusCode, statusMessage: 'No access.', data: {}, fatal: true })
     }
-    const page = await fetchPage(useRoute().path, { query: useRoute().query }, customPageError)
+    const { page } = await fetchPage(useRoute().path, { query: useRoute().query }, customPageError)
   </script>
   ```
 
