@@ -1,6 +1,6 @@
 import { callWithNuxt } from '#app'
 import { defu } from 'defu'
-import { appendResponseHeader, H3Event } from 'h3'
+import { appendResponseHeader } from 'h3'
 import { useRuntimeConfig, useRequestURL, useState, useFetch, navigateTo, createError, h, resolveComponent, setResponseStatus, useNuxtApp, useRequestHeaders, UseFetchOptions, ref, watch } from '#imports'
 
 export const useDrupalCe = () => {
@@ -56,16 +56,14 @@ export const useDrupalCe = () => {
       title: ''
     }))
 
-    const headers = ref({})
-
     useFetchOptions.key = `page-${path}`
     useFetchOptions = processFetchOptions(useFetchOptions)
     useFetchOptions.query = useFetchOptions.query ?? {}
 
-    if (import.meta.server) {
-      useFetchOptions.onResponse = (context) => {
+    useFetchOptions.onResponse = (context) => {
+      if (config.passThroughHeaders && import.meta.server) {
         const headersObject = Object.fromEntries([...context.response.headers.entries()])
-        headers.value = headersObject
+        passThroughHeaders(nuxtApp, headersObject)
       }
     }
 
@@ -95,11 +93,7 @@ export const useDrupalCe = () => {
     page.value?.messages && pushMessagesToState(page.value.messages)
 
     pageState.value = page.value
-    // Headers should be available only on the server.
-    if (import.meta.server) {
-      return { page, headers }
-    }
-    return { page }
+    return page
   }
 
   /**
@@ -165,14 +159,13 @@ export const useDrupalCe = () => {
 
   /**
    * Pass through headers from Drupal to the client
-   * @param event H3Event
    * @param pageHeaders The headers from the Drupal response
-   * @param passThroughHeaders The headers to pass through
    */
-  const passThroughHeaders = (event: H3Event, pageHeaders: Object, passThroughHeaders: Array<String>) => {
+  const passThroughHeaders = (nuxtApp, pageHeaders) => {
+    const event = nuxtApp.ssrContext.event
     if (pageHeaders) {
       Object.keys(pageHeaders).forEach((key) => {
-        if (passThroughHeaders.includes(key)) {
+        if (config.passThroughHeaders.includes(key)) {
           appendResponseHeader(event, key, pageHeaders[key])
         }
       })

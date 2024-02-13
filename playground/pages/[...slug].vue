@@ -12,7 +12,7 @@
 
 <script lang="ts" setup>
 const { fetchPage, renderCustomElements, passThroughHeaders } = useDrupalCe()
-const { page, headers } = await fetchPage(useRoute().path, { query: useRoute().query })
+const page = await fetchPage(useRoute().path, { query: useRoute().query })
 // Set to false to support custom layouts, using <NuxtLayout> instead.
 definePageMeta({
   layout: false,
@@ -31,9 +31,4 @@ useHead({
     },
   ],
 })
-
-if (import.meta.server) {
-  const event = useRequestEvent()
-  passThroughHeaders(event, headers.value, ['cache-control'])
-}
 </script>
