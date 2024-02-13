@@ -55,7 +55,6 @@ export const useDrupalCe = () => {
       page_layout: 'default',
       title: ''
     }))
-
     useFetchOptions.key = `page-${path}`
     useFetchOptions = processFetchOptions(useFetchOptions)
     useFetchOptions.query = useFetchOptions.query ?? {}
@@ -92,7 +91,7 @@ export const useDrupalCe = () => {
 
     page.value?.messages && pushMessagesToState(page.value.messages)
 
-    pageState.value = page.value
+    pageState.value = page
     return page
   }
 
