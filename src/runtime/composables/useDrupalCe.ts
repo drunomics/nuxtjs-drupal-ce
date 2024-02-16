@@ -161,6 +161,10 @@ export const useDrupalCe = () => {
    * @param pageHeaders The headers from the Drupal response
    */
   const passThroughHeaders = (nuxtApp, pageHeaders) => {
+    // Only run when SSR context is available.
+    if (!nuxtApp.ssrContext) {
+      return
+    }
     const event = nuxtApp.ssrContext.event
     if (pageHeaders) {
       Object.keys(pageHeaders).forEach((key) => {

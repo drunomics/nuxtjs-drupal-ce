@@ -40,7 +40,7 @@ export default defineNuxtModule<ModuleOptions>({
     useLocalizedMenuEndpoint: true,
     addRequestFormat: false,
     exposeAPIRouteRules: true,
-    passThroughHeaders: ['cache-control'],
+    passThroughHeaders: ['cache-control', 'content-language', 'set-cookie', 'x-drupal-cache', 'x-drupal-dynamic-cache'],
   },
   setup (options, nuxt) {
     // Keep backwards compatibility for baseURL(deprecated).
