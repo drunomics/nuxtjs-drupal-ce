@@ -113,16 +113,20 @@ export const useDrupalCe = () => {
     const baseMenuPath = config.menuEndpoint.replace('$$$NAME$$$', name)
     const menuPath = ref(baseMenuPath)
 
-    if (config.exposeAPIRouteRules) {
-      useFetchOptions.baseURL = '/api/menu'
-    }
-
     if (config.useLocalizedMenuEndpoint && nuxtApp.$i18n) {
       // API path with localization
       menuPath.value = nuxtApp.$localePath('/' + baseMenuPath)
       watch(nuxtApp.$i18n.locale, () => {
         menuPath.value = nuxtApp.$localePath('/' + baseMenuPath)
       })
+    }
+
+    if (config.exposeAPIRouteRules) {
+      useFetchOptions.baseURL = '/api/menu'
+      // menuPath should not start with a slash.
+      if (menuPath.value.startsWith('/')) {
+        menuPath.value = menuPath.value.substring(1)
+      }
     }
 
     const { data: menu, error } = await useFetch(menuPath, useFetchOptions)
