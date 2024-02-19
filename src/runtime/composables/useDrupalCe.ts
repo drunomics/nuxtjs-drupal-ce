@@ -1,5 +1,6 @@
 import { callWithNuxt } from '#app'
 import { defu } from 'defu'
+import { appendResponseHeader } from 'h3'
 import { useRuntimeConfig, useRequestURL, useState, useFetch, navigateTo, createError, h, resolveComponent, setResponseStatus, useNuxtApp, useRequestHeaders, UseFetchOptions, ref, watch } from '#imports'
 
 export const useDrupalCe = () => {
@@ -57,6 +58,13 @@ export const useDrupalCe = () => {
     useFetchOptions.key = `page-${path}`
     useFetchOptions = processFetchOptions(useFetchOptions)
     useFetchOptions.query = useFetchOptions.query ?? {}
+
+    useFetchOptions.onResponse = (context) => {
+      if (config.passThroughHeaders && import.meta.server) {
+        const headersObject = Object.fromEntries([...context.response.headers.entries()])
+        passThroughHeaders(nuxtApp, headersObject)
+      }
+    }
 
     if (config.addRequestContentFormat) {
       useFetchOptions.query._content_format = config.addRequestContentFormat
@@ -148,12 +156,32 @@ export const useDrupalCe = () => {
       : h(resolveComponent(customElements.element), customElements)
   }
 
+  /**
+   * Pass through headers from Drupal to the client
+   * @param pageHeaders The headers from the Drupal response
+   */
+  const passThroughHeaders = (nuxtApp, pageHeaders) => {
+    // Only run when SSR context is available.
+    if (!nuxtApp.ssrContext) {
+      return
+    }
+    const event = nuxtApp.ssrContext.event
+    if (pageHeaders) {
+      Object.keys(pageHeaders).forEach((key) => {
+        if (config.passThroughHeaders.includes(key)) {
+          appendResponseHeader(event, key, pageHeaders[key])
+        }
+      })
+    }
+  }
+
   return {
     fetchPage,
     fetchMenu,
     getMessages,
     getPage,
     renderCustomElements,
+    passThroughHeaders
   }
 }
 

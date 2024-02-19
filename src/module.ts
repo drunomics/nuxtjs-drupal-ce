@@ -17,6 +17,7 @@ export interface ModuleOptions {
   fetchProxyHeaders: string[],
   useLocalizedMenuEndpoint: boolean,
   exposeAPIRouteRules: boolean,
+  passThroughHeaders?: string[],
 }
 
 export default defineNuxtModule<ModuleOptions>({
@@ -38,7 +39,8 @@ export default defineNuxtModule<ModuleOptions>({
     fetchProxyHeaders: ['cookie'],
     useLocalizedMenuEndpoint: true,
     addRequestFormat: false,
-    exposeAPIRouteRules: true
+    exposeAPIRouteRules: true,
+    passThroughHeaders: ['cache-control', 'content-language', 'set-cookie', 'x-drupal-cache', 'x-drupal-dynamic-cache'],
   },
   setup (options, nuxt) {
     // Keep backwards compatibility for baseURL(deprecated).
