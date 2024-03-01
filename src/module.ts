@@ -58,11 +58,6 @@ export default defineNuxtModule<ModuleOptions>({
       options.menuBaseUrl = options.drupalBaseUrl + options.ceApiEndpoint
     }
 
-    // Disable the server routes for static sites OR when baseURL is not a full URL.
-    if (nuxt.options._generate || !options.baseURL.startsWith('http')) {
-      options.exposeAPIRouteRules = false
-    }
-
     const { resolve } = createResolver(import.meta.url)
     const runtimeDir = fileURLToPath(new URL('./runtime', import.meta.url))
     nuxt.options.build.transpile.push(runtimeDir)
