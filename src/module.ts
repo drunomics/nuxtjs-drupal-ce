@@ -58,6 +58,11 @@ export default defineNuxtModule<ModuleOptions>({
       options.menuBaseUrl = options.drupalBaseUrl + options.ceApiEndpoint
     }
 
+    // Keep backwards compatibility for exposeAPIRouteRules(deprecated).
+    if (nuxt.options.drupalCe?.exposeAPIRouteRules !== undefined) {
+      options.serverApiProxy = nuxt.options.drupalCe?.exposeAPIRouteRules
+    }
+
     // Disable the server routes for static sites OR when drupalBaseUrl is not a full URL.
     if (nuxt.options._generate || !options.drupalBaseUrl.startsWith('http')) {
       options.serverApiProxy = false

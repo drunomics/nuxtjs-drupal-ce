@@ -13,7 +13,7 @@ export const useDrupalCe = () => {
    * @returns UseFetchOptions<any>
    */
   const processFetchOptions = (fetchOptions:UseFetchOptions<any> = {}) => {
-    if (config.exposeAPIRouteRules) {
+    if (config.serverApiProxy) {
       fetchOptions.baseURL = '/api/drupal-ce'
     } else {
       fetchOptions.baseURL = fetchOptions.baseURL ?? config.baseURL
