@@ -121,7 +121,7 @@ export const useDrupalCe = () => {
       })
     }
 
-    if (config.exposeAPIRouteRules) {
+    if (config.serverApiProxy) {
       useFetchOptions.baseURL = '/api/menu'
       // menuPath should not start with a slash.
       if (menuPath.value.startsWith('/')) {

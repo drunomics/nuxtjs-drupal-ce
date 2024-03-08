@@ -16,7 +16,7 @@ export interface ModuleOptions {
   fetchOptions: UseFetchOptions<any>,
   fetchProxyHeaders: string[],
   useLocalizedMenuEndpoint: boolean,
-  exposeAPIRouteRules: boolean,
+  serverApiProxy: boolean,
   passThroughHeaders?: string[],
 }
 
@@ -39,7 +39,7 @@ export default defineNuxtModule<ModuleOptions>({
     fetchProxyHeaders: ['cookie'],
     useLocalizedMenuEndpoint: true,
     addRequestFormat: false,
-    exposeAPIRouteRules: true,
+    serverApiProxy: true,
     passThroughHeaders: ['cache-control', 'content-language', 'set-cookie', 'x-drupal-cache', 'x-drupal-dynamic-cache'],
   },
   setup (options, nuxt) {
@@ -58,9 +58,9 @@ export default defineNuxtModule<ModuleOptions>({
       options.menuBaseUrl = options.drupalBaseUrl + options.ceApiEndpoint
     }
 
-    // Disable the server routes for static sites OR when baseURL is not a full URL.
-    if (nuxt.options._generate || !options.baseURL.startsWith('http')) {
-      options.exposeAPIRouteRules = false
+    // Disable the server routes for static sites OR when drupalBaseUrl is not a full URL.
+    if (nuxt.options._generate || !options.drupalBaseUrl.startsWith('http')) {
+      options.serverApiProxy = false
     }
 
     const { resolve } = createResolver(import.meta.url)
@@ -71,7 +71,7 @@ export default defineNuxtModule<ModuleOptions>({
 
     nuxt.options.runtimeConfig.public.drupalCe = defu(nuxt.options.runtimeConfig.public.drupalCe ?? {}, options)
 
-    if (options.exposeAPIRouteRules === true) {
+    if (options.serverApiProxy === true) {
       addServerHandler({
         route: '/api/drupal-ce',
         handler: resolve(runtimeDir, 'server/api/drupalCe')
