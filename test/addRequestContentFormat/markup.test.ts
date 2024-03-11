@@ -12,7 +12,8 @@ describe('Module addRequestContentFormat set to markup', async () => {
       ],
       drupalCe: {
         baseURL: '/api',
-        addRequestContentFormat: 'markup'
+        addRequestContentFormat: 'markup',
+        serverApiProxy: false
       }
     }
   })

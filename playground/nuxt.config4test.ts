@@ -6,6 +6,7 @@ export default defineNuxtConfig({
     DrupalCe
   ],
   drupalCe: {
-    baseURL: '/api'
+    baseURL: '/api',
+    serverApiProxy: false // to-do: improve tests to cover this option
   }
 })

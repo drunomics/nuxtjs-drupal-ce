@@ -18,6 +18,7 @@ export interface ModuleOptions {
   useLocalizedMenuEndpoint: boolean,
   serverApiProxy: boolean,
   passThroughHeaders?: string[],
+  exposeAPIRouteRules?: boolean,
 }
 
 export default defineNuxtModule<ModuleOptions>({
@@ -59,12 +60,12 @@ export default defineNuxtModule<ModuleOptions>({
     }
 
     // Keep backwards compatibility for exposeAPIRouteRules(deprecated).
-    if (nuxt.options.drupalCe?.exposeAPIRouteRules !== undefined) {
-      options.serverApiProxy = nuxt.options.drupalCe?.exposeAPIRouteRules
+    if (!nuxt.options.drupalCe?.serverApiProxy && options.exposeAPIRouteRules !== undefined) {
+      options.serverApiProxy = options.exposeAPIRouteRules
     }
 
-    // Disable the server routes for static sites OR when drupalBaseUrl is not a full URL.
-    if (nuxt.options._generate || !options.drupalBaseUrl.startsWith('http')) {
+    // Disable the server routes for static sites.
+    if (nuxt.options._generate) {
       options.serverApiProxy = false
     }
 
@@ -92,11 +93,3 @@ export default defineNuxtModule<ModuleOptions>({
     }
   }
 })
-
-// Define the type for the runtime-config,.
-// see https://nuxt.com/docs/guide/going-further/runtime-config#manually-typing-runtime-config
-declare module 'nuxt/schema' {
-  interface PublicRuntimeConfig {
-    drupalCe: ModuleOptions,
-  }
-}

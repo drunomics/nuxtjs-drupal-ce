@@ -11,7 +11,8 @@ describe('Module addRequestContentFormat not set', async () => {
         DrupalCe
       ],
       drupalCe: {
-        baseURL: '/api'
+        baseURL: '/api',
+        serverApiProxy: false
       }
     }
   })
