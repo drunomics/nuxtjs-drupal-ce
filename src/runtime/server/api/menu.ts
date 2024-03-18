@@ -1,10 +1,8 @@
 import { defineEventHandler, proxyRequest, getRouterParams } from 'h3'
-import { useRuntimeConfig } from '#imports'
+import { getMenuBaseUrl } from '../utils/getBaseUrls'
 
 export default defineEventHandler(async (event) => {
-  const drupalCe = useRuntimeConfig().public.drupalCe
-  const { serverDrupalBaseUrl, drupalBaseUrl, menuBaseUrl: ceMenuBaseUrl, ceApiEndpoint } = drupalCe
-  const menuBaseUrl = ceMenuBaseUrl || (serverDrupalBaseUrl || drupalBaseUrl) + ceApiEndpoint
+  const menuBaseUrl = getMenuBaseUrl()
   const menu = getRouterParams(event)._
   return await proxyRequest(event, `${menuBaseUrl}/${menu}`, {
     headers: {

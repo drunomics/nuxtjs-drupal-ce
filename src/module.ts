@@ -1,10 +1,9 @@
 import { fileURLToPath } from 'url'
 import { defineNuxtModule, addPlugin, createResolver, addImportsDir, addServerHandler } from '@nuxt/kit'
-import type { UseFetchOptions } from 'nuxt/dist/app/composables'
 import { defu } from 'defu'
+import type { UseFetchOptions, NuxtOptionsWithDrupalCe } from './types'
 
 export interface ModuleOptions {
-  baseURL?: string,
   drupalBaseUrl: string,
   serverDrupalBaseUrl?: string,
   ceApiEndpoint: string,
@@ -44,23 +43,9 @@ export default defineNuxtModule<ModuleOptions>({
     passThroughHeaders: ['cache-control', 'content-language', 'set-cookie', 'x-drupal-cache', 'x-drupal-dynamic-cache'],
   },
   setup (options, nuxt) {
-    // Keep backwards compatibility for baseURL(deprecated).
-    if (options.baseURL && options.baseURL.startsWith('http')) {
-      const baseURL = new URL(options.baseURL)
-      if (!options.drupalBaseUrl) {
-        options.drupalBaseUrl = baseURL.origin
-      }
-      options.ceApiEndpoint = baseURL.pathname
-    } else if (!options.baseURL) {
-      options.baseURL = options.drupalBaseUrl + options.ceApiEndpoint
-    }
-
-    if (!options.menuBaseUrl) {
-      options.menuBaseUrl = options.drupalBaseUrl + options.ceApiEndpoint
-    }
-
+    const nuxtOptions = nuxt.options as NuxtOptionsWithDrupalCe
     // Keep backwards compatibility for exposeAPIRouteRules(deprecated).
-    if (!nuxt.options.drupalCe?.serverApiProxy && options.exposeAPIRouteRules !== undefined) {
+    if (!nuxtOptions.drupalCe?.serverApiProxy && options.exposeAPIRouteRules !== undefined) {
       options.serverApiProxy = options.exposeAPIRouteRules
     }
 

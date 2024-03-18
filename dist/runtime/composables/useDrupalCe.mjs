@@ -4,11 +4,17 @@ import { appendResponseHeader } from "h3";
 import { useRuntimeConfig, useState, useFetch, navigateTo, createError, h, resolveComponent, setResponseStatus, useNuxtApp, useRequestHeaders, ref, watch } from "#imports";
 export const useDrupalCe = () => {
   const config = useRuntimeConfig().public.drupalCe;
+  const getMenuBaseUrl = () => {
+    return config.drupalBaseUrl + config.ceApiEndpoint;
+  };
+  const getDrupalBaseUrl = () => {
+    return import.meta.env.SSR && config.serverDrupalBaseUrl ? config.serverDrupalBaseUrl : config.drupalBaseUrl;
+  };
   const processFetchOptions = (fetchOptions = {}) => {
     if (config.serverApiProxy) {
       fetchOptions.baseURL = "/api/drupal-ce";
     } else {
-      fetchOptions.baseURL = fetchOptions.baseURL ?? config.baseURL;
+      fetchOptions.baseURL = fetchOptions.baseURL ?? config.drupalBaseUrl + config.ceApiEndpoint;
     }
     fetchOptions = defu(fetchOptions, config.fetchOptions);
     if (config.fetchProxyHeaders) {
@@ -123,7 +129,9 @@ export const useDrupalCe = () => {
     getMessages,
     getPage,
     renderCustomElements,
-    passThroughHeaders
+    passThroughHeaders,
+    getMenuBaseUrl,
+    getDrupalBaseUrl
   };
 };
 const pushMessagesToState = (messages) => {

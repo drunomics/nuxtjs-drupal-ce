@@ -25,19 +25,8 @@ const module = defineNuxtModule({
     passThroughHeaders: ["cache-control", "content-language", "set-cookie", "x-drupal-cache", "x-drupal-dynamic-cache"]
   },
   setup(options, nuxt) {
-    if (options.baseURL && options.baseURL.startsWith("http")) {
-      const baseURL = new URL(options.baseURL);
-      if (!options.drupalBaseUrl) {
-        options.drupalBaseUrl = baseURL.origin;
-      }
-      options.ceApiEndpoint = baseURL.pathname;
-    } else if (!options.baseURL) {
-      options.baseURL = options.drupalBaseUrl + options.ceApiEndpoint;
-    }
-    if (!options.menuBaseUrl) {
-      options.menuBaseUrl = options.drupalBaseUrl + options.ceApiEndpoint;
-    }
-    if (!nuxt.options.drupalCe?.serverApiProxy && options.exposeAPIRouteRules !== void 0) {
+    const nuxtOptions = nuxt.options;
+    if (!nuxtOptions.drupalCe?.serverApiProxy && options.exposeAPIRouteRules !== void 0) {
       options.serverApiProxy = options.exposeAPIRouteRules;
     }
     if (nuxt.options._generate) {

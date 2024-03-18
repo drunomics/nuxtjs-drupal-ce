@@ -1,11 +1,11 @@
 import { defineNuxtConfig } from 'nuxt/config'
-import DrupalCe from '..'
+import DrupalCe from '../src/module'
 
 export default defineNuxtConfig({
   modules: [
     DrupalCe
   ],
   drupalCe: {
-    baseURL: 'https://8080-drunomics-lupusdecouple-ih6hr5d3dwc.ws-eu106.gitpod.io/ce-api'
+    drupalBaseUrl: 'https://8080-drunomics-lupusdecouple-x5qe3h51r0o.ws-eu110.gitpod.io'
   }
 })
