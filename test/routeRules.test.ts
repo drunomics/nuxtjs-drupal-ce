@@ -11,7 +11,8 @@ describe('Site works with serverApiProxy disabled', async () => {
         DrupalCe
       ],
       drupalCe: {
-        baseURL: '/api',
+        drupalBaseUrl: '',
+        ceApiEndpoint: '/api',
         serverApiProxy: false
       }
     }

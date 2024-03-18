@@ -1,5 +1,5 @@
 import { defineNuxtConfig } from 'nuxt/config'
-import DrupalCe from '../src/module'
+import DrupalCe from '..'
 
 export default defineNuxtConfig({
   modules: [

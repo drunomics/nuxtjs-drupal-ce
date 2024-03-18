@@ -11,7 +11,8 @@ describe('Module addRequestContentFormat option set to json', async () => {
         DrupalCe
       ],
       drupalCe: {
-        baseURL: '/api',
+        drupalBaseUrl: '',
+        ceApiEndpoint: '/api',
         addRequestContentFormat: 'json',
         serverApiProxy: false
       }
