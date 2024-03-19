@@ -1,7 +1,7 @@
 import { fileURLToPath } from 'url'
 import { defineNuxtModule, addPlugin, createResolver, addImportsDir, addServerHandler } from '@nuxt/kit'
-import type { UseFetchOptions } from 'nuxt/dist/app/composables'
 import { defu } from 'defu'
+import type { NuxtOptionsWithDrupalCe } from './types'
 
 export interface ModuleOptions {
   baseURL?: string,
@@ -13,11 +13,12 @@ export interface ModuleOptions {
   addRequestContentFormat?: string,
   addRequestFormat: boolean,
   customErrorPages: boolean,
-  fetchOptions: UseFetchOptions<any>,
+  fetchOptions: Object,
   fetchProxyHeaders: string[],
   useLocalizedMenuEndpoint: boolean,
-  exposeAPIRouteRules: boolean,
+  serverApiProxy: boolean,
   passThroughHeaders?: string[],
+  exposeAPIRouteRules?: boolean,
 }
 
 export default defineNuxtModule<ModuleOptions>({
@@ -39,10 +40,15 @@ export default defineNuxtModule<ModuleOptions>({
     fetchProxyHeaders: ['cookie'],
     useLocalizedMenuEndpoint: true,
     addRequestFormat: false,
-    exposeAPIRouteRules: true,
+    serverApiProxy: true,
     passThroughHeaders: ['cache-control', 'content-language', 'set-cookie', 'x-drupal-cache', 'x-drupal-dynamic-cache'],
   },
   setup (options, nuxt) {
+    const nuxtOptions = nuxt.options as NuxtOptionsWithDrupalCe
+    // Keep backwards compatibility for exposeAPIRouteRules(deprecated).
+    if (!nuxtOptions.drupalCe?.serverApiProxy && options.exposeAPIRouteRules !== undefined) {
+      options.serverApiProxy = options.exposeAPIRouteRules
+    }
     // Keep backwards compatibility for baseURL(deprecated).
     if (options.baseURL && options.baseURL.startsWith('http')) {
       const baseURL = new URL(options.baseURL)
@@ -60,7 +66,7 @@ export default defineNuxtModule<ModuleOptions>({
 
     // Disable the server routes for static sites OR when baseURL is not a full URL.
     if (nuxt.options._generate || !options.baseURL.startsWith('http')) {
-      options.exposeAPIRouteRules = false
+      options.serverApiProxy = false
     }
 
     const { resolve } = createResolver(import.meta.url)
@@ -71,7 +77,7 @@ export default defineNuxtModule<ModuleOptions>({
 
     nuxt.options.runtimeConfig.public.drupalCe = defu(nuxt.options.runtimeConfig.public.drupalCe ?? {}, options)
 
-    if (options.exposeAPIRouteRules === true) {
+    if (options.serverApiProxy === true) {
       addServerHandler({
         route: '/api/drupal-ce',
         handler: resolve(runtimeDir, 'server/api/drupalCe')
@@ -87,11 +93,3 @@ export default defineNuxtModule<ModuleOptions>({
     }
   }
 })
-
-// Define the type for the runtime-config,.
-// see https://nuxt.com/docs/guide/going-further/runtime-config#manually-typing-runtime-config
-declare module 'nuxt/schema' {
-  interface PublicRuntimeConfig {
-    drupalCe: ModuleOptions,
-  }
-}

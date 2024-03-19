@@ -1,7 +1,8 @@
 import { callWithNuxt } from '#app'
 import { defu } from 'defu'
 import { appendResponseHeader } from 'h3'
-import { useRuntimeConfig, useRequestURL, useState, useFetch, navigateTo, createError, h, resolveComponent, setResponseStatus, useNuxtApp, useRequestHeaders, UseFetchOptions, ref, watch } from '#imports'
+import type { UseFetchOptions } from '#app'
+import { useRuntimeConfig, useState, useFetch, navigateTo, createError, h, resolveComponent, setResponseStatus, useNuxtApp, useRequestHeaders, ref, watch } from '#imports'
 
 export const useDrupalCe = () => {
 
@@ -13,7 +14,7 @@ export const useDrupalCe = () => {
    * @returns UseFetchOptions<any>
    */
   const processFetchOptions = (fetchOptions:UseFetchOptions<any> = {}) => {
-    if (config.exposeAPIRouteRules) {
+    if (config.serverApiProxy) {
       fetchOptions.baseURL = '/api/drupal-ce'
     } else {
       fetchOptions.baseURL = fetchOptions.baseURL ?? config.baseURL
@@ -121,7 +122,7 @@ export const useDrupalCe = () => {
       })
     }
 
-    if (config.exposeAPIRouteRules) {
+    if (config.serverApiProxy) {
       useFetchOptions.baseURL = '/api/menu'
       // menuPath should not start with a slash.
       if (menuPath.value.startsWith('/')) {
