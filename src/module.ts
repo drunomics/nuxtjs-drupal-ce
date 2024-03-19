@@ -1,7 +1,7 @@
 import { fileURLToPath } from 'url'
 import { defineNuxtModule, addPlugin, createResolver, addImportsDir, addServerHandler } from '@nuxt/kit'
 import { defu } from 'defu'
-import type { UseFetchOptions, NuxtOptionsWithDrupalCe } from './types'
+import type { NuxtOptionsWithDrupalCe } from './types'
 
 export interface ModuleOptions {
   drupalBaseUrl: string,
@@ -12,7 +12,7 @@ export interface ModuleOptions {
   addRequestContentFormat?: string,
   addRequestFormat: boolean,
   customErrorPages: boolean,
-  fetchOptions: UseFetchOptions<any>,
+  fetchOptions: Object,
   fetchProxyHeaders: string[],
   useLocalizedMenuEndpoint: boolean,
   serverApiProxy: boolean,

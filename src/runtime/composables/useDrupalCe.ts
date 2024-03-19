@@ -1,7 +1,7 @@
 import { callWithNuxt } from '#app'
 import { defu } from 'defu'
 import { appendResponseHeader } from 'h3'
-import type { UseFetchOptions } from '../../types'
+import type { UseFetchOptions } from '#app'
 import { useRuntimeConfig, useState, useFetch, navigateTo, createError, h, resolveComponent, setResponseStatus, useNuxtApp, useRequestHeaders, ref, watch } from '#imports'
 
 export const useDrupalCe = () => {
