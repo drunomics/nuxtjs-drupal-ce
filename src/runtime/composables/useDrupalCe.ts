@@ -16,11 +16,31 @@ export const useDrupalCe = () => {
   }
 
   /**
+   * Fetches data from Drupal
+   * @param path The path to fetch
+   * @param fetchOptions Optional Nuxt useFetch options
+   */
+  const useFetchDrupal = (path: string, fetchOptions: UseFetchOptions<any> = {}): ReturnType<typeof useFetch> => {
+    fetchOptions.baseURL = fetchOptions.baseURL ?? config.drupalBaseUrl + config.ceApiEndpoint
+    fetchOptions = defu(fetchOptions, config.fetchOptions)
+    fetchOptions.query = fetchOptions.query ?? {}
+    // If fetchOptions.query._content_format is undefined, use config.addRequestContentFormat
+    // If fetchOptions.query._content_format is false, keep that
+    fetchOptions.query._content_format =
+      fetchOptions.query._content_format ?? config.addRequestContentFormat
+    if (!fetchOptions.query._content_format) {
+      // Remove _content_format if set to a falsy value (e.g. fetchOptions.query._content_format was set to false)
+      delete fetchOptions.query._content_format
+    }
+    return useFetch(path, fetchOptions)
+  }
+
+  /**
    * Processes the given fetchOptions to apply module defaults
    * @param fetchOptions Optional Nuxt useFetch options
    * @returns UseFetchOptions<any>
    */
-  const processFetchOptions = (fetchOptions:UseFetchOptions<any> = {}) => {
+  const processFetchOptions = (fetchOptions: UseFetchOptions<any> = {}) => {
     if (config.serverApiProxy) {
       fetchOptions.baseURL = '/api/drupal-ce'
     } else {
@@ -195,7 +215,8 @@ export const useDrupalCe = () => {
     renderCustomElements,
     passThroughHeaders,
     getMenuBaseUrl,
-    getDrupalBaseUrl
+    getDrupalBaseUrl,
+    useFetchDrupal
   }
 }
 
