@@ -56,6 +56,17 @@ export const useDrupalCe = () => {
   }
 
   /**
+   * Returns the API endpoint with localization (if available)
+   */
+  const getCeApiEndpoint = () => {
+    const nuxtApp = useNuxtApp()
+    if (nuxtApp.$i18n.locale && nuxtApp.$i18n.locale.value !== nuxtApp.$i18n.defaultLocale) {
+      return `${config.ceApiEndpoint}/${nuxtApp.$i18n.locale.value}`
+    }
+    return config.ceApiEndpoint
+  }
+
+  /**
    * Fetches page data from Drupal, handles redirects, errors and messages
    * @param path Path of the Drupal page to fetch
    * @param useFetchOptions Optional Nuxt useFetch options
@@ -216,7 +227,8 @@ export const useDrupalCe = () => {
     passThroughHeaders,
     getMenuBaseUrl,
     getDrupalBaseUrl,
-    useFetchDrupal
+    useFetchDrupal,
+    getCeApiEndpoint
   }
 }
 
