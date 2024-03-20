@@ -93,7 +93,7 @@ is added automatically to requests. Defaults to `false`.
 
 - `useLocalizedMenuEndpoint`: If enabled, the menu endpoint will use a language prefix as configured by [nuxtjs/i18n](https://v8.i18n.nuxtjs.org) module. Defaults to `true`.
 
-- `exposeAPIRouteRules`: If enabled, the module will create a Nitro server handler that proxies API requests to Drupal backend. Defaults to `true` for SSR (it's disabled for SSG).
+- `serverApiProxy`: If enabled, the module will create a Nitro server handler that proxies API requests to Drupal backend. Defaults to `true` for SSR (it's disabled for SSG).
 
 - `passThroughHeaders`: Response headers to pass through from Drupal to the client. Defaults to ['cache-control', 'content-language', 'set-cookie', 'x-drupal-cache', 'x-drupal-dynamic-cache']. Note: This is only available in SSR mode.
 

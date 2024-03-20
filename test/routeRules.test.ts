@@ -3,7 +3,7 @@ import { describe, it, expect } from 'vitest'
 import { setup, $fetch } from '@nuxt/test-utils'
 import DrupalCe from '..'
 
-describe('Site works with exposeAPIRouteRules disabled', async () => {
+describe('Site works with serverApiProxy disabled', async () => {
   await setup({
     rootDir: fileURLToPath(new URL('../playground', import.meta.url)),
     nuxtConfig: {
@@ -12,7 +12,7 @@ describe('Site works with exposeAPIRouteRules disabled', async () => {
       ],
       drupalCe: {
         baseURL: '/api',
-        exposeAPIRouteRules: false
+        serverApiProxy: false
       }
     }
   })
