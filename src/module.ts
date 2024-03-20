@@ -1,5 +1,5 @@
 import { fileURLToPath } from 'url'
-import { defineNuxtModule, addPlugin, createResolver, addImportsDir, addServerHandler } from '@nuxt/kit'
+import { defineNuxtModule, addPlugin, createResolver, addImportsDir, addServerHandler, addServerImports, addImports } from '@nuxt/kit'
 import { defu } from 'defu'
 import type { NuxtOptionsWithDrupalCe } from './types'
 

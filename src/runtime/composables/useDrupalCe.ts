@@ -2,18 +2,11 @@ import { callWithNuxt } from '#app'
 import { defu } from 'defu'
 import { appendResponseHeader } from 'h3'
 import type { UseFetchOptions } from '#app'
+import { getDrupalBaseUrl } from './useBaseUrls'
 import { useRuntimeConfig, useState, useFetch, navigateTo, createError, h, resolveComponent, setResponseStatus, useNuxtApp, useRequestHeaders, ref, watch } from '#imports'
 
 export const useDrupalCe = () => {
   const config = useRuntimeConfig().public.drupalCe
-
-  const getMenuBaseUrl = () => {
-    return config.drupalBaseUrl + config.ceApiEndpoint
-  }
-
-  const getDrupalBaseUrl = () => {
-    return import.meta.env.SSR && config.serverDrupalBaseUrl ? config.serverDrupalBaseUrl : config.drupalBaseUrl
-  }
 
   /**
    * Fetches data from Drupal
@@ -21,7 +14,7 @@ export const useDrupalCe = () => {
    * @param fetchOptions Optional Nuxt useFetch options
    */
   const useFetchDrupal = (path: string, fetchOptions: UseFetchOptions<any> = {}): ReturnType<typeof useFetch> => {
-    fetchOptions.baseURL = fetchOptions.baseURL ?? config.drupalBaseUrl + config.ceApiEndpoint
+    fetchOptions.baseURL = fetchOptions.baseURL ?? getDrupalBaseUrl() + config.ceApiEndpoint
     fetchOptions = defu(fetchOptions, config.fetchOptions)
     fetchOptions.query = fetchOptions.query ?? {}
     // If fetchOptions.query._content_format is undefined, use config.addRequestContentFormat
@@ -44,7 +37,7 @@ export const useDrupalCe = () => {
     if (config.serverApiProxy) {
       fetchOptions.baseURL = '/api/drupal-ce'
     } else {
-      fetchOptions.baseURL = fetchOptions.baseURL ?? config.drupalBaseUrl + config.ceApiEndpoint
+      fetchOptions.baseURL = fetchOptions.baseURL ?? getDrupalBaseUrl() + config.ceApiEndpoint
     }
     fetchOptions = defu(fetchOptions, config.fetchOptions)
 
@@ -58,9 +51,9 @@ export const useDrupalCe = () => {
   /**
    * Returns the API endpoint with localization (if available)
    */
-  const getCeApiEndpoint = () => {
+  const getCeApiEndpoint = (localize: boolean = true) => {
     const nuxtApp = useNuxtApp()
-    if (nuxtApp.$i18n.locale && nuxtApp.$i18n.locale.value !== nuxtApp.$i18n.defaultLocale) {
+    if (localize && nuxtApp.$i18n?.locale && nuxtApp.$i18n.locale.value !== nuxtApp.$i18n.defaultLocale) {
       return `${config.ceApiEndpoint}/${nuxtApp.$i18n.locale.value}`
     }
     return config.ceApiEndpoint
@@ -225,8 +218,6 @@ export const useDrupalCe = () => {
     getPage,
     renderCustomElements,
     passThroughHeaders,
-    getMenuBaseUrl,
-    getDrupalBaseUrl,
     useFetchDrupal,
     getCeApiEndpoint
   }
