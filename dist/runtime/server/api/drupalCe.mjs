@@ -1,5 +1,5 @@
 import { defineEventHandler, proxyRequest, getRouterParams } from "h3";
-import { getDrupalBaseUrl } from "../../composables/useBaseUrls.mjs";
+import { getDrupalBaseUrl } from "../utils/getBaseUrls.mjs";
 import { useRuntimeConfig } from "#imports";
 export default defineEventHandler(async (event) => {
   const params = getRouterParams(event)._;

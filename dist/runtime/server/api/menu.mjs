@@ -1,5 +1,5 @@
 import { defineEventHandler, proxyRequest, getRouterParams } from "h3";
-import { getMenuBaseUrl } from "../../composables/useBaseUrls.mjs";
+import { getMenuBaseUrl } from "../utils/getBaseUrls.mjs";
 export default defineEventHandler(async (event) => {
   const menu = getRouterParams(event)._;
   return await proxyRequest(event, `${getMenuBaseUrl()}/${menu}`, {

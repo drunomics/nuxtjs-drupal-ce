@@ -2,7 +2,7 @@ import { callWithNuxt } from '#app'
 import { defu } from 'defu'
 import { appendResponseHeader } from 'h3'
 import type { UseFetchOptions } from '#app'
-import { getDrupalBaseUrl } from './useBaseUrls'
+import { getDrupalBaseUrl, getMenuBaseUrl } from '../server/utils/getBaseUrls'
 import { useRuntimeConfig, useState, useFetch, navigateTo, createError, h, resolveComponent, setResponseStatus, useNuxtApp, useRequestHeaders, ref, watch } from '#imports'
 
 export const useDrupalCe = () => {
@@ -219,7 +219,9 @@ export const useDrupalCe = () => {
     renderCustomElements,
     passThroughHeaders,
     useFetchDrupal,
-    getCeApiEndpoint
+    getCeApiEndpoint,
+    getDrupalBaseUrl,
+    getMenuBaseUrl
   }
 }
 

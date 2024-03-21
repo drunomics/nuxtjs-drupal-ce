@@ -1,7 +1,7 @@
 import { callWithNuxt } from "#app";
 import { defu } from "defu";
 import { appendResponseHeader } from "h3";
-import { getDrupalBaseUrl } from "./useBaseUrls.mjs";
+import { getDrupalBaseUrl, getMenuBaseUrl } from "../server/utils/getBaseUrls.mjs";
 import { useRuntimeConfig, useState, useFetch, navigateTo, createError, h, resolveComponent, setResponseStatus, useNuxtApp, useRequestHeaders, ref, watch } from "#imports";
 export const useDrupalCe = () => {
   const config = useRuntimeConfig().public.drupalCe;
@@ -143,7 +143,9 @@ export const useDrupalCe = () => {
     renderCustomElements,
     passThroughHeaders,
     useFetchDrupal,
-    getCeApiEndpoint
+    getCeApiEndpoint,
+    getDrupalBaseUrl,
+    getMenuBaseUrl
   };
 };
 const pushMessagesToState = (messages) => {
