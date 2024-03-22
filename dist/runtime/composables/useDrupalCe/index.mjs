@@ -1,20 +1,10 @@
 import { callWithNuxt } from "#app";
 import { defu } from "defu";
 import { appendResponseHeader } from "h3";
-import { getDrupalBaseUrl, getMenuBaseUrl } from "../server/utils/getBaseUrls.mjs";
+import { getDrupalBaseUrl, getMenuBaseUrl } from "./server.mjs";
 import { useRuntimeConfig, useState, useFetch, navigateTo, createError, h, resolveComponent, setResponseStatus, useNuxtApp, useRequestHeaders, ref, watch } from "#imports";
 export const useDrupalCe = () => {
   const config = useRuntimeConfig().public.drupalCe;
-  const useFetchDrupal = (path, fetchOptions = {}) => {
-    fetchOptions.baseURL = fetchOptions.baseURL ?? getDrupalBaseUrl() + config.ceApiEndpoint;
-    fetchOptions = defu(fetchOptions, config.fetchOptions);
-    fetchOptions.query = fetchOptions.query ?? {};
-    fetchOptions.query._content_format = fetchOptions.query._content_format ?? config.addRequestContentFormat;
-    if (!fetchOptions.query._content_format) {
-      delete fetchOptions.query._content_format;
-    }
-    return useFetch(path, fetchOptions);
-  };
   const processFetchOptions = (fetchOptions = {}) => {
     if (config.serverApiProxy) {
       fetchOptions.baseURL = "/api/drupal-ce";
@@ -142,7 +132,6 @@ export const useDrupalCe = () => {
     getPage,
     renderCustomElements,
     passThroughHeaders,
-    useFetchDrupal,
     getCeApiEndpoint,
     getDrupalBaseUrl,
     getMenuBaseUrl

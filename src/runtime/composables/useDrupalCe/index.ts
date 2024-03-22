@@ -2,31 +2,11 @@ import { callWithNuxt } from '#app'
 import { defu } from 'defu'
 import { appendResponseHeader } from 'h3'
 import type { UseFetchOptions } from '#app'
-import { getDrupalBaseUrl, getMenuBaseUrl } from '../server/utils/getBaseUrls'
+import { getDrupalBaseUrl, getMenuBaseUrl } from './server'
 import { useRuntimeConfig, useState, useFetch, navigateTo, createError, h, resolveComponent, setResponseStatus, useNuxtApp, useRequestHeaders, ref, watch } from '#imports'
 
 export const useDrupalCe = () => {
   const config = useRuntimeConfig().public.drupalCe
-
-  /**
-   * Fetches data from Drupal
-   * @param path The path to fetch
-   * @param fetchOptions Optional Nuxt useFetch options
-   */
-  const useFetchDrupal = (path: string, fetchOptions: UseFetchOptions<any> = {}): ReturnType<typeof useFetch> => {
-    fetchOptions.baseURL = fetchOptions.baseURL ?? getDrupalBaseUrl() + config.ceApiEndpoint
-    fetchOptions = defu(fetchOptions, config.fetchOptions)
-    fetchOptions.query = fetchOptions.query ?? {}
-    // If fetchOptions.query._content_format is undefined, use config.addRequestContentFormat
-    // If fetchOptions.query._content_format is false, keep that
-    fetchOptions.query._content_format =
-      fetchOptions.query._content_format ?? config.addRequestContentFormat
-    if (!fetchOptions.query._content_format) {
-      // Remove _content_format if set to a falsy value (e.g. fetchOptions.query._content_format was set to false)
-      delete fetchOptions.query._content_format
-    }
-    return useFetch(path, fetchOptions)
-  }
 
   /**
    * Processes the given fetchOptions to apply module defaults
@@ -218,7 +198,6 @@ export const useDrupalCe = () => {
     getPage,
     renderCustomElements,
     passThroughHeaders,
-    useFetchDrupal,
     getCeApiEndpoint,
     getDrupalBaseUrl,
     getMenuBaseUrl

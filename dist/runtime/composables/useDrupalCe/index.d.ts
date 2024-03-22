@@ -5,7 +5,6 @@ export declare const useDrupalCe: () => {
     getPage: () => Ref;
     renderCustomElements: (customElements: Record<string, any> | Array<Object>) => any;
     passThroughHeaders: (nuxtApp: any, pageHeaders: any) => void;
-    useFetchDrupal: (path: string, fetchOptions?: UseFetchOptions<any>) => any;
     getCeApiEndpoint: (localize?: boolean) => any;
     getDrupalBaseUrl: () => any;
     getMenuBaseUrl: () => any;

@@ -36,7 +36,7 @@ const module = defineNuxtModule({
     const runtimeDir = fileURLToPath(new URL("./runtime", import.meta.url));
     nuxt.options.build.transpile.push(runtimeDir);
     addPlugin(resolve(runtimeDir, "plugin"));
-    addImportsDir(resolve(runtimeDir, "composables"));
+    addImportsDir(resolve(runtimeDir, "composables/useDrupalCe"));
     nuxt.options.runtimeConfig.public.drupalCe = defu(nuxt.options.runtimeConfig.public.drupalCe ?? {}, options);
     if (options.serverApiProxy === true) {
       addServerHandler({

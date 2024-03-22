@@ -1,5 +1,5 @@
 import { defineEventHandler, proxyRequest, getRouterParams } from 'h3'
-import { getMenuBaseUrl } from '../utils/getBaseUrls'
+import { getMenuBaseUrl } from '../../composables/useDrupalCe/server'
 
 export default defineEventHandler(async (event) => {
   const menu = getRouterParams(event)._
