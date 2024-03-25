@@ -2,10 +2,10 @@ import { callWithNuxt } from '#app'
 import { defu } from 'defu'
 import { appendResponseHeader } from 'h3'
 import type { UseFetchOptions } from '#app'
+import { getDrupalBaseUrl, getMenuBaseUrl } from './server'
 import { useRuntimeConfig, useState, useFetch, navigateTo, createError, h, resolveComponent, setResponseStatus, useNuxtApp, useRequestHeaders, ref, watch } from '#imports'
 
 export const useDrupalCe = () => {
-
   const config = useRuntimeConfig().public.drupalCe
 
   /**
@@ -13,11 +13,11 @@ export const useDrupalCe = () => {
    * @param fetchOptions Optional Nuxt useFetch options
    * @returns UseFetchOptions<any>
    */
-  const processFetchOptions = (fetchOptions:UseFetchOptions<any> = {}) => {
+  const processFetchOptions = (fetchOptions: UseFetchOptions<any> = {}) => {
     if (config.serverApiProxy) {
       fetchOptions.baseURL = '/api/drupal-ce'
     } else {
-      fetchOptions.baseURL = fetchOptions.baseURL ?? config.baseURL
+      fetchOptions.baseURL = fetchOptions.baseURL ?? getDrupalBaseUrl() + config.ceApiEndpoint
     }
     fetchOptions = defu(fetchOptions, config.fetchOptions)
 
@@ -26,6 +26,17 @@ export const useDrupalCe = () => {
       fetchOptions.headers = defu(fetchOptions.headers ?? {}, useRequestHeaders(config.fetchProxyHeaders))
     }
     return fetchOptions
+  }
+
+  /**
+   * Returns the API endpoint with localization (if available)
+   */
+  const getCeApiEndpoint = (localize: boolean = true) => {
+    const nuxtApp = useNuxtApp()
+    if (localize && nuxtApp.$i18n?.locale && nuxtApp.$i18n.locale.value !== nuxtApp.$i18n.defaultLocale) {
+      return `${config.ceApiEndpoint}/${nuxtApp.$i18n.locale.value}`
+    }
+    return config.ceApiEndpoint
   }
 
   /**
@@ -186,7 +197,10 @@ export const useDrupalCe = () => {
     getMessages,
     getPage,
     renderCustomElements,
-    passThroughHeaders
+    passThroughHeaders,
+    getCeApiEndpoint,
+    getDrupalBaseUrl,
+    getMenuBaseUrl
   }
 }
 

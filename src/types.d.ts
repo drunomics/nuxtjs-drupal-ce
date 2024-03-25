@@ -11,4 +11,3 @@ declare module 'nuxt/schema' {
 export interface NuxtOptionsWithDrupalCe extends NuxtOptions {
   drupalCe?: ModuleOptions
 }
-

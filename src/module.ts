@@ -1,10 +1,9 @@
 import { fileURLToPath } from 'url'
-import { defineNuxtModule, addPlugin, createResolver, addImportsDir, addServerHandler } from '@nuxt/kit'
+import { defineNuxtModule, addPlugin, createResolver, addImportsDir, addServerHandler, addServerImports, addImports } from '@nuxt/kit'
 import { defu } from 'defu'
 import type { NuxtOptionsWithDrupalCe } from './types'
 
 export interface ModuleOptions {
-  baseURL?: string,
   drupalBaseUrl: string,
   serverDrupalBaseUrl?: string,
   ceApiEndpoint: string,
@@ -49,23 +48,9 @@ export default defineNuxtModule<ModuleOptions>({
     if (!nuxtOptions.drupalCe?.serverApiProxy && options.exposeAPIRouteRules !== undefined) {
       options.serverApiProxy = options.exposeAPIRouteRules
     }
-    // Keep backwards compatibility for baseURL(deprecated).
-    if (options.baseURL && options.baseURL.startsWith('http')) {
-      const baseURL = new URL(options.baseURL)
-      if (!options.drupalBaseUrl) {
-        options.drupalBaseUrl = baseURL.origin
-      }
-      options.ceApiEndpoint = baseURL.pathname
-    } else if (!options.baseURL) {
-      options.baseURL = options.drupalBaseUrl + options.ceApiEndpoint
-    }
 
-    if (!options.menuBaseUrl) {
-      options.menuBaseUrl = options.drupalBaseUrl + options.ceApiEndpoint
-    }
-
-    // Disable the server routes for static sites OR when baseURL is not a full URL.
-    if (nuxt.options._generate || !options.baseURL.startsWith('http')) {
+    // Disable the server routes for static sites.
+    if (nuxt.options._generate) {
       options.serverApiProxy = false
     }
 
@@ -73,7 +58,7 @@ export default defineNuxtModule<ModuleOptions>({
     const runtimeDir = fileURLToPath(new URL('./runtime', import.meta.url))
     nuxt.options.build.transpile.push(runtimeDir)
     addPlugin(resolve(runtimeDir, 'plugin'))
-    addImportsDir(resolve(runtimeDir, 'composables'))
+    addImportsDir(resolve(runtimeDir, 'composables/useDrupalCe'))
 
     nuxt.options.runtimeConfig.public.drupalCe = defu(nuxt.options.runtimeConfig.public.drupalCe ?? {}, options)
 

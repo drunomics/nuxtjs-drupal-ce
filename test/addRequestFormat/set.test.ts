@@ -11,8 +11,10 @@ describe('Module addRequestFormat option set to true', async () => {
         DrupalCe
       ],
       drupalCe: {
-        baseURL: '/api',
-        addRequestFormat: true
+        drupalBaseUrl: '',
+        ceApiEndpoint: '/api',
+        addRequestFormat: true,
+        serverApiProxy: false
       }
     }
   })
