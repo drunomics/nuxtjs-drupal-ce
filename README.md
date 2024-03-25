@@ -161,8 +161,8 @@ Note: The `error` parameter is optional and can be omitted.
 The following options were support in 1.x but got dropped:
 
 - `addVueCompiler`: This is necessary if you want to render custom elements markup on runtime;
-  i.e. use the 'markup' content format. If you need this, you may find a solution in this
-  [GitHub issue](https://github.com/nuxt/nuxt/issues/13843).
+  i.e. use the 'markup' content format. Instead, the vue runtime compiler can be enabled in via
+  Nuxt config, see [here](https://github.com/nuxt/framework/pull/4762).
 
 - `axios`: Options to pass-through to the `drupal-ce`
   [axios](https://github.com/nuxt-community/axios-module) instance. Use `fetchOptions` instead.
