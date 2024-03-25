@@ -213,12 +213,12 @@ const pushMessagesToState = (messages) => {
   if (!messagesArray.length) {
     return
   }
-  process.client && useDrupalCe().getMessages().value.push(...messagesArray)
+  import.meta.client && useDrupalCe().getMessages().value.push(...messagesArray)
 }
 
 const menuErrorHandler = (error: Record<string, any>) => {
   console.error({ statusCode: error.value.statusCode, statusMessage: error.value.message, data: error.value.data })
-  process.client && useDrupalCe().getMessages().value.push({
+  import.meta.client && useDrupalCe().getMessages().value.push({
     type: 'error',
     message: `Menu error: ${error.value.message}.`
   })
