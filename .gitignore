@@ -14,7 +14,7 @@ node_modules
 **/.yarn/*state*
 
 # Generated dirs
-playground/dist
+dist
 
 # Nuxt
 .nuxt
