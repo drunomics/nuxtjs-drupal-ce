@@ -129,7 +129,12 @@ export const useDrupalCe = () => {
       // API path with localization
       menuPath.value = nuxtApp.$localePath('/' + baseMenuPath)
       watch(nuxtApp.$i18n.locale, () => {
-        menuPath.value = nuxtApp.$localePath('/' + baseMenuPath)
+        let menuLocalePath = nuxtApp.$localePath('/' + baseMenuPath)
+        // menuPath should not start with a slash.
+        if (config.serverApiProxy && menuLocalePath.startsWith('/')) {
+          menuLocalePath = menuLocalePath.substring(1)
+        }
+        menuPath.value = menuLocalePath
       })
     }
 
