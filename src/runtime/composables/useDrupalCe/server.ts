@@ -1,7 +1,8 @@
 import { useRuntimeConfig } from '#imports'
 
 export const getDrupalBaseUrl = () => {
-  return useRuntimeConfig().public.drupalCe.drupalBaseUrl
+  const config = useRuntimeConfig().public.drupalCe
+  return import.meta.server && config.serverDrupalBaseUrl ? config.serverDrupalBaseUrl : config.drupalBaseUrl
 }
 
 export const getMenuBaseUrl = () => {
