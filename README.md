@@ -106,6 +106,23 @@ Runtime config values can be overridden with environment variables via `NUXT_PUB
 - `menuBaseUrl` -> `NUXT_PUBLIC_DRUPAL_CE_MENU_BASE_URL`
 - `ceApiEndpoint` -> `NUXT_PUBLIC_DRUPAL_CE_CE_API_ENDPOINT`
 
+## Helpers
+
+The module provides the following helpers:
+
+- `useDrupalCe`: The main composable that provides:
+  - `fetchPage`: Fetches a page from Drupal.
+  - `fetchMenu`: Fetches a menu from Drupal.
+  - `getMessages`: Returns page messages.
+  - `getPage`: Returns the fetched page.
+  - `renderCustomElements`: Renders custom elements markup.
+  - `passThroughHeaders`: Passes through headers from Drupal to the client.
+  - `getCeApiEndpoint`: Returns the `ceApiEndpoint` with localization(if enabled).
+
+- `getDrupalBaseUrl`: If `serverDrupalBaseUrl` is set, on the server it will return the `serverDrupalBaseUrl` and on the client it returns the `drupalBaseUrl`, if unset it simply returns the `drupalBaseUrl` on both server and client.
+
+- `getMenuBaseUrl`: Returns the menuBaseUrl if set, otherwise the `drupalBaseUrl` + `ceApiEndpoint`.
+
 ## Deprecated options
 
 The following options are deprecated and only there for improved backwards compatibility.
