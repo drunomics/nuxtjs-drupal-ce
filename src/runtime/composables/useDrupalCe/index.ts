@@ -29,6 +29,33 @@ export const useDrupalCe = () => {
   }
 
   /**
+   * Fetch data from the Drupal API
+   * @param path Path of the Drupal API endpoint to fetch
+   * @param fetchOptions UseFetchOptions<any>
+   */
+  const $ceApi = (path: string | Ref<string>, fetchOptions: UseFetchOptions<any> = {}): Promise<any> => {
+    const useFetchOptions = processFetchOptions(fetchOptions)
+
+    // If useFetchOptions.query._content_format is undefined, use config.addRequestContentFormat.
+    // If useFetchOptions.query._content_format is false, keep that.
+    useFetchOptions.query = useFetchOptions.query ?? {}
+    useFetchOptions.query._content_format = useFetchOptions.query._content_format ?? config.addRequestContentFormat
+    if (!useFetchOptions.query._content_format) {
+      // Remove _content_format if set to a falsy value (e.g. fetchOptions.query._content_format was set to false)
+      delete useFetchOptions.query._content_format
+    }
+
+    const $ceApi = $fetch.create({
+      ...useFetchOptions
+    })
+
+    return useFetch(path, {
+      ...useFetchOptions,
+      $fetch: $ceApi
+    })
+  }
+
+  /**
    * Returns the API endpoint with localization (if available)
    */
   const getCeApiEndpoint = (localize: boolean = true) => {
@@ -86,7 +113,7 @@ export const useDrupalCe = () => {
       useFetchOptions.query._format = 'custom_elements'
     }
 
-    const { data: page, error } = await useFetch(path, useFetchOptions)
+    const { data: page, error } = await $ceApi(path, useFetchOptions)
 
     if (page?.value?.redirect) {
       await callWithNuxt(nuxtApp, navigateTo, [
@@ -146,7 +173,7 @@ export const useDrupalCe = () => {
       }
     }
 
-    const { data: menu, error } = await useFetch(menuPath, useFetchOptions)
+    const { data: menu, error } = await $ceApi(menuPath, useFetchOptions)
 
     if (error.value) {
       overrideErrorHandler ? overrideErrorHandler(error) : menuErrorHandler(error)
@@ -197,6 +224,7 @@ export const useDrupalCe = () => {
   }
 
   return {
+    $ceApi,
     fetchPage,
     fetchMenu,
     getMessages,
