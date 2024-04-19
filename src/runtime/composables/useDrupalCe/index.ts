@@ -26,6 +26,20 @@ export const useDrupalCe = () => {
     if (config.fetchProxyHeaders) {
       fetchOptions.headers = defu(fetchOptions.headers ?? {}, useRequestHeaders(config.fetchProxyHeaders))
     }
+
+    // If fetchOptions.query._content_format is undefined, use config.addRequestContentFormat.
+    // If fetchOptions.query._content_format is false, keep that.
+    fetchOptions.query = fetchOptions.query ?? {}
+
+    fetchOptions.query._content_format = fetchOptions.query._content_format ?? config.addRequestContentFormat
+    if (!fetchOptions.query._content_format) {
+      // Remove _content_format if set to a falsy value (e.g. fetchOptions.query._content_format was set to false)
+      delete fetchOptions.query._content_format
+    }
+
+    if (config.addRequestFormat) {
+      fetchOptions.query._format = 'custom_elements'
+    }
     return fetchOptions
   }
 
@@ -35,28 +49,6 @@ export const useDrupalCe = () => {
    */
   const $ceApi = (fetchOptions: UseFetchOptions<any> = {}): $Fetch<unknown, NitroFetchRequest> => {
     const useFetchOptions = processFetchOptions(fetchOptions)
-    const nuxtApp = useNuxtApp()
-
-    // If useFetchOptions.query._content_format is undefined, use config.addRequestContentFormat.
-    // If useFetchOptions.query._content_format is false, keep that.
-    useFetchOptions.query = useFetchOptions.query ?? {}
-
-    useFetchOptions.query._content_format = useFetchOptions.query._content_format ?? config.addRequestContentFormat
-    if (!useFetchOptions.query._content_format) {
-      // Remove _content_format if set to a falsy value (e.g. fetchOptions.query._content_format was set to false)
-      delete useFetchOptions.query._content_format
-    }
-
-    if (config.addRequestFormat) {
-      useFetchOptions.query._format = 'custom_elements'
-    }
-
-    useFetchOptions.onResponse = (context) => {
-      if (config.passThroughHeaders && import.meta.server) {
-        const headersObject = Object.fromEntries([...context.response.headers.entries()])
-        passThroughHeaders(nuxtApp, headersObject)
-      }
-    }
 
     return $fetch.create({
       ...useFetchOptions
@@ -64,11 +56,20 @@ export const useDrupalCe = () => {
   }
 
   /**
-   * Fetch data from Drupal API using $ceApi
-   * @param path Path of the Drupal API endpoint to fetch
+   * Fetch data from Drupal ce-API endpoint using $ceApi
+   * @param path Path of the Drupal ce-API endpoint to fetch
    * @param fetchOptions UseFetchOptions<any>
+   * @param passThroughHeaders Whether to pass through headers from Drupal to the client
    */
-  const useCeApi = (path: string | Ref<string>, fetchOptions: UseFetchOptions<any> = {}): Promise<any> => {
+  const useCeApi = (path: string | Ref<string>, fetchOptions: UseFetchOptions<any> = {}, doPassThroughHeaders?: boolean): Promise<any> => {
+    const nuxtApp = useNuxtApp()
+    fetchOptions.onResponse = (context) => {
+      if (doPassThroughHeaders && config.passThroughHeaders && import.meta.server) {
+        const headersObject = Object.fromEntries([...context.response.headers.entries()])
+        passThroughHeaders(nuxtApp, headersObject)
+      }
+    }
+
     return useFetch(path, {
       ...fetchOptions,
       $fetch: $ceApi(fetchOptions)
@@ -116,7 +117,7 @@ export const useDrupalCe = () => {
     }))
     useFetchOptions.key = `page-${path}-${JSON.stringify(useFetchOptions.query)}`
 
-    const { data: page, error } = await useCeApi(path, useFetchOptions)
+    const { data: page, error } = await useCeApi(path, useFetchOptions, true)
 
     if (page?.value?.redirect) {
       await callWithNuxt(nuxtApp, navigateTo, [
