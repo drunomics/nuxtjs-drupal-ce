@@ -2,6 +2,7 @@ import { callWithNuxt } from '#app'
 import { defu } from 'defu'
 import { appendResponseHeader } from 'h3'
 import type { UseFetchOptions } from '#app'
+import type { $Fetch, NitroFetchRequest } from 'nitropack'
 import { getDrupalBaseUrl, getMenuBaseUrl } from './server'
 import { useRuntimeConfig, useState, useFetch, navigateTo, createError, h, resolveComponent, setResponseStatus, useNuxtApp, useRequestHeaders, ref, watch } from '#imports'
 
@@ -29,29 +30,48 @@ export const useDrupalCe = () => {
   }
 
   /**
-   * Fetch data from the Drupal API
-   * @param path Path of the Drupal API endpoint to fetch
+   * Custom $fetch instance
    * @param fetchOptions UseFetchOptions<any>
    */
-  const $ceApi = (path: string | Ref<string>, fetchOptions: UseFetchOptions<any> = {}): Promise<any> => {
+  const $ceApi = (fetchOptions: UseFetchOptions<any> = {}): $Fetch<unknown, NitroFetchRequest> => {
     const useFetchOptions = processFetchOptions(fetchOptions)
+    const nuxtApp = useNuxtApp()
 
     // If useFetchOptions.query._content_format is undefined, use config.addRequestContentFormat.
     // If useFetchOptions.query._content_format is false, keep that.
     useFetchOptions.query = useFetchOptions.query ?? {}
+
     useFetchOptions.query._content_format = useFetchOptions.query._content_format ?? config.addRequestContentFormat
     if (!useFetchOptions.query._content_format) {
       // Remove _content_format if set to a falsy value (e.g. fetchOptions.query._content_format was set to false)
       delete useFetchOptions.query._content_format
     }
 
-    const $ceApi = $fetch.create({
+    if (config.addRequestFormat) {
+      useFetchOptions.query._format = 'custom_elements'
+    }
+
+    useFetchOptions.onResponse = (context) => {
+      if (config.passThroughHeaders && import.meta.server) {
+        const headersObject = Object.fromEntries([...context.response.headers.entries()])
+        passThroughHeaders(nuxtApp, headersObject)
+      }
+    }
+
+    return $fetch.create({
       ...useFetchOptions
     })
+  }
 
+  /**
+   * Fetch data from Drupal API using $ceApi
+   * @param path Path of the Drupal API endpoint to fetch
+   * @param fetchOptions UseFetchOptions<any>
+   */
+  const useCeApi = (path: string | Ref<string>, fetchOptions: UseFetchOptions<any> = {}): Promise<any> => {
     return useFetch(path, {
-      ...useFetchOptions,
-      $fetch: $ceApi
+      ...fetchOptions,
+      $fetch: $ceApi(fetchOptions)
     })
   }
 
@@ -94,26 +114,9 @@ export const useDrupalCe = () => {
       page_layout: 'default',
       title: ''
     }))
-    useFetchOptions.key = `page-${path}`
-    useFetchOptions = processFetchOptions(useFetchOptions)
-    useFetchOptions.query = useFetchOptions.query ?? {}
+    useFetchOptions.key = `page-${path}-${JSON.stringify(useFetchOptions.query)}`
 
-    useFetchOptions.onResponse = (context) => {
-      if (config.passThroughHeaders && import.meta.server) {
-        const headersObject = Object.fromEntries([...context.response.headers.entries()])
-        passThroughHeaders(nuxtApp, headersObject)
-      }
-    }
-
-    if (config.addRequestContentFormat) {
-      useFetchOptions.query._content_format = config.addRequestContentFormat
-    }
-
-    if (config.addRequestFormat) {
-      useFetchOptions.query._format = 'custom_elements'
-    }
-
-    const { data: page, error } = await $ceApi(path, useFetchOptions)
+    const { data: page, error } = await useCeApi(path, useFetchOptions)
 
     if (page?.value?.redirect) {
       await callWithNuxt(nuxtApp, navigateTo, [
@@ -173,7 +176,7 @@ export const useDrupalCe = () => {
       }
     }
 
-    const { data: menu, error } = await $ceApi(menuPath, useFetchOptions)
+    const { data: menu, error } = await useCeApi(menuPath, useFetchOptions)
 
     if (error.value) {
       overrideErrorHandler ? overrideErrorHandler(error) : menuErrorHandler(error)
@@ -225,6 +228,7 @@ export const useDrupalCe = () => {
 
   return {
     $ceApi,
+    useCeApi,
     fetchPage,
     fetchMenu,
     getMessages,
