@@ -115,7 +115,7 @@ export const useDrupalCe = () => {
       page_layout: 'default',
       title: ''
     }))
-    useFetchOptions.key = `page-${path}-${JSON.stringify(useFetchOptions.query)}`
+    useFetchOptions.key = `page-${path}`
 
     const { data: page, error } = await useCeApi(path, useFetchOptions, true)
 
