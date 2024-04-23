@@ -53,10 +53,11 @@ export const useDrupalCe = () => {
     useFetchOptions.onResponseError = ({ response }) => {
       const data = response._data
       /**
-       * Nuxt 5xx fetch errors should be handled as 404 errors, 5xx errors are reserved for Drupal errors.
-       * Using data.stack to determine if the error is a Nuxt error.
+       * Nicely handle fetch errors, such as request time out. This ensures that
+       * the 5xx errors are passed through properly to the client.
+       * Using data.url to determine if the error is a Nuxt error.
        */
-      if (data.stack !== undefined && data.statusCode && data.statusCode.toString().startsWith('5')) {
+      if (data.url && data.statusCode && data.statusCode.toString().startsWith('5')) {
         const error = ref({
           statusCode: 404,
           statusMessage: 'Page not found',

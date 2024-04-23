@@ -18,6 +18,7 @@ export interface ModuleOptions {
   serverApiProxy: boolean,
   passThroughHeaders?: string[],
   exposeAPIRouteRules?: boolean,
+  errorLogger?: boolean,
 }
 
 export default defineNuxtModule<ModuleOptions>({
@@ -41,6 +42,7 @@ export default defineNuxtModule<ModuleOptions>({
     addRequestFormat: false,
     serverApiProxy: true,
     passThroughHeaders: ['cache-control', 'content-language', 'set-cookie', 'x-drupal-cache', 'x-drupal-dynamic-cache'],
+    errorLogger: true
   },
   setup (options, nuxt) {
     const nuxtOptions = nuxt.options as NuxtOptionsWithDrupalCe
@@ -58,7 +60,9 @@ export default defineNuxtModule<ModuleOptions>({
     const runtimeDir = fileURLToPath(new URL('./runtime', import.meta.url))
     nuxt.options.build.transpile.push(runtimeDir)
     addPlugin(resolve(runtimeDir, 'plugin'))
-    addServerPlugin(resolve(runtimeDir, 'server/plugins/errorLogger'))
+    if (options.errorLogger) {
+      addServerPlugin(resolve(runtimeDir, 'server/plugins/errorLogger'))
+    }
     addImportsDir(resolve(runtimeDir, 'composables/useDrupalCe'))
 
     nuxt.options.runtimeConfig.public.drupalCe = defu(nuxt.options.runtimeConfig.public.drupalCe ?? {}, options)

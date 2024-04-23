@@ -1,5 +1,5 @@
 import { fileURLToPath } from 'url';
-import { defineNuxtModule, createResolver, addPlugin, addImportsDir, addServerHandler } from '@nuxt/kit';
+import { defineNuxtModule, createResolver, addPlugin, addServerPlugin, addImportsDir, addServerHandler } from '@nuxt/kit';
 import { defu } from 'defu';
 
 const module = defineNuxtModule({
@@ -22,7 +22,8 @@ const module = defineNuxtModule({
     useLocalizedMenuEndpoint: true,
     addRequestFormat: false,
     serverApiProxy: true,
-    passThroughHeaders: ["cache-control", "content-language", "set-cookie", "x-drupal-cache", "x-drupal-dynamic-cache"]
+    passThroughHeaders: ["cache-control", "content-language", "set-cookie", "x-drupal-cache", "x-drupal-dynamic-cache"],
+    errorLogger: true
   },
   setup(options, nuxt) {
     const nuxtOptions = nuxt.options;
@@ -36,6 +37,9 @@ const module = defineNuxtModule({
     const runtimeDir = fileURLToPath(new URL("./runtime", import.meta.url));
     nuxt.options.build.transpile.push(runtimeDir);
     addPlugin(resolve(runtimeDir, "plugin"));
+    if (options.errorLogger) {
+      addServerPlugin(resolve(runtimeDir, "server/plugins/errorLogger"));
+    }
     addImportsDir(resolve(runtimeDir, "composables/useDrupalCe"));
     nuxt.options.runtimeConfig.public.drupalCe = defu(nuxt.options.runtimeConfig.public.drupalCe ?? {}, options);
     if (options.serverApiProxy === true) {
