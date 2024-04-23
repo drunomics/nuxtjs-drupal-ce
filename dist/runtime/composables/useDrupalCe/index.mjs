@@ -27,17 +27,6 @@ export const useDrupalCe = () => {
   };
   const $ceApi = (fetchOptions = {}) => {
     const useFetchOptions = processFetchOptions(fetchOptions);
-    useFetchOptions.onResponseError = ({ response }) => {
-      const data = response._data;
-      if (data.url && data.statusCode && data.statusCode.toString().startsWith("5")) {
-        const error = ref({
-          statusCode: 404,
-          statusMessage: "Page not found",
-          data: data.message
-        });
-        return pageErrorHandler(error);
-      }
-    };
     return $fetch.create({
       ...useFetchOptions
     });
@@ -186,10 +175,10 @@ const menuErrorHandler = (error) => {
   });
 };
 const pageErrorHandler = (error, context) => {
-  if (error.value && (!error.value?.data?.content || context?.config.customErrorPages)) {
-    throw createError({ statusCode: error.value.statusCode, statusMessage: error.value.message, data: error.value.data, fatal: true });
-  }
   if (context) {
     callWithNuxt(context.nuxtApp, setResponseStatus, [error.value.statusCode]);
+  }
+  if (error.value && (!error.value?.data?.content || context?.config.customErrorPages)) {
+    throw createError({ statusCode: error.value.statusCode, statusMessage: error.value.message, data: error.value.data, fatal: true });
   }
 };

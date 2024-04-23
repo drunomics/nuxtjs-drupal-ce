@@ -15,7 +15,7 @@ interface ModuleOptions {
     serverApiProxy: boolean;
     passThroughHeaders?: string[];
     exposeAPIRouteRules?: boolean;
-    errorLogger?: boolean;
+    serverLogLevel?: boolean | 'info' | 'error';
 }
 declare const _default: _nuxt_schema.NuxtModule<ModuleOptions>;
 

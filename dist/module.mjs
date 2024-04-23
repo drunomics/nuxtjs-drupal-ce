@@ -23,7 +23,7 @@ const module = defineNuxtModule({
     addRequestFormat: false,
     serverApiProxy: true,
     passThroughHeaders: ["cache-control", "content-language", "set-cookie", "x-drupal-cache", "x-drupal-dynamic-cache"],
-    errorLogger: true
+    serverLogLevel: "info"
   },
   setup(options, nuxt) {
     const nuxtOptions = nuxt.options;
@@ -37,7 +37,7 @@ const module = defineNuxtModule({
     const runtimeDir = fileURLToPath(new URL("./runtime", import.meta.url));
     nuxt.options.build.transpile.push(runtimeDir);
     addPlugin(resolve(runtimeDir, "plugin"));
-    if (options.errorLogger) {
+    if (options.serverLogLevel) {
       addServerPlugin(resolve(runtimeDir, "server/plugins/errorLogger"));
     }
     addImportsDir(resolve(runtimeDir, "composables/useDrupalCe"));
