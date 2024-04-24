@@ -52,7 +52,7 @@ export const useDrupalCe = () => {
 
     useFetchOptions.onResponseError = ({ response }) => {
       const statusCode = response.statusCode || response.status
-      const message = response._data.message ? `${response._data.url} - ${response._data.message}` : 'The website encountered an unexpected error. Please try again later.'
+      const message = response._data.message ? `${response._data.url} - ${response._data.message}` : response._data
       if (statusCode === 500) {
         const error = ref({
           statusCode,
