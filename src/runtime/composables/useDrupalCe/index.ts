@@ -2,6 +2,7 @@ import { callWithNuxt } from '#app'
 import { defu } from 'defu'
 import { appendResponseHeader } from 'h3'
 import type { UseFetchOptions } from '#app'
+import type { $Fetch, NitroFetchRequest } from 'nitropack'
 import { getDrupalBaseUrl, getMenuBaseUrl } from './server'
 import { useRuntimeConfig, useState, useFetch, navigateTo, createError, h, resolveComponent, setResponseStatus, useNuxtApp, useRequestHeaders, ref, watch } from '#imports'
 
@@ -25,7 +26,54 @@ export const useDrupalCe = () => {
     if (config.fetchProxyHeaders) {
       fetchOptions.headers = defu(fetchOptions.headers ?? {}, useRequestHeaders(config.fetchProxyHeaders))
     }
+
+    // If fetchOptions.query._content_format is undefined, use config.addRequestContentFormat.
+    // If fetchOptions.query._content_format is false, keep that.
+    fetchOptions.query = fetchOptions.query ?? {}
+
+    fetchOptions.query._content_format = fetchOptions.query._content_format ?? config.addRequestContentFormat
+    if (!fetchOptions.query._content_format) {
+      // Remove _content_format if set to a falsy value (e.g. fetchOptions.query._content_format was set to false)
+      delete fetchOptions.query._content_format
+    }
+
+    if (config.addRequestFormat) {
+      fetchOptions.query._format = 'custom_elements'
+    }
     return fetchOptions
+  }
+
+  /**
+   * Custom $fetch instance
+   * @param fetchOptions UseFetchOptions<any>
+   */
+  const $ceApi = (fetchOptions: UseFetchOptions<any> = {}): $Fetch<unknown, NitroFetchRequest> => {
+    const useFetchOptions = processFetchOptions(fetchOptions)
+
+    return $fetch.create({
+      ...useFetchOptions
+    })
+  }
+
+  /**
+   * Fetch data from Drupal ce-API endpoint using $ceApi
+   * @param path Path of the Drupal ce-API endpoint to fetch
+   * @param fetchOptions UseFetchOptions<any>
+   * @param passThroughHeaders Whether to pass through headers from Drupal to the client
+   */
+  const useCeApi = (path: string | Ref<string>, fetchOptions: UseFetchOptions<any> = {}, doPassThroughHeaders?: boolean): Promise<any> => {
+    const nuxtApp = useNuxtApp()
+    fetchOptions.onResponse = (context) => {
+      if (doPassThroughHeaders && config.passThroughHeaders && import.meta.server) {
+        const headersObject = Object.fromEntries([...context.response.headers.entries()])
+        passThroughHeaders(nuxtApp, headersObject)
+      }
+    }
+
+    return useFetch(path, {
+      ...fetchOptions,
+      $fetch: $ceApi(fetchOptions)
+    })
   }
 
   /**
@@ -68,25 +116,8 @@ export const useDrupalCe = () => {
       title: ''
     }))
     useFetchOptions.key = `page-${path}`
-    useFetchOptions = processFetchOptions(useFetchOptions)
-    useFetchOptions.query = useFetchOptions.query ?? {}
 
-    useFetchOptions.onResponse = (context) => {
-      if (config.passThroughHeaders && import.meta.server) {
-        const headersObject = Object.fromEntries([...context.response.headers.entries()])
-        passThroughHeaders(nuxtApp, headersObject)
-      }
-    }
-
-    if (config.addRequestContentFormat) {
-      useFetchOptions.query._content_format = config.addRequestContentFormat
-    }
-
-    if (config.addRequestFormat) {
-      useFetchOptions.query._format = 'custom_elements'
-    }
-
-    const { data: page, error } = await useFetch(path, useFetchOptions)
+    const { data: page, error } = await useCeApi(path, useFetchOptions, true)
 
     if (page?.value?.redirect) {
       await callWithNuxt(nuxtApp, navigateTo, [
@@ -146,7 +177,7 @@ export const useDrupalCe = () => {
       }
     }
 
-    const { data: menu, error } = await useFetch(menuPath, useFetchOptions)
+    const { data: menu, error } = await useCeApi(menuPath, useFetchOptions)
 
     if (error.value) {
       overrideErrorHandler ? overrideErrorHandler(error) : menuErrorHandler(error)
@@ -197,6 +228,8 @@ export const useDrupalCe = () => {
   }
 
   return {
+    $ceApi,
+    useCeApi,
     fetchPage,
     fetchMenu,
     getMessages,
