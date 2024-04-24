@@ -50,6 +50,20 @@ export const useDrupalCe = () => {
   const $ceApi = (fetchOptions: UseFetchOptions<any> = {}): $Fetch<unknown, NitroFetchRequest> => {
     const useFetchOptions = processFetchOptions(fetchOptions)
 
+    useFetchOptions.onResponseError = ({ response }) => {
+      const statusCode = response.statusCode || response.status
+      const message = response._data.message ? `${response._data.url} - ${response._data.message}` : 'The website encountered an unexpected error. Please try again later.'
+      if (statusCode === 500) {
+        const error = ref({
+          statusCode,
+          message: `[${statusCode}] ${message}`,
+          data: response._data
+        })
+
+        return pageErrorHandler(error)
+      }
+    }
+
     return $fetch.create({
       ...useFetchOptions,
     })
@@ -263,10 +277,10 @@ const menuErrorHandler = (error: Record<string, any>) => {
 }
 
 const pageErrorHandler = (error: Record<string, any>, context?: Record<string, any>) => {
-  if (context) {
-    callWithNuxt(context.nuxtApp, setResponseStatus, [error.value.statusCode])
-  }
   if (error.value && (!error.value?.data?.content || context?.config.customErrorPages)) {
     throw createError({ statusCode: error.value.statusCode, statusMessage: error.value.message, data: error.value.data, fatal: true })
+  }
+  if (context) {
+    callWithNuxt(context.nuxtApp, setResponseStatus, [error.value.statusCode])
   }
 }
