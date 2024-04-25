@@ -30,17 +30,26 @@ export const useDrupalCe = () => {
     useFetchOptions.onResponseError = ({ response }) => {
       const statusCode = response.statusCode || response.status;
       if (statusCode === 500) {
-        const message = ref("");
-        if (response._data.message) {
-          message.value = `${response._data.url} - ${response._data.message} - No response from backend received.`;
+        const error = ref({});
+        if (response._data.message === "fetch failed") {
+          error.value = {
+            statusCode: 503,
+            message: `[${statusCode}] fetch failed. Unable to reach backend.`,
+            data: response._data
+          };
+        } else if (response._data.message) {
+          error.value = {
+            statusCode: 504,
+            message: `[${statusCode}] ${response._data.url} - ${response._data.message} - No response from backend received.`,
+            data: response._data
+          };
         } else {
-          message.value = response._data;
+          error.value = {
+            statusCode: 504,
+            message: `[${statusCode}] ${response._data || "No response from backend received."}`,
+            data: response._data
+          };
         }
-        const error = ref({
-          statusCode: 504,
-          message: `[${statusCode}] ${message.value || "No response from backend received."}`,
-          data: response._data
-        });
         return pageErrorHandler(error);
       }
     };
