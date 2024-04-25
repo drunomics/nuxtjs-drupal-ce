@@ -50,32 +50,20 @@ export const useDrupalCe = () => {
   const $ceApi = (fetchOptions: UseFetchOptions<any> = {}): $Fetch<unknown, NitroFetchRequest> => {
     const useFetchOptions = processFetchOptions(fetchOptions)
 
-    useFetchOptions.onResponseError = ({ response }) => {
+    useFetchOptions.onResponseError = (error) => {
+      const { response } = error
       const statusCode = response.statusCode || response.status
-      if (statusCode === 500) {
+      // At the moment, Nuxt API proxy does not provide a nice error when the backend is not reachable. Handle it better.
+      // See https://github.com/nuxt/nuxt/issues/22645
+      if (statusCode === 500 && response._data.message === 'fetch failed' && response._data.statusMessage == '') {
         const error = ref({})
-        // At the moment, Nuxt API proxy does not provide a nice error when the backend is not reachable. Handle it better.
-        if (response._data.message === 'fetch failed') {
-          error.value = {
-            statusCode: 503,
-            message: `[${statusCode}] fetch failed. Unable to reach backend.`,
-            data: response._data
-          }
-        } else if (response._data.message) {
-          error.value = {
-            statusCode: 504,
-            message: `[${statusCode}] ${response._data.url} - ${response._data.message} - No response from backend received.`,
-            data: response._data
-          }
-        } else {
-          error.value = {
-            statusCode: 504,
-            message: `[${statusCode}] ${response._data || 'No response from backend received.'}`,
-            data: response._data
-          }
+        error.value = {
+          statusCode: 503,
+          message: `[${statusCode}] fetch failed. Unable to reach backend.`,
+          data: response._data
         }
-        return pageErrorHandler(error)
       }
+      return pageErrorHandler(error)
     }
 
     return $fetch.create({
