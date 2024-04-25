@@ -176,8 +176,8 @@ const menuErrorHandler = (error) => {
 };
 const pageErrorHandler = (error, context) => {
   const errorData = error.value.data;
-  if (error.value && (!errorData.content || context?.config.customErrorPages)) {
-    if (errorData.statusCode === 500 && errorData.message === "fetch failed" && !errorData.statusMessage) {
+  if (error.value && (!errorData?.content || context?.config.customErrorPages)) {
+    if (error.value.statusCode === 500 && errorData.message === "fetch failed" && !errorData.statusMessage) {
       throw createError({
         statusCode: 503,
         statusMessage: "Unable to reach backend.",

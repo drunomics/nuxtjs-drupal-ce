@@ -264,10 +264,10 @@ const menuErrorHandler = (error: Record<string, any>) => {
 
 const pageErrorHandler = (error: Record<string, any>, context?: Record<string, any>) => {
   const errorData = error.value.data
-  if (error.value && (!errorData.content || context?.config.customErrorPages)) {
+  if (error.value && (!errorData?.content || context?.config.customErrorPages)) {
     // At the moment, Nuxt API proxy does not provide a nice error when the backend is not reachable. Handle it better.
     // See https://github.com/nuxt/nuxt/issues/22645
-    if (errorData.statusCode === 500 && errorData.message === 'fetch failed' && !errorData.statusMessage) {
+    if (error.value.statusCode === 500 && errorData.message === 'fetch failed' && !errorData.statusMessage) {
       throw createError({
         statusCode: 503,
         statusMessage: 'Unable to reach backend.',
