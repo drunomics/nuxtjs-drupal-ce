@@ -27,32 +27,6 @@ export const useDrupalCe = () => {
   };
   const $ceApi = (fetchOptions = {}) => {
     const useFetchOptions = processFetchOptions(fetchOptions);
-    useFetchOptions.onResponseError = ({ response }) => {
-      const statusCode = response.statusCode || response.status;
-      if (statusCode === 500) {
-        const error = ref({});
-        if (response._data.message === "fetch failed") {
-          error.value = {
-            statusCode: 503,
-            message: `[${statusCode}] fetch failed. Unable to reach backend.`,
-            data: response._data
-          };
-        } else if (response._data.message) {
-          error.value = {
-            statusCode: 504,
-            message: `[${statusCode}] ${response._data.url} - ${response._data.message} - No response from backend received.`,
-            data: response._data
-          };
-        } else {
-          error.value = {
-            statusCode: 504,
-            message: `[${statusCode}] ${response._data || "No response from backend received."}`,
-            data: response._data
-          };
-        }
-        return pageErrorHandler(error);
-      }
-    };
     return $fetch.create({
       ...useFetchOptions
     });
@@ -201,8 +175,22 @@ const menuErrorHandler = (error) => {
   });
 };
 const pageErrorHandler = (error, context) => {
-  if (error.value && (!error.value?.data?.content || context?.config.customErrorPages)) {
-    throw createError({ statusCode: error.value.statusCode, statusMessage: error.value.message, data: error.value.data, fatal: true });
+  const errorData = error.value.data;
+  if (error.value && (!errorData.content || context?.config.customErrorPages)) {
+    if (errorData.statusCode === 500 && errorData.message === "fetch failed" && !errorData.statusMessage) {
+      throw createError({
+        statusCode: 503,
+        statusMessage: "Unable to reach backend.",
+        data: errorData,
+        fatal: true
+      });
+    }
+    throw createError({
+      statusCode: error.value.statusCode,
+      statusMessage: error.value.message,
+      data: error.value.data,
+      fatal: true
+    });
   }
   if (context) {
     callWithNuxt(context.nuxtApp, setResponseStatus, [error.value.statusCode]);

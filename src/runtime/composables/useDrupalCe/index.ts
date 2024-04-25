@@ -50,22 +50,6 @@ export const useDrupalCe = () => {
   const $ceApi = (fetchOptions: UseFetchOptions<any> = {}): $Fetch<unknown, NitroFetchRequest> => {
     const useFetchOptions = processFetchOptions(fetchOptions)
 
-    useFetchOptions.onResponseError = (error) => {
-      const { response } = error
-      const statusCode = response.statusCode || response.status
-      // At the moment, Nuxt API proxy does not provide a nice error when the backend is not reachable. Handle it better.
-      // See https://github.com/nuxt/nuxt/issues/22645
-      if (statusCode === 500 && response._data.message === 'fetch failed' && response._data.statusMessage == '') {
-        const error = ref({})
-        error.value = {
-          statusCode: 503,
-          message: `[${statusCode}] fetch failed. Unable to reach backend.`,
-          data: response._data
-        }
-      }
-      return pageErrorHandler(error)
-    }
-
     return $fetch.create({
       ...useFetchOptions,
     })
@@ -279,8 +263,24 @@ const menuErrorHandler = (error: Record<string, any>) => {
 }
 
 const pageErrorHandler = (error: Record<string, any>, context?: Record<string, any>) => {
-  if (error.value && (!error.value?.data?.content || context?.config.customErrorPages)) {
-    throw createError({ statusCode: error.value.statusCode, statusMessage: error.value.message, data: error.value.data, fatal: true })
+  const errorData = error.value.data
+  if (error.value && (!errorData.content || context?.config.customErrorPages)) {
+    // At the moment, Nuxt API proxy does not provide a nice error when the backend is not reachable. Handle it better.
+    // See https://github.com/nuxt/nuxt/issues/22645
+    if (errorData.statusCode === 500 && errorData.message === 'fetch failed' && !errorData.statusMessage) {
+      throw createError({
+        statusCode: 503,
+        statusMessage: 'Unable to reach backend.',
+        data: errorData,
+        fatal: true
+      })
+    }
+    throw createError({
+      statusCode: error.value.statusCode,
+      statusMessage: error.value.message,
+      data: error.value.data,
+      fatal: true
+    })
   }
   if (context) {
     callWithNuxt(context.nuxtApp, setResponseStatus, [error.value.statusCode])
