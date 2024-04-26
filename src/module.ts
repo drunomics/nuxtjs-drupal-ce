@@ -1,5 +1,5 @@
 import { fileURLToPath } from 'url'
-import { defineNuxtModule, addPlugin, createResolver, addImportsDir, addServerHandler, addServerImports, addImports } from '@nuxt/kit'
+import { defineNuxtModule, addPlugin, addServerPlugin, createResolver, addImportsDir, addServerHandler } from '@nuxt/kit'
 import { defu } from 'defu'
 import type { NuxtOptionsWithDrupalCe } from './types'
 
@@ -18,6 +18,7 @@ export interface ModuleOptions {
   serverApiProxy: boolean,
   passThroughHeaders?: string[],
   exposeAPIRouteRules?: boolean,
+  serverLogLevel?: boolean | 'info' | 'error',
 }
 
 export default defineNuxtModule<ModuleOptions>({
@@ -41,6 +42,7 @@ export default defineNuxtModule<ModuleOptions>({
     addRequestFormat: false,
     serverApiProxy: true,
     passThroughHeaders: ['cache-control', 'content-language', 'set-cookie', 'x-drupal-cache', 'x-drupal-dynamic-cache'],
+    serverLogLevel: 'info'
   },
   setup (options, nuxt) {
     const nuxtOptions = nuxt.options as NuxtOptionsWithDrupalCe
@@ -58,6 +60,9 @@ export default defineNuxtModule<ModuleOptions>({
     const runtimeDir = fileURLToPath(new URL('./runtime', import.meta.url))
     nuxt.options.build.transpile.push(runtimeDir)
     addPlugin(resolve(runtimeDir, 'plugin'))
+    if (options.serverLogLevel) {
+      addServerPlugin(resolve(runtimeDir, 'server/plugins/errorLogger'))
+    }
     addImportsDir(resolve(runtimeDir, 'composables/useDrupalCe'))
 
     nuxt.options.runtimeConfig.public.drupalCe = defu(nuxt.options.runtimeConfig.public.drupalCe ?? {}, options)
