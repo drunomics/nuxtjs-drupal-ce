@@ -28,7 +28,7 @@ const mainMenu = await fetchMenu('main')
 
 <style lang="css" scoped>
 .main-menu {
-  display: flex;
+  display: inline-flex;
   list-style: none;
 }
 
