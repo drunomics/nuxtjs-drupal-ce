@@ -65,7 +65,18 @@ export default defineNuxtModule<ModuleOptions>({
     }
     addImportsDir(resolve(runtimeDir, 'composables/useDrupalCe'))
 
-    nuxt.options.runtimeConfig.public.drupalCe = defu(nuxt.options.runtimeConfig.public.drupalCe ?? {}, options)
+    const publicOptions = { ...options }
+    // Server options are not needed in the client bundle.
+    delete publicOptions.serverLogLevel
+    delete publicOptions.passThroughHeaders
+    delete publicOptions.exposeAPIRouteRules
+
+    nuxt.options.runtimeConfig.public.drupalCe = defu(nuxt.options.runtimeConfig.public.drupalCe ?? {}, publicOptions)
+
+    nuxt.options.runtimeConfig.drupalCe = defu(nuxt.options.runtimeConfig.drupalCe ?? {}, {
+      serverLogLevel: options.serverLogLevel as string,
+      passThroughHeaders: options.passThroughHeaders
+    })
 
     if (options.serverApiProxy === true) {
       addServerHandler({

@@ -8,6 +8,7 @@ import { useRuntimeConfig, useState, useFetch, navigateTo, createError, h, resol
 
 export const useDrupalCe = () => {
   const config = useRuntimeConfig().public.drupalCe
+  const privateConfig = useRuntimeConfig().drupalCe
 
   /**
    * Processes the given fetchOptions to apply module defaults
@@ -64,7 +65,7 @@ export const useDrupalCe = () => {
   const useCeApi = (path: string | Ref<string>, fetchOptions: UseFetchOptions<any> = {}, doPassThroughHeaders?: boolean): Promise<any> => {
     const nuxtApp = useNuxtApp()
     fetchOptions.onResponse = (context) => {
-      if (doPassThroughHeaders && config.passThroughHeaders && import.meta.server) {
+      if (doPassThroughHeaders && privateConfig.passThroughHeaders && import.meta.server) {
         const headersObject = Object.fromEntries([...context.response.headers.entries()])
         passThroughHeaders(nuxtApp, headersObject)
       }
@@ -220,7 +221,7 @@ export const useDrupalCe = () => {
     const event = nuxtApp.ssrContext.event
     if (pageHeaders) {
       Object.keys(pageHeaders).forEach((key) => {
-        if (config.passThroughHeaders.includes(key)) {
+        if (privateConfig.passThroughHeaders.includes(key)) {
           appendResponseHeader(event, key, pageHeaders[key])
         }
       })
@@ -267,7 +268,7 @@ const pageErrorHandler = (error: Record<string, any>, context?: Record<string, a
   if (error.value && (!errorData?.content || context?.config.customErrorPages)) {
     // At the moment, Nuxt API proxy does not provide a nice error when the backend is not reachable. Handle it better.
     // See https://github.com/nuxt/nuxt/issues/22645
-    if (error.value.statusCode === 500 && errorData.message === 'fetch failed' && !errorData.statusMessage) {
+    if (error.value.statusCode === 500 && errorData?.message === 'fetch failed' && !errorData.statusMessage) {
       throw createError({
         statusCode: 503,
         statusMessage: 'Unable to reach backend.',
@@ -277,7 +278,7 @@ const pageErrorHandler = (error: Record<string, any>, context?: Record<string, a
     }
     throw createError({
       statusCode: error.value.statusCode,
-      statusMessage: error.value.message,
+      statusMessage: error.value?.message,
       data: error.value.data,
       fatal: true
     })
