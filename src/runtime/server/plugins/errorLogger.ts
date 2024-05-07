@@ -2,7 +2,8 @@ import { getRequestURL } from 'h3'
 import { useRuntimeConfig, defineNitroPlugin } from '#imports'
 
 export default defineNitroPlugin((nitro: any) => {
-  const { ceApiEndpoint, serverLogLevel } = useRuntimeConfig().public.drupalCe
+  const { ceApiEndpoint } = useRuntimeConfig().public.drupalCe
+  const { serverLogLevel } = useRuntimeConfig().drupalCe
 
   if (serverLogLevel === 'error' || serverLogLevel === 'info') {
     nitro.hooks.hook('error', (error: any, { event }: any) => {
