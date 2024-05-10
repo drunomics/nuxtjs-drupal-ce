@@ -73,7 +73,7 @@ export const useDrupalCe = () => {
 
     return useFetch(path, {
       ...fetchOptions,
-      $fetch: $ceApi(fetchOptions)
+      $fetch: $ceApi(fetchOptions),
     })
   }
 
@@ -104,17 +104,17 @@ export const useDrupalCe = () => {
       content_format: 'json',
       local_tasks: {
         primary: [],
-        secondary: []
+        secondary: [],
       },
       settings: {},
       messages: [],
       metatags: {
         meta: [],
         link: [],
-        jsonld: []
+        jsonld: [],
       },
       page_layout: 'default',
-      title: ''
+      title: '',
     }))
     useFetchOptions.key = `page-${path}`
 
@@ -123,7 +123,7 @@ export const useDrupalCe = () => {
     if (page?.value?.redirect) {
       await callWithNuxt(nuxtApp, navigateTo, [
         page.value.redirect.url,
-        { external: page.value.redirect.external, redirectCode: page.value.redirect.statusCode, replace: true }
+        { external: page.value.redirect.external, redirectCode: page.value.redirect.statusCode, replace: true },
       ])
       return pageState
     }
@@ -239,7 +239,7 @@ export const useDrupalCe = () => {
     passThroughHeaders,
     getCeApiEndpoint,
     getDrupalBaseUrl,
-    getMenuBaseUrl
+    getMenuBaseUrl,
   }
 }
 
@@ -247,7 +247,7 @@ const pushMessagesToState = (messages) => {
   messages = Object.assign({ success: [], error: [] }, messages)
   const messagesArray = [
     ...messages.error.map(message => ({ type: 'error', message })),
-    ...messages.success.map(message => ({ type: 'success', message }))
+    ...messages.success.map(message => ({ type: 'success', message })),
   ]
   if (!messagesArray.length) {
     return
@@ -259,7 +259,7 @@ const menuErrorHandler = (error: Record<string, any>) => {
   console.error({ statusCode: error.value.statusCode, statusMessage: error.value.message, data: error.value.data })
   process.client && useDrupalCe().getMessages().value.push({
     type: 'error',
-    message: `Menu error: ${error.value.message}.`
+    message: `Menu error: ${error.value.message}.`,
   })
 }
 
@@ -273,14 +273,14 @@ const pageErrorHandler = (error: Record<string, any>, context?: Record<string, a
         statusCode: 503,
         statusMessage: 'Unable to reach backend.',
         data: errorData,
-        fatal: true
+        fatal: true,
       })
     }
     throw createError({
       statusCode: error.value.statusCode,
       statusMessage: error.value?.message,
       data: error.value.data,
-      fatal: true
+      fatal: true,
     })
   }
   if (context) {

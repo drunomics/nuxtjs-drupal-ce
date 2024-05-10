@@ -37,7 +37,7 @@ const props = withDefaults(defineProps<{
 }>(), {
   current: 0,
   totalPages: 0,
-  maxLinks: 8
+  maxLinks: 8,
 })
 
 const previousURL = props.current > 0 ? `?page=${props.current - 1}` : null

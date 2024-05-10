@@ -3,11 +3,11 @@ import DrupalCe from '..'
 
 export default defineNuxtConfig({
   modules: [
-    DrupalCe
+    DrupalCe,
   ],
   drupalCe: {
     drupalBaseUrl: '',
     ceApiEndpoint: '/api',
-    serverApiProxy: false // to-do: improve tests to cover this option
-  }
+    serverApiProxy: false, // to-do: improve tests to cover this option
+  },
 })

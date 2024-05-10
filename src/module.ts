@@ -26,7 +26,7 @@ export default defineNuxtModule<ModuleOptions>({
     name: 'nuxtjs-drupal-ce',
     configKey: 'drupalCe',
     compatibility: {
-      nuxt: '^3.2.2'
+      nuxt: '^3.2.2',
     },
   },
   defaults: {
@@ -42,7 +42,7 @@ export default defineNuxtModule<ModuleOptions>({
     addRequestFormat: false,
     serverApiProxy: true,
     passThroughHeaders: ['cache-control', 'content-language', 'set-cookie', 'x-drupal-cache', 'x-drupal-dynamic-cache'],
-    serverLogLevel: 'info'
+    serverLogLevel: 'info',
   },
   setup (options, nuxt) {
     const nuxtOptions = nuxt.options as NuxtOptionsWithDrupalCe
@@ -75,22 +75,22 @@ export default defineNuxtModule<ModuleOptions>({
 
     nuxt.options.runtimeConfig.drupalCe = defu(nuxt.options.runtimeConfig.drupalCe ?? {}, {
       serverLogLevel: options.serverLogLevel as string,
-      passThroughHeaders: options.passThroughHeaders
+      passThroughHeaders: options.passThroughHeaders,
     })
 
     if (options.serverApiProxy === true) {
       addServerHandler({
         route: '/api/drupal-ce',
-        handler: resolve(runtimeDir, 'server/api/drupalCe')
+        handler: resolve(runtimeDir, 'server/api/drupalCe'),
       })
       addServerHandler({
         route: '/api/drupal-ce/**',
-        handler: resolve(runtimeDir, 'server/api/drupalCe')
+        handler: resolve(runtimeDir, 'server/api/drupalCe'),
       })
       addServerHandler({
         route: '/api/menu/**',
-        handler: resolve(runtimeDir, 'server/api/menu')
+        handler: resolve(runtimeDir, 'server/api/menu'),
       })
     }
-  }
+  },
 })

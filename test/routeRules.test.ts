@@ -8,14 +8,14 @@ describe('Site works with serverApiProxy disabled', async () => {
     rootDir: fileURLToPath(new URL('../playground', import.meta.url)),
     nuxtConfig: {
       modules: [
-        DrupalCe
+        DrupalCe,
       ],
       drupalCe: {
         drupalBaseUrl: '',
         ceApiEndpoint: '/api',
-        serverApiProxy: false
-      }
-    }
+        serverApiProxy: false,
+      },
+    },
   })
   it('renders homepage', async () => {
     const html = await $fetch('/')

@@ -5,7 +5,7 @@ import { setup, $fetch, fetch } from '@nuxt/test-utils'
 describe('Module error handling', async () => {
   await setup({
     rootDir: fileURLToPath(new URL('../playground', import.meta.url)),
-    configFile: 'nuxt.config4test'
+    configFile: 'nuxt.config4test',
   })
   it('renders Drupal error page', async () => {
     const response = await fetch('/node/404')

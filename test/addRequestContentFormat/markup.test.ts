@@ -8,15 +8,15 @@ describe('Module addRequestContentFormat set to markup', async () => {
     rootDir: fileURLToPath(new URL('../fixtures/debug', import.meta.url)),
     nuxtConfig: {
       modules: [
-        DrupalCe
+        DrupalCe,
       ],
       drupalCe: {
         drupalBaseUrl: '',
         ceApiEndpoint: '/api',
         addRequestContentFormat: 'markup',
-        serverApiProxy: false
-      }
-    }
+        serverApiProxy: false,
+      },
+    },
   })
   it('is correctly set in query', async () => {
     const html = await $fetch('/')

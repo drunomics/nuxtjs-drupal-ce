@@ -8,14 +8,14 @@ describe('Module addRequestFormat not set', async () => {
     rootDir: fileURLToPath(new URL('../fixtures/debug', import.meta.url)),
     nuxtConfig: {
       modules: [
-        DrupalCe
+        DrupalCe,
       ],
       drupalCe: {
         drupalBaseUrl: '',
         ceApiEndpoint: '/api',
-        serverApiProxy: false
-      }
-    }
+        serverApiProxy: false,
+      },
+    },
   })
   it('is correctly missing in query', async () => {
     const html = await $fetch('/')

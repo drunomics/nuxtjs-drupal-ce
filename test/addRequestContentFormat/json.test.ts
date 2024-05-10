@@ -8,15 +8,15 @@ describe('Module addRequestContentFormat option set to json', async () => {
     rootDir: fileURLToPath(new URL('../fixtures/debug', import.meta.url)),
     nuxtConfig: {
       modules: [
-        DrupalCe
+        DrupalCe,
       ],
       drupalCe: {
         drupalBaseUrl: '',
         ceApiEndpoint: '/api',
         addRequestContentFormat: 'json',
-        serverApiProxy: false
-      }
-    }
+        serverApiProxy: false,
+      },
+    },
   })
   it('is correctly set in query', async () => {
     const html = await $fetch('/')
