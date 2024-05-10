@@ -6,7 +6,7 @@ export default defineEventHandler(async (event) => {
   const menuPath = getRouterParams(event)._
   return await proxyRequest(event, `${getMenuBaseUrl()}/${menuPath}`, {
     headers: {
-      'Cache-Control': 'max-age=300'
-    }
+      'Cache-Control': 'max-age=300',
+    },
   })
 })
