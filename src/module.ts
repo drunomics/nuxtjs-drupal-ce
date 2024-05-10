@@ -26,7 +26,7 @@ export default defineNuxtModule<ModuleOptions>({
     name: 'nuxtjs-drupal-ce',
     configKey: 'drupalCe',
     compatibility: {
-      nuxt: '^3.2.2'
+      nuxt: '^3.7.0'
     },
   },
   defaults: {
