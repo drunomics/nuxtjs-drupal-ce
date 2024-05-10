@@ -11,12 +11,12 @@ describe('Module addRequestFormat option set to true', async () => {
         DrupalCe
       ],
       drupalCe: {
-        drupalBaseUrl: '',
+        drupalBaseUrl: 'http://127.0.0.1:3200',
         ceApiEndpoint: '/api',
-        addRequestFormat: true,
-        serverApiProxy: false
+        addRequestFormat: true
       }
-    }
+    },
+    port: 3200
   })
   it('is correctly set in query', async () => {
     const html = await $fetch('/')

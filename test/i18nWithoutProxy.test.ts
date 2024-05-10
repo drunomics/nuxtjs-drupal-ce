@@ -12,9 +12,9 @@ describe('Module @nuxtjs/i18n integration works', async () => {
         '@nuxtjs/i18n'
       ],
       drupalCe: {
-        drupalBaseUrl: 'http://127.0.0.1:3001',
+        drupalBaseUrl: 'http://127.0.0.1:3003',
         ceApiEndpoint: '/api',
-        serverApiProxy: true
+        serverApiProxy: false
       },
       i18n: {
         locales: ['en', 'de'],
@@ -22,7 +22,7 @@ describe('Module @nuxtjs/i18n integration works', async () => {
         detectBrowserLanguage: false
       }
     },
-    port: 3001
+    port: 3003
   })
   it('language switcher renders', async () => {
     const html = await $fetch('/')
