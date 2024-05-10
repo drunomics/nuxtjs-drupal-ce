@@ -11,11 +11,12 @@ describe('Site works with serverApiProxy disabled', async () => {
         DrupalCe,
       ],
       drupalCe: {
-        drupalBaseUrl: '',
+        drupalBaseUrl: 'http://127.0.0.1:3002',
         ceApiEndpoint: '/api',
         serverApiProxy: false,
       },
     },
+    port: 3002,
   })
   it('renders homepage', async () => {
     const html = await $fetch('/')

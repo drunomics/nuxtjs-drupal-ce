@@ -6,6 +6,7 @@ describe('Custom layouts work', async () => {
   await setup({
     rootDir: fileURLToPath(new URL('../playground', import.meta.url)),
     configFile: 'nuxt.config4test',
+    port: 3001,
   })
   it('renders a page with a custom layout', async () => {
     const html = await $fetch('/node/3')

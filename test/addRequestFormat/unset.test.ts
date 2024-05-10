@@ -11,11 +11,11 @@ describe('Module addRequestFormat not set', async () => {
         DrupalCe,
       ],
       drupalCe: {
-        drupalBaseUrl: '',
+        drupalBaseUrl: 'http://127.0.0.1:3201',
         ceApiEndpoint: '/api',
-        serverApiProxy: false,
       },
     },
+    port: 3201,
   })
   it('is correctly missing in query', async () => {
     const html = await $fetch('/')

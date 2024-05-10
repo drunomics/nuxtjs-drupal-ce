@@ -11,12 +11,12 @@ describe('Module addRequestContentFormat set to markup', async () => {
         DrupalCe,
       ],
       drupalCe: {
-        drupalBaseUrl: '',
+        drupalBaseUrl: 'http://127.0.0.1:3101',
         ceApiEndpoint: '/api',
         addRequestContentFormat: 'markup',
-        serverApiProxy: false,
       },
     },
+    port: 3101,
   })
   it('is correctly set in query', async () => {
     const html = await $fetch('/')
