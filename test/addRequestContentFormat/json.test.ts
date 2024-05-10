@@ -11,12 +11,12 @@ describe('Module addRequestContentFormat option set to json', async () => {
         DrupalCe
       ],
       drupalCe: {
-        drupalBaseUrl: '',
+        drupalBaseUrl: 'http://127.0.0.1:3100',
         ceApiEndpoint: '/api',
-        addRequestContentFormat: 'json',
-        serverApiProxy: false
+        addRequestContentFormat: 'json'
       }
-    }
+    },
+    port: 3100
   })
   it('is correctly set in query', async () => {
     const html = await $fetch('/')

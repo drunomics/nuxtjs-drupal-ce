@@ -5,7 +5,8 @@ import { setup, $fetch } from '@nuxt/test-utils'
 describe('Module renders pages', async () => {
   await setup({
     rootDir: fileURLToPath(new URL('../playground', import.meta.url)),
-    configFile: 'nuxt.config4test'
+    configFile: 'nuxt.config4test',
+    port: 3001
   })
   it('renders homepage', async () => {
     const html = await $fetch('/')
