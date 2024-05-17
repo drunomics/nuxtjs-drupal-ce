@@ -6,7 +6,7 @@ describe('Module redirects work', async () => {
   await setup({
     rootDir: fileURLToPath(new URL('../playground', import.meta.url)),
     configFile: 'nuxt.config4test',
-    port: 3001
+    port: 3001,
   })
   it('redirect to /node/1 works', async () => {
     const html = await $fetch('/redirect')

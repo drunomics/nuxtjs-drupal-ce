@@ -8,15 +8,15 @@ describe('Module addRequestFormat option set to true', async () => {
     rootDir: fileURLToPath(new URL('../fixtures/debug', import.meta.url)),
     nuxtConfig: {
       modules: [
-        DrupalCe
+        DrupalCe,
       ],
       drupalCe: {
         drupalBaseUrl: 'http://127.0.0.1:3200',
         ceApiEndpoint: '/api',
-        addRequestFormat: true
-      }
+        addRequestFormat: true,
+      },
     },
-    port: 3200
+    port: 3200,
   })
   it('is correctly set in query', async () => {
     const html = await $fetch('/')
