@@ -65,7 +65,7 @@ export const useDrupalCe = () => {
   const useCeApi = (path: string | Ref<string>, fetchOptions: UseFetchOptions<any> = {}, doPassThroughHeaders?: boolean): Promise<any> => {
     const nuxtApp = useNuxtApp()
     fetchOptions.onResponse = (context) => {
-      if (doPassThroughHeaders && privateConfig.passThroughHeaders && import.meta.server) {
+      if (doPassThroughHeaders && import.meta.server && privateConfig?.passThroughHeaders) {
         const headersObject = Object.fromEntries([...context.response.headers.entries()])
         passThroughHeaders(nuxtApp, headersObject)
       }
@@ -221,7 +221,7 @@ export const useDrupalCe = () => {
     const event = nuxtApp.ssrContext.event
     if (pageHeaders) {
       Object.keys(pageHeaders).forEach((key) => {
-        if (privateConfig.passThroughHeaders.includes(key)) {
+        if (privateConfig?.passThroughHeaders.includes(key)) {
           appendResponseHeader(event, key, pageHeaders[key])
         }
       })
