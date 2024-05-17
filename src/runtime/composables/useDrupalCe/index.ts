@@ -221,7 +221,7 @@ export const useDrupalCe = () => {
     const event = nuxtApp.ssrContext.event
     if (pageHeaders) {
       Object.keys(pageHeaders).forEach((key) => {
-        if (privateConfig.passThroughHeaders.includes(key)) {
+        if (privateConfig?.passThroughHeaders.includes(key)) {
           appendResponseHeader(event, key, pageHeaders[key])
         }
       })
