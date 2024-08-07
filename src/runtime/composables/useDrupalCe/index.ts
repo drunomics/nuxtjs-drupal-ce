@@ -126,15 +126,13 @@ export const useDrupalCe = () => {
     }
 
     // Check if the page data is already provided, e.g. by a form response.
-    if (!page.value) {
-      if (serverResponse.value && serverResponse.value._data) {
-        page.value = serverResponse.value._data
-        passThroughHeaders(nuxtApp, serverResponse.value.headers)
-      } else {
-        const { data, error } = await useCeApi(path, useFetchOptions, true)
-        page.value = data.value
-        pageError.value = error.value
-      }
+    if (serverResponse.value && serverResponse.value._data) {
+      page.value = serverResponse.value._data
+      passThroughHeaders(nuxtApp, serverResponse.value.headers)
+    } else {
+      const { data, error } = await useCeApi(path, useFetchOptions, true)
+      page.value = data.value
+      pageError.value = error.value
     }
 
     if (page.value?.messages) {
