@@ -4,7 +4,7 @@ import { appendResponseHeader } from 'h3'
 import type { UseFetchOptions } from '#app'
 import type { $Fetch, NitroFetchRequest } from 'nitropack'
 import { getDrupalBaseUrl, getMenuBaseUrl } from './server'
-import { useRuntimeConfig, useState, useFetch, navigateTo, createError, h, resolveComponent, setResponseStatus, useNuxtApp, useRequestHeaders, ref, watch } from '#imports'
+import { useRuntimeConfig, useState, useFetch, navigateTo, createError, h, resolveComponent, setResponseStatus, useNuxtApp, useRequestHeaders, ref, watch, useRequestEvent } from '#imports'
 
 export const useDrupalCe = () => {
   const config = useRuntimeConfig().public.drupalCe
@@ -116,24 +116,51 @@ export const useDrupalCe = () => {
       page_layout: 'default',
       title: '',
     }))
+    const serverResponse = useState('server-response', () => null)
     useFetchOptions.key = `page-${path}`
+    const page = ref(null)
+    const pageError = ref(null)
 
-    const { data: page, error } = await useCeApi(path, useFetchOptions, true)
+    if (import.meta.server) {
+      serverResponse.value = useRequestEvent(nuxtApp).context.nitro.response
+    }
+
+    // Check if the page data is already provided, e.g. by a form response.
+    if (!page.value) {
+      if (serverResponse.value && serverResponse.value._data) {
+        page.value = serverResponse.value._data
+        passThroughHeaders(nuxtApp, serverResponse.value.headers)
+      } else {
+        const { data, error } = await useCeApi(path, useFetchOptions, true)
+        page.value = data.value
+        pageError.value = error.value
+      }
+    }
+
+    if (page.value?.messages) {
+      pushMessagesToState(page.value.messages)
+    }
 
     if (page?.value?.redirect) {
-      await callWithNuxt(nuxtApp, navigateTo, [
-        page.value.redirect.url,
-        { external: page.value.redirect.external, redirectCode: page.value.redirect.statusCode, replace: true },
-      ])
-      return pageState
+      const redirect = page.value.redirect
+      if (redirect.external) {
+        await navigateTo(redirect.url, { external: redirect.external, redirectCode: redirect.statusCode, replace: true })
+        return {
+          ...pageState.value,
+        }
+      }
+      const { data, error } = await useCeApi(redirect.url, useFetchOptions, true)
+      page.value = data.value
+      pageError.value = error.value
+      if (import.meta.client) {
+        await navigateTo(redirect.url, { redirectCode: redirect.statusCode, replace: true })
+      }
     }
 
-    if (error.value) {
-      overrideErrorHandler ? overrideErrorHandler(error) : pageErrorHandler(error, { config, nuxtApp })
-      page.value = error.value?.data
+    if (pageError.value) {
+      overrideErrorHandler ? overrideErrorHandler(pageError) : pageErrorHandler(pageError, { config, nuxtApp })
+      page.value = pageError.value?.data
     }
-
-    page.value?.messages && pushMessagesToState(page.value.messages)
 
     pageState.value = page
     return page
