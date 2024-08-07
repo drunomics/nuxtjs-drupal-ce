@@ -142,16 +142,15 @@ export const useDrupalCe = () => {
     if (page?.value?.redirect) {
       const redirect = page.value.redirect
       if (redirect.external) {
-        await navigateTo(redirect.url, { external: redirect.external, redirectCode: redirect.statusCode, replace: true })
-        return {
-          ...pageState.value,
-        }
-      }
-      const { data, error } = await useCeApi(redirect.url, useFetchOptions, true)
-      page.value = data.value
-      pageError.value = error.value
-      if (import.meta.client) {
-        await navigateTo(redirect.url, { redirectCode: redirect.statusCode, replace: true })
+        await callWithNuxt(nuxtApp, navigateTo, [
+          redirect.url,
+          { external: true, redirectCode: redirect.statusCode, replace: true },
+        ])
+      } else {
+        const { data, error } = await useCeApi(redirect.url, useFetchOptions, true)
+        page.value = data.value
+        pageError.value = error.value
+        nuxtApp.$router.push(redirect.url)
       }
     }
 
