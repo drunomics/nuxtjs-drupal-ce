@@ -30,15 +30,15 @@
     "lint-fix": "eslint . --ext .js,.vue,.ts --fix"
   },
   "dependencies": {
-    "@nuxt/kit": "^3.11.2",
+    "@nuxt/kit": "^3.12.4",
     "defu": "^6.1.4"
   },
   "devDependencies": {
-    "@nuxt/module-builder": "^0.7.0",
-    "@nuxt/schema": "^3.11.2",
-    "@nuxt/test-utils": "^3.13.1",
+    "@nuxt/module-builder": "^0.8.1",
+    "@nuxt/schema": "^3.12.4",
+    "@nuxt/test-utils": "^3.14.0",
     "@nuxtjs/eslint-config-typescript": "^12.1.0",
-    "@nuxtjs/i18n": "^8.3.1",
+    "@nuxtjs/i18n": "^8.3.3",
     "eslint": "^8.57.0",
     "nuxt": "^3.12.4",
     "vitest": "^1.6.0"
