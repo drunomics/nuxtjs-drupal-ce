@@ -46,11 +46,10 @@ export default defineNuxtConfig({
   }
 })
 ```
-
-The module defaults work well with [Lupus Decoupled Drupal](https://www.drupal.org/project/lupus_decoupled) - in that case setting the
+The module defaults work well with [Lupus Decoupled Drupal](https://drupal.org/project/lupus_decoupled) - in that case setting the
 `drupalBaseUrl` is enough to get started.
 
-5. Scaffold initial files. After scaffolding, edit them as suiting.
+4. Scaffold initial files. After scaffolding, edit them as suiting.
 ```bash
 rm -f app.vue && npx nuxt-drupal-ce-init
 ```
