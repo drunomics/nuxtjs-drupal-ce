@@ -1,4 +1,4 @@
-# nuxtjs-drupal-ce - Nuxt.js Drupal Custom Elements Connector
+# nuxtjs-drupal-ce - Nuxt Drupal Custom Elements Connector
 
 [![npm version][npm-version-src]][npm-version-href]
 [![npm downloads][npm-downloads-src]][npm-downloads-href]
@@ -21,13 +21,19 @@ The 2.x version of the module is compatible with Nuxt 3. For a Nuxt 2 compatible
 
 ## Setup
 
-1. Add `nuxtjs-drupal-ce` dependency to your Nuxt project
+1. Go to your Nuxt project. If necessary, start a new one:
+
+```bash
+npx nuxi@latest init <project-name>
+```
+
+2. Add the `nuxtjs-drupal-ce` module to your Nuxt project
 
 ```bash
 npx nuxi@latest module add drupal-ce
 ```
 
-2. Add `nuxtjs-drupal-ce` to the `modules` section of `nuxt.config.js`
+3. Configure `nuxtjs-drupal-ce` in your `nuxt.config.js`
 
 ```js
 export default defineNuxtConfig({
@@ -44,7 +50,7 @@ export default defineNuxtConfig({
 The module defaults work well with [Lupus Decoupled Drupal](https://www.drupal.org/project/lupus_decoupled) - in that case setting the
 `drupalBaseUrl` is enough to get started.
 
-3. Get started quickly by scaffolding initial files:
+5. Scaffold initial files. After scaffolding, edit them as suiting.
 ```bash
 rm -f app.vue && npx nuxt-drupal-ce-init
 ```
