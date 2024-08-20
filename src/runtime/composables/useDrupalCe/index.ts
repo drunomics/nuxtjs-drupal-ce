@@ -122,13 +122,17 @@ export const useDrupalCe = () => {
     const pageError = ref(null)
 
     if (import.meta.server) {
-      serverResponse.value = useRequestEvent(nuxtApp).context.nitro.response
+      serverResponse.value = useRequestEvent(nuxtApp).context.drupalCeCustomPageResponse
     }
 
     // Check if the page data is already provided, e.g. by a form response.
     if (serverResponse.value && serverResponse.value._data) {
       page.value = serverResponse.value._data
       passThroughHeaders(nuxtApp, serverResponse.value.headers)
+      // Clear the server response state after it was sent to the client.
+      if (import.meta.client) {
+        serverResponse.value = null
+      }
     } else {
       const { data, error } = await useCeApi(path, useFetchOptions, true)
       page.value = data.value
