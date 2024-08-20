@@ -1,5 +1,5 @@
 import { fileURLToPath } from 'url';
-import { defineNuxtModule, createResolver, addPlugin, addServerPlugin, addImportsDir, addServerHandler } from '@nuxt/kit';
+import { defineNuxtModule, createResolver, addServerPlugin, addImportsDir, addServerHandler } from '@nuxt/kit';
 import { defu } from 'defu';
 
 const module = defineNuxtModule({
@@ -36,7 +36,6 @@ const module = defineNuxtModule({
     const { resolve } = createResolver(import.meta.url);
     const runtimeDir = fileURLToPath(new URL("./runtime", import.meta.url));
     nuxt.options.build.transpile.push(runtimeDir);
-    addPlugin(resolve(runtimeDir, "plugins/formHandler"));
     if (options.serverLogLevel) {
       addServerPlugin(resolve(runtimeDir, "server/plugins/errorLogger"));
     }

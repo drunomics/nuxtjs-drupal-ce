@@ -77,11 +77,14 @@ export const useDrupalCe = () => {
     const page = ref(null);
     const pageError = ref(null);
     if (import.meta.server) {
-      serverResponse.value = useRequestEvent(nuxtApp).context.nitro.response;
+      serverResponse.value = useRequestEvent(nuxtApp).context.drupalCeCustomPageResponse;
     }
     if (serverResponse.value && serverResponse.value._data) {
       page.value = serverResponse.value._data;
       passThroughHeaders(nuxtApp, serverResponse.value.headers);
+      if (import.meta.client) {
+        serverResponse.value = null;
+      }
     } else {
       const { data, error } = await useCeApi(path, useFetchOptions, true);
       page.value = data.value;
