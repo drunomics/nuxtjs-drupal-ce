@@ -16,7 +16,6 @@ const page = await fetchPage(useRoute().path, { query: useRoute().query })
 // Set to false to support custom layouts, using <NuxtLayout> instead.
 definePageMeta({
   layout: false,
-  middleware: 'form-handler',
 })
 const layout = computed(() => {
   return page.value.page_layout || 'default'
