@@ -126,9 +126,13 @@ export const useDrupalCe = () => {
     }
 
     // Check if the page data is already provided, e.g. by a form response.
-    if (serverResponse.value && serverResponse.value._data) {
-      page.value = serverResponse.value._data
-      passThroughHeaders(nuxtApp, serverResponse.value.headers)
+    if (serverResponse.value) {
+      if (serverResponse.value._data) {
+        page.value = serverResponse.value._data
+        passThroughHeaders(nuxtApp, serverResponse.value.headers)
+      } else if (serverResponse.value.error) {
+        pageError.value = serverResponse.value.error
+      }
       // Clear the server response state after it was sent to the client.
       if (import.meta.client) {
         serverResponse.value = null
