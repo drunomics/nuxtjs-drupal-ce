@@ -79,9 +79,13 @@ export const useDrupalCe = () => {
     if (import.meta.server) {
       serverResponse.value = useRequestEvent(nuxtApp).context.drupalCeCustomPageResponse;
     }
-    if (serverResponse.value && serverResponse.value._data) {
-      page.value = serverResponse.value._data;
-      passThroughHeaders(nuxtApp, serverResponse.value.headers);
+    if (serverResponse.value) {
+      if (serverResponse.value._data) {
+        page.value = serverResponse.value._data;
+        passThroughHeaders(nuxtApp, serverResponse.value.headers);
+      } else if (serverResponse.value.error) {
+        pageError.value = serverResponse.value.error;
+      }
       if (import.meta.client) {
         serverResponse.value = null;
       }
