@@ -1,10 +1,7 @@
 <template>
   <div :data-id="$options.name" class="messages">
-    <transition-group
-      name="list"
-      tag="div"
-    >
-      <message
+    <transition-group name="list" tag="div">
+      <SiteMessage
         v-for="(message, index) in messages"
         :id="`${index}-${message.message}`"
         :key="`${index}-${message.message}`"
