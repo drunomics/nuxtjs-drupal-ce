@@ -14,9 +14,9 @@
 </template>
 
 <script setup lang="ts">
-const { getMessages } = useDrupalCe();
-const messages = getMessages();
-const dismiss = (id: number) => messages.value.splice(id, 1);
+const { getMessages } = useDrupalCe()
+const messages = getMessages()
+const dismiss = (id: number) => messages.value.splice(id, 1)
 </script>
 
 <style lang="css" scoped>
