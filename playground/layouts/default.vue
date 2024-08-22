@@ -1,8 +1,8 @@
 <template>
   <div>
-    <LanguageSwitcher v-if="$i18n" />
-    <MainNavigation />
-    <Messages />
+    <SiteLanguageSwitcher v-if="$i18n" />
+    <NavigationMain />
+    <SiteMessages />
     <div id="main">
       <slot />
     </div>

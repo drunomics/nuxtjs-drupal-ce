@@ -1,10 +1,7 @@
 <template>
   <div :data-id="$options.name" class="messages">
-    <transition-group
-      name="list"
-      tag="div"
-    >
-      <message
+    <transition-group name="list" tag="div">
+      <SiteMessage
         v-for="(message, index) in messages"
         :id="`${index}-${message.message}`"
         :key="`${index}-${message.message}`"
@@ -17,9 +14,9 @@
 </template>
 
 <script setup lang="ts">
-const { getMessages } = useDrupalCe()
-const messages = getMessages()
-const dismiss = (id: number) => messages.value.splice(id, 1)
+const { getMessages } = useDrupalCe();
+const messages = getMessages();
+const dismiss = (id: number) => messages.value.splice(id, 1);
 </script>
 
 <style lang="css" scoped>
