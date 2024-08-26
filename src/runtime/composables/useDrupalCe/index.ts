@@ -234,7 +234,7 @@ export const useDrupalCe = () => {
       return h('div', customElements.map((customElement) => {
         const resolvedElement = resolveCustomElement(customElement.element)
         return resolvedElement ? h(resolvedElement, customElement) : null
-      }).filter(Boolean))
+      }))
     }
     const resolvedElement = resolveCustomElement(customElements.element)
     return resolvedElement ? h((resolvedElement), customElements) : null
