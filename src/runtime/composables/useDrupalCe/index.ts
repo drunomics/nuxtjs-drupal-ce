@@ -197,6 +197,32 @@ export const useDrupalCe = () => {
   const getPage = (): Ref => useState('drupal-ce-page-data', () => ({}))
 
   /**
+   * Resolve a custom element into a Vue component
+   * @param element The custom element name to resolve
+   */
+  const resolveCustomElement = (element: string) => {
+    // Try resolving the full component name.
+    const component = resolveComponent(element)
+    if (typeof component === 'object' && component.name) {
+      console.log('1', component)
+      return resolveComponent(element)
+    }
+
+    // Try to lookup a fallback component name.
+    const regex = /-[a-z]+$/
+    let componentName = element
+    while (regex.test(componentName)) {
+      componentName = componentName.replace(regex, '')
+      const component = resolveComponent(componentName)
+      if (typeof component === 'object' && component.name) {
+        return component
+      }
+    }
+
+    return null
+  }
+
+  /**
    * Render elements from page data returned from fetchPage
    * @param customElements
    */
@@ -204,9 +230,14 @@ export const useDrupalCe = () => {
     if (Object.keys(customElements).length === 0) {
       return
     }
-    return Array.isArray(customElements)
-      ? h('div', customElements.map(customElement => h(resolveComponent(customElement.element), customElement)))
-      : h(resolveComponent(customElements.element), customElements)
+    if (Array.isArray(customElements)) {
+      return h('div', customElements.map((customElement) => {
+        const resolvedElement = resolveCustomElement(customElement.element)
+        return resolvedElement ? h(resolvedElement, customElement) : null
+      }).filter(Boolean))
+    }
+    const resolvedElement = resolveCustomElement(customElements.element)
+    return resolvedElement ? h((resolvedElement), customElements) : null
   }
 
   /**
