@@ -204,7 +204,6 @@ export const useDrupalCe = () => {
     // Try resolving the full component name.
     const component = resolveComponent(element)
     if (typeof component === 'object' && component.name) {
-      console.log('1', component)
       return resolveComponent(element)
     }
 
