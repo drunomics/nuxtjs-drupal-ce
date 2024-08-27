@@ -18,8 +18,7 @@
     "dist",
     "playground/components",
     "playground/pages",
-    "playground/app.vue",
-    "playground/middleware"
+    "playground/app.vue"
   ],
   "scripts": {
     "prepack": "nuxt-module-build",

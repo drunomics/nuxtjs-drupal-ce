@@ -1,14 +1,15 @@
+import { getDrupalBaseUrl } from '../../composables/useDrupalCe/server'
+import { useRuntimeConfig } from '#imports'
+
 export default defineEventHandler(async (event) => {
-  const runtimeConfig = useRuntimeConfig()
-  const { ceApiEndpoint, drupalBaseUrl, serverDrupalBaseUrl } = runtimeConfig.public.drupalCe
-  const fetchUrl = serverDrupalBaseUrl ? serverDrupalBaseUrl : drupalBaseUrl
+  const { ceApiEndpoint } = useRuntimeConfig().public.drupalCe
 
   if (event.node.req.method === 'POST') {
     const formData = await readFormData(event)
 
     if (formData) {
       const targetUrl = event.node.req.url
-      const response = await $fetch.raw(fetchUrl + ceApiEndpoint + targetUrl, {
+      const response = await $fetch.raw(getDrupalBaseUrl() + ceApiEndpoint + targetUrl, {
         method: 'POST',
         body: formData,
       }).catch((error) => {
@@ -17,7 +18,7 @@ export default defineEventHandler(async (event) => {
             data: error,
             statusCode: error.statusCode || 400,
             message: error.message || 'Fetch error. See drupalFormHandler.',
-          }
+          },
         }
       })
 
@@ -26,7 +27,6 @@ export default defineEventHandler(async (event) => {
           _data: response._data,
           headers: Object.fromEntries(response.headers.entries()),
         }
-        return
       }
     } else {
       throw createError({

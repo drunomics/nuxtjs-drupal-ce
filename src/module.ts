@@ -63,6 +63,9 @@ export default defineNuxtModule<ModuleOptions>({
       addServerPlugin(resolve(runtimeDir, 'server/plugins/errorLogger'))
     }
     addImportsDir(resolve(runtimeDir, 'composables/useDrupalCe'))
+    addServerHandler({
+      handler: resolve(runtimeDir, 'server/middleware/drupalFormHandler'),
+    })
 
     const publicOptions = { ...options }
     // Server options are not needed in the client bundle.
