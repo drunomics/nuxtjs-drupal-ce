@@ -1,10 +1,10 @@
-import { callWithNuxt } from '#app'
 import { defu } from 'defu'
 import { appendResponseHeader } from 'h3'
-import type { UseFetchOptions } from '#app'
 import type { $Fetch, NitroFetchRequest } from 'nitropack'
 import { getDrupalBaseUrl, getMenuBaseUrl } from './server'
-import { useRuntimeConfig, useState, useFetch, navigateTo, createError, h, resolveComponent, setResponseStatus, useNuxtApp, useRequestHeaders, ref, watch } from '#imports'
+import type { UseFetchOptions } from '#app'
+import { callWithNuxt } from '#app'
+import { useRuntimeConfig, useState, useFetch, navigateTo, createError, h, resolveComponent, setResponseStatus, useNuxtApp, useRequestHeaders, ref, watch, computed } from '#imports'
 
 export const useDrupalCe = () => {
   const config = useRuntimeConfig().public.drupalCe
@@ -228,6 +228,16 @@ export const useDrupalCe = () => {
     }
   }
 
+  /**
+   * Determines the page layout based on the Drupal page data.
+   * @param page Ref containing the Drupal page data
+   * @returns A computed property that resolves to either the page_layout
+   *          specified in the Drupal data, or 'default' if not specified.
+   */
+  const getPageLayout = (page: Ref<any>): ComputedRef<string> => {
+    return computed(() => page.value.page_layout || 'default')
+  }
+
   return {
     $ceApi,
     useCeApi,
@@ -240,6 +250,7 @@ export const useDrupalCe = () => {
     getCeApiEndpoint,
     getDrupalBaseUrl,
     getMenuBaseUrl,
+    getPageLayout,
   }
 }
 
