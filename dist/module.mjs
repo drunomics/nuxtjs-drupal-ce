@@ -40,6 +40,9 @@ const module = defineNuxtModule({
       addServerPlugin(resolve(runtimeDir, "server/plugins/errorLogger"));
     }
     addImportsDir(resolve(runtimeDir, "composables/useDrupalCe"));
+    addServerHandler({
+      handler: resolve(runtimeDir, "server/middleware/drupalFormHandler")
+    });
     const publicOptions = { ...options };
     delete publicOptions.serverLogLevel;
     delete publicOptions.passThroughHeaders;
