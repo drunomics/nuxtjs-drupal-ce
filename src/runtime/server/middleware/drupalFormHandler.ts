@@ -17,7 +17,7 @@ export default defineEventHandler(async (event) => {
           error: {
             data: error,
             statusCode: error.statusCode || 400,
-            message: error.message || 'Fetch error. See drupalFormHandler.',
+            message: error.message || 'Error when POSTing form data (drupalFormHandler).',
           },
         }
       })
@@ -32,7 +32,7 @@ export default defineEventHandler(async (event) => {
       throw createError({
         statusCode: 400,
         statusMessage: 'Bad Request',
-        message: 'No or invalid form data given. See drupalFormHandler.',
+        message: 'POST requests without form data are not supported (drupalFormHandler).',
       })
     }
   }
