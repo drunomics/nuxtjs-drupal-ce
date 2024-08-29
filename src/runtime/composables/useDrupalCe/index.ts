@@ -215,9 +215,9 @@ export const useDrupalCe = () => {
     let componentName = element
     while (regex.test(componentName)) {
       componentName = componentName.replace(regex, '')
-      const component = nuxtApp.vueApp.component(formatName(componentName) + 'Default')
-      if (typeof component === 'object' && component.name) {
-        return component
+      const fallbackComponent = nuxtApp.vueApp.component(formatName(componentName) + 'Default')
+      if (typeof fallbackComponent === 'object' && fallbackComponent.name) {
+        return fallbackComponent
       }
     }
 
