@@ -201,10 +201,13 @@ export const useDrupalCe = () => {
    * @param element The custom element name to resolve
    */
   const resolveCustomElement = (element: string) => {
+    const nuxtApp = useNuxtApp()
+    const formatName = (name: string) => name.split('-').map(part => part.charAt(0).toUpperCase() + part.slice(1)).join('')
+
     // Try resolving the full component name.
-    const component = resolveComponent(element)
+    const component = nuxtApp.vueApp.component(formatName(element))
     if (typeof component === 'object' && component.name) {
-      return resolveComponent(element)
+      return component
     }
 
     // Try to lookup a fallback component name.
@@ -212,13 +215,20 @@ export const useDrupalCe = () => {
     let componentName = element
     while (regex.test(componentName)) {
       componentName = componentName.replace(regex, '')
-      const component = resolveComponent(componentName)
+      const component = nuxtApp.vueApp.component(formatName(componentName) + 'Default')
       if (typeof component === 'object' && component.name) {
         return component
       }
     }
 
-    return null
+    // Try resolving by adding 'Default' suffix.
+    const defaultComponent = nuxtApp.vueApp.component(formatName(element) + 'Default')
+    if (typeof defaultComponent === 'object' && defaultComponent.name) {
+      return defaultComponent
+    }
+
+    // If not found, try with resolveComponent. This provides a warning if the component is not found.
+    return typeof resolveComponent(element) === 'object' ? resolveComponent(element) : null
   }
 
   /**
