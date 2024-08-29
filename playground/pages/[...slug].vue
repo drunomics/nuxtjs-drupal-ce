@@ -27,7 +27,7 @@ useHead({
   script: [
     {
       type: 'application/ld+json',
-      children: JSON.stringify(page.value.metatags.jsonld || []),
+      children: JSON.stringify(page.value.metatags.jsonld || [], null, ''),
     },
   ],
 })
