@@ -125,20 +125,26 @@ export const useDrupalCe = () => {
   const getMessages = () => useState("drupal-ce-messages", () => []);
   const getPage = () => useState("drupal-ce-page-data", () => ({}));
   const resolveCustomElement = (element) => {
-    const component = resolveComponent(element);
+    const nuxtApp = useNuxtApp();
+    const formatName = (name) => name.split("-").map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join("");
+    const component = nuxtApp.vueApp.component(formatName(element));
     if (typeof component === "object" && component.name) {
-      return resolveComponent(element);
+      return component;
     }
     const regex = /-[a-z]+$/;
     let componentName = element;
     while (regex.test(componentName)) {
       componentName = componentName.replace(regex, "");
-      const component2 = resolveComponent(componentName);
-      if (typeof component2 === "object" && component2.name) {
-        return component2;
+      const fallbackComponent = nuxtApp.vueApp.component(formatName(componentName) + "Default");
+      if (typeof fallbackComponent === "object" && fallbackComponent.name) {
+        return fallbackComponent;
       }
     }
-    return null;
+    const defaultComponent = nuxtApp.vueApp.component(formatName(element) + "Default");
+    if (typeof defaultComponent === "object" && defaultComponent.name) {
+      return defaultComponent;
+    }
+    return typeof resolveComponent(element) === "object" ? resolveComponent(element) : null;
   };
   const renderCustomElements = (customElements) => {
     if (Object.keys(customElements).length === 0) {
