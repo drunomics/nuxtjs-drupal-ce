@@ -4,7 +4,7 @@ import { useRuntimeConfig } from '#imports'
  * Returns the drupalBaseUrl.
  * On server it returns the serverDrupalBaseUrl if set, otherwise it returns the drupalBaseUrl.
  *
- * @returns {string}
+ * @returns {string} Returns the Drupal base URL.
  */
 export const getDrupalBaseUrl = () => {
   const config = useRuntimeConfig().public.drupalCe
@@ -14,7 +14,7 @@ export const getDrupalBaseUrl = () => {
 /**
  * Returns the menuBaseUrl if set, otherwise it returns the drupalBaseUrl + ceApiEndpoint.
  *
- * @returns {string}
+ * @returns {string} Returns the menu base URL.
  */
 export const getMenuBaseUrl = () => {
   const config = useRuntimeConfig().public.drupalCe

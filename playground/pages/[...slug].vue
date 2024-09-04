@@ -3,7 +3,10 @@
     <NuxtLayout :name="layout">
       <main>
         <SiteBreadcrumbs />
-        <DrupalTabs v-if="page.local_tasks" :tabs="page.local_tasks" />
+        <DrupalTabs
+          v-if="page.local_tasks"
+          :tabs="page.local_tasks"
+        />
         <component :is="renderCustomElements(page.content)" />
       </main>
     </NuxtLayout>

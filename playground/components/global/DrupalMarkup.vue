@@ -3,7 +3,7 @@
 </template>
 
 <script setup lang="ts">
-const props = defineProps<{
-  content: String;
+defineProps<{
+  content: string
 }>()
 </script>
