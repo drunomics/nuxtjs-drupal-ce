@@ -1,8 +1,8 @@
-import { callWithNuxt } from "#app";
 import { defu } from "defu";
 import { appendResponseHeader } from "h3";
 import { getDrupalBaseUrl, getMenuBaseUrl } from "./server.js";
-import { useRuntimeConfig, useState, useFetch, navigateTo, createError, h, resolveComponent, setResponseStatus, useNuxtApp, useRequestHeaders, ref, watch, useRequestEvent } from "#imports";
+import { callWithNuxt } from "#app";
+import { useRuntimeConfig, useState, useFetch, navigateTo, createError, h, resolveComponent, setResponseStatus, useNuxtApp, useRequestHeaders, ref, watch, useRequestEvent, computed } from "#imports";
 export const useDrupalCe = () => {
   const config = useRuntimeConfig().public.drupalCe;
   const privateConfig = useRuntimeConfig().drupalCe;
@@ -146,11 +146,40 @@ export const useDrupalCe = () => {
   };
   const getMessages = () => useState("drupal-ce-messages", () => []);
   const getPage = () => useState("drupal-ce-page-data", () => ({}));
+  const resolveCustomElement = (element) => {
+    const nuxtApp = useNuxtApp();
+    const formatName = (name) => name.split("-").map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join("");
+    const component = nuxtApp.vueApp.component(formatName(element));
+    if (typeof component === "object" && component.name) {
+      return component;
+    }
+    const regex = /-[a-z]+$/;
+    let componentName = element;
+    while (regex.test(componentName)) {
+      componentName = componentName.replace(regex, "");
+      const fallbackComponent = nuxtApp.vueApp.component(formatName(componentName) + "Default");
+      if (typeof fallbackComponent === "object" && fallbackComponent.name) {
+        return fallbackComponent;
+      }
+    }
+    const defaultComponent = nuxtApp.vueApp.component(formatName(element) + "Default");
+    if (typeof defaultComponent === "object" && defaultComponent.name) {
+      return defaultComponent;
+    }
+    return typeof resolveComponent(element) === "object" ? resolveComponent(element) : null;
+  };
   const renderCustomElements = (customElements) => {
     if (Object.keys(customElements).length === 0) {
       return;
     }
-    return Array.isArray(customElements) ? h("div", customElements.map((customElement) => h(resolveComponent(customElement.element), customElement))) : h(resolveComponent(customElements.element), customElements);
+    if (Array.isArray(customElements)) {
+      return customElements.map((customElement) => {
+        const resolvedElement2 = resolveCustomElement(customElement.element);
+        return resolvedElement2 ? h(resolvedElement2, customElement) : null;
+      });
+    }
+    const resolvedElement = resolveCustomElement(customElements.element);
+    return resolvedElement ? h(resolvedElement, customElements) : null;
   };
   const passThroughHeaders = (nuxtApp, pageHeaders) => {
     if (!nuxtApp.ssrContext) {
@@ -165,6 +194,9 @@ export const useDrupalCe = () => {
       });
     }
   };
+  const getPageLayout = (page) => {
+    return computed(() => page.value.page_layout || "default");
+  };
   return {
     $ceApi,
     useCeApi,
@@ -176,7 +208,8 @@ export const useDrupalCe = () => {
     passThroughHeaders,
     getCeApiEndpoint,
     getDrupalBaseUrl,
-    getMenuBaseUrl
+    getMenuBaseUrl,
+    getPageLayout
   };
 };
 const pushMessagesToState = (messages) => {

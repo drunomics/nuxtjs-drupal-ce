@@ -1,4 +1,4 @@
-import { fileURLToPath } from 'url';
+import { fileURLToPath } from 'node:url';
 import { defineNuxtModule, createResolver, addServerPlugin, addImportsDir, addServerHandler } from '@nuxt/kit';
 import { defu } from 'defu';
 

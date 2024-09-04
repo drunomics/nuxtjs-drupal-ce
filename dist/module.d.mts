@@ -9,7 +9,7 @@ interface ModuleOptions {
     addRequestContentFormat?: string;
     addRequestFormat: boolean;
     customErrorPages: boolean;
-    fetchOptions: Object;
+    fetchOptions: object;
     fetchProxyHeaders: string[];
     useLocalizedMenuEndpoint: boolean;
     serverApiProxy: boolean;
