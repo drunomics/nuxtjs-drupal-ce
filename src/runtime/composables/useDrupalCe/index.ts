@@ -1,10 +1,10 @@
-import { callWithNuxt } from '#app'
 import { defu } from 'defu'
 import { appendResponseHeader } from 'h3'
-import type { UseFetchOptions } from '#app'
 import type { $Fetch, NitroFetchRequest } from 'nitropack'
 import { getDrupalBaseUrl, getMenuBaseUrl } from './server'
-import { useRuntimeConfig, useState, useFetch, navigateTo, createError, h, resolveComponent, setResponseStatus, useNuxtApp, useRequestHeaders, ref, watch, useRequestEvent } from '#imports'
+import type { UseFetchOptions } from '#app'
+import { callWithNuxt } from '#app'
+import { useRuntimeConfig, useState, useFetch, navigateTo, createError, h, resolveComponent, setResponseStatus, useNuxtApp, useRequestHeaders, ref, watch, useRequestEvent, computed } from '#imports'
 
 export const useDrupalCe = () => {
   const config = useRuntimeConfig().public.drupalCe
@@ -18,7 +18,8 @@ export const useDrupalCe = () => {
   const processFetchOptions = (fetchOptions: UseFetchOptions<any> = {}) => {
     if (config.serverApiProxy) {
       fetchOptions.baseURL = '/api/drupal-ce'
-    } else {
+    }
+    else {
       fetchOptions.baseURL = fetchOptions.baseURL ?? getDrupalBaseUrl() + config.ceApiEndpoint
     }
     fetchOptions = defu(fetchOptions, config.fetchOptions)
@@ -60,7 +61,7 @@ export const useDrupalCe = () => {
    * Fetch data from Drupal ce-API endpoint using $ceApi
    * @param path Path of the Drupal ce-API endpoint to fetch
    * @param fetchOptions UseFetchOptions<any>
-   * @param passThroughHeaders Whether to pass through headers from Drupal to the client
+   * @param doPassThroughHeaders Whether to pass through headers from Drupal to the client
    */
   const useCeApi = (path: string | Ref<string>, fetchOptions: UseFetchOptions<any> = {}, doPassThroughHeaders?: boolean): Promise<any> => {
     const nuxtApp = useNuxtApp()
@@ -130,14 +131,16 @@ export const useDrupalCe = () => {
       if (serverResponse.value._data) {
         page.value = serverResponse.value._data
         passThroughHeaders(nuxtApp, serverResponse.value.headers)
-      } else if (serverResponse.value.error) {
+      }
+      else if (serverResponse.value.error) {
         pageError.value = serverResponse.value.error
       }
       // Clear the server response state after it was sent to the client.
       if (import.meta.client) {
         serverResponse.value = null
       }
-    } else {
+    }
+    else {
       const { data, error } = await useCeApi(path, useFetchOptions, true)
       page.value = data.value
       pageError.value = error.value
@@ -222,20 +225,61 @@ export const useDrupalCe = () => {
   const getPage = (): Ref => useState('drupal-ce-page-data', () => ({}))
 
   /**
+   * Resolve a custom element into a Vue component
+   * @param element The custom element name to resolve
+   */
+  const resolveCustomElement = (element: string) => {
+    const nuxtApp = useNuxtApp()
+    const formatName = (name: string) => name.split('-').map(part => part.charAt(0).toUpperCase() + part.slice(1)).join('')
+
+    // Try resolving the full component name.
+    const component = nuxtApp.vueApp.component(formatName(element))
+    if (typeof component === 'object' && component.name) {
+      return component
+    }
+
+    // Progressively remove segments from the custom element name to find a matching default component.
+    const regex = /-[a-z]+$/
+    let componentName = element
+    while (regex.test(componentName)) {
+      componentName = componentName.replace(regex, '')
+      const fallbackComponent = nuxtApp.vueApp.component(formatName(componentName) + 'Default')
+      if (typeof fallbackComponent === 'object' && fallbackComponent.name) {
+        return fallbackComponent
+      }
+    }
+
+    // Try resolving by adding 'Default' suffix.
+    const defaultComponent = nuxtApp.vueApp.component(formatName(element) + 'Default')
+    if (typeof defaultComponent === 'object' && defaultComponent.name) {
+      return defaultComponent
+    }
+
+    // If not found, try with resolveComponent. This provides a warning if the component is not found.
+    return typeof resolveComponent(element) === 'object' ? resolveComponent(element) : null
+  }
+
+  /**
    * Render elements from page data returned from fetchPage
    * @param customElements
    */
-  const renderCustomElements = (customElements: Record<string, any> | Array<Object>) => {
+  const renderCustomElements = (customElements: Record<string, any> | Array<object>) => {
     if (Object.keys(customElements).length === 0) {
       return
     }
-    return Array.isArray(customElements)
-      ? h('div', customElements.map(customElement => h(resolveComponent(customElement.element), customElement)))
-      : h(resolveComponent(customElements.element), customElements)
+    if (Array.isArray(customElements)) {
+      return customElements.map((customElement) => {
+        const resolvedElement = resolveCustomElement(customElement.element)
+        return resolvedElement ? h(resolvedElement, customElement) : null
+      })
+    }
+    const resolvedElement = resolveCustomElement(customElements.element)
+    return resolvedElement ? h((resolvedElement), customElements) : null
   }
 
   /**
    * Pass through headers from Drupal to the client
+   * @param nuxtApp The Nuxt app instance
    * @param pageHeaders The headers from the Drupal response
    */
   const passThroughHeaders = (nuxtApp, pageHeaders) => {
@@ -253,6 +297,15 @@ export const useDrupalCe = () => {
     }
   }
 
+  /**
+   * Determines the page layout based on the Drupal page data.
+   * @param page Ref containing the Drupal page data
+   * @returns A computed property resolving to the specified page_layout or 'default' if unspecified.
+   */
+  const getPageLayout = (page: Ref<any>): ComputedRef<string> => {
+    return computed(() => page.value.page_layout || 'default')
+  }
+
   return {
     $ceApi,
     useCeApi,
@@ -265,6 +318,7 @@ export const useDrupalCe = () => {
     getCeApiEndpoint,
     getDrupalBaseUrl,
     getMenuBaseUrl,
+    getPageLayout,
   }
 }
 

@@ -1,29 +1,30 @@
 #!/usr/bin/env node
 
-const fs = require('fs')
-const path = require('path')
+const fs = require('node:fs')
+const path = require('node:path')
+
 const scaffoldDir = path.join(__dirname, '/../playground')
 const target = '.'
 
-function copyFile (source, target) {
+function copyFile(source, target) {
   const targetFile = target + '/' + path.basename(source)
 
   // If target is a directory, a new file with the same name will be created
   if (!fs.existsSync(targetFile)) {
-    // eslint-disable-next-line no-console
     console.log(targetFile + ' - Created.')
     fs.writeFileSync(targetFile, fs.readFileSync(source))
-  } else {
-    // eslint-disable-next-line no-console
+  }
+  else {
     console.log(targetFile + ' - Existing, skipped.')
   }
 }
 
-function syncDir (directory) {
+function syncDir(directory) {
   fs.readdirSync(scaffoldDir + '/' + directory).forEach(function (item) {
     if (fs.lstatSync(scaffoldDir + '/' + directory + '/' + item).isDirectory()) {
       syncDir(directory + '/' + item)
-    } else {
+    }
+    else {
       copyFile(scaffoldDir + '/' + directory + '/' + item, target + '/' + directory)
     }
   })

@@ -3,8 +3,8 @@ export default defineEventHandler(() => {
     redirect: {
       external: false,
       statusCode: 302,
-      url: '/node/1'
+      url: '/node/1',
     },
-    messages: []
+    messages: [],
   }
 })

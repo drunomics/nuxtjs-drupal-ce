@@ -29,7 +29,8 @@ export default defineEventHandler(async (event) => {
           headers: Object.fromEntries(response.headers.entries()),
         }
       }
-    } else {
+    }
+    else {
       throw createError({
         statusCode: 400,
         statusMessage: 'Bad Request',
