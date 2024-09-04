@@ -18,7 +18,8 @@ export const useDrupalCe = () => {
   const processFetchOptions = (fetchOptions: UseFetchOptions<any> = {}) => {
     if (config.serverApiProxy) {
       fetchOptions.baseURL = '/api/drupal-ce'
-    } else {
+    }
+    else {
       fetchOptions.baseURL = fetchOptions.baseURL ?? getDrupalBaseUrl() + config.ceApiEndpoint
     }
     fetchOptions = defu(fetchOptions, config.fetchOptions)
@@ -60,7 +61,7 @@ export const useDrupalCe = () => {
    * Fetch data from Drupal ce-API endpoint using $ceApi
    * @param path Path of the Drupal ce-API endpoint to fetch
    * @param fetchOptions UseFetchOptions<any>
-   * @param passThroughHeaders Whether to pass through headers from Drupal to the client
+   * @param doPassThroughHeaders Whether to pass through headers from Drupal to the client
    */
   const useCeApi = (path: string | Ref<string>, fetchOptions: UseFetchOptions<any> = {}, doPassThroughHeaders?: boolean): Promise<any> => {
     const nuxtApp = useNuxtApp()
@@ -130,14 +131,16 @@ export const useDrupalCe = () => {
       if (serverResponse.value._data) {
         page.value = serverResponse.value._data
         passThroughHeaders(nuxtApp, serverResponse.value.headers)
-      } else if (serverResponse.value.error) {
+      }
+      else if (serverResponse.value.error) {
         pageError.value = serverResponse.value.error
       }
       // Clear the server response state after it was sent to the client.
       if (import.meta.client) {
         serverResponse.value = null
       }
-    } else {
+    }
+    else {
       const { data, error } = await useCeApi(path, useFetchOptions, true)
       page.value = data.value
       pageError.value = error.value
@@ -225,7 +228,7 @@ export const useDrupalCe = () => {
    * Render elements from page data returned from fetchPage
    * @param customElements
    */
-  const renderCustomElements = (customElements: Record<string, any> | Array<Object>) => {
+  const renderCustomElements = (customElements: Record<string, any> | Array<object>) => {
     if (Object.keys(customElements).length === 0) {
       return
     }
@@ -236,6 +239,7 @@ export const useDrupalCe = () => {
 
   /**
    * Pass through headers from Drupal to the client
+   * @param nuxtApp The Nuxt app instance
    * @param pageHeaders The headers from the Drupal response
    */
   const passThroughHeaders = (nuxtApp, pageHeaders) => {
