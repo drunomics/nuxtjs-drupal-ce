@@ -225,6 +225,41 @@ export const useDrupalCe = () => {
   const getPage = (): Ref => useState('drupal-ce-page-data', () => ({}))
 
   /**
+   * Resolve a custom element into a Vue component
+   * @param element The custom element name to resolve
+   */
+  const resolveCustomElement = (element: string) => {
+    const nuxtApp = useNuxtApp()
+    const formatName = (name: string) => name.split('-').map(part => part.charAt(0).toUpperCase() + part.slice(1)).join('')
+
+    // Try resolving the full component name.
+    const component = nuxtApp.vueApp.component(formatName(element))
+    if (typeof component === 'object' && component.name) {
+      return component
+    }
+
+    // Progressively remove segments from the custom element name to find a matching default component.
+    const regex = /-[a-z]+$/
+    let componentName = element
+    while (regex.test(componentName)) {
+      componentName = componentName.replace(regex, '')
+      const fallbackComponent = nuxtApp.vueApp.component(formatName(componentName) + 'Default')
+      if (typeof fallbackComponent === 'object' && fallbackComponent.name) {
+        return fallbackComponent
+      }
+    }
+
+    // Try resolving by adding 'Default' suffix.
+    const defaultComponent = nuxtApp.vueApp.component(formatName(element) + 'Default')
+    if (typeof defaultComponent === 'object' && defaultComponent.name) {
+      return defaultComponent
+    }
+
+    // If not found, try with resolveComponent. This provides a warning if the component is not found.
+    return typeof resolveComponent(element) === 'object' ? resolveComponent(element) : null
+  }
+
+  /**
    * Render elements from page data returned from fetchPage
    * @param customElements
    */
@@ -232,9 +267,14 @@ export const useDrupalCe = () => {
     if (Object.keys(customElements).length === 0) {
       return
     }
-    return Array.isArray(customElements)
-      ? h('div', customElements.map(customElement => h(resolveComponent(customElement.element), customElement)))
-      : h(resolveComponent(customElements.element), customElements)
+    if (Array.isArray(customElements)) {
+      return customElements.map((customElement) => {
+        const resolvedElement = resolveCustomElement(customElement.element)
+        return resolvedElement ? h(resolvedElement, customElement) : null
+      })
+    }
+    const resolvedElement = resolveCustomElement(customElements.element)
+    return resolvedElement ? h((resolvedElement), customElements) : null
   }
 
   /**
