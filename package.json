@@ -26,21 +26,22 @@
     "dev:build": "nuxi build playground",
     "dev:prepare": "nuxt-module-build --stub && nuxi prepare playground",
     "test": "vitest run",
-    "lint": "eslint . --ext .js,.vue,.ts",
-    "lint-fix": "eslint . --ext .js,.vue,.ts --fix"
+    "lint": "eslint .",
+    "lint-fix": "eslint . --fix"
   },
   "dependencies": {
     "@nuxt/kit": "^3.12.4",
     "defu": "^6.1.4"
   },
   "devDependencies": {
+    "@nuxt/eslint-config": "^0.5.5",
     "@nuxt/module-builder": "^0.8.3",
     "@nuxt/schema": "^3.12.4",
     "@nuxt/test-utils": "^3.14.1",
-    "@nuxtjs/eslint-config-typescript": "^12.1.0",
     "@nuxtjs/i18n": "^8.5.0",
-    "eslint": "^8.57.0",
+    "eslint": "^9.9.1",
     "nuxt": "^3.12.4",
+    "typescript": "^5.5.4",
     "vitest": "^1.6.0"
   }
 }

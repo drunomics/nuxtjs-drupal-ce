@@ -4,14 +4,20 @@
       v-if="tabs.primary"
       class="tabs primary"
     >
-      <li v-for="tab in tabs.primary" :key="tab.url">
+      <li
+        v-for="tab in tabs.primary"
+        :key="tab.url"
+      >
         <nuxt-link
           :href="tab.url"
           tabindex="-1"
-          :class="{'is-active': tab.active}"
+          :class="{ 'is-active': tab.active }"
         >
           {{ tab.label }}
-          <span v-if="tab.active" class="visually-hidden">
+          <span
+            v-if="tab.active"
+            class="visually-hidden"
+          >
             (active tab)
           </span>
         </nuxt-link>
@@ -21,8 +27,8 @@
 </template>
 
 <script setup lang="ts">
-const props = defineProps<{
-  tabs: Object;
+defineProps<{
+  tabs: object
 }>()
 </script>
 
@@ -64,5 +70,4 @@ a:hover {
   padding: 0;
   border: 0;
 }
-
 </style>

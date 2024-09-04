@@ -3,7 +3,10 @@
     <NuxtLayout :name="layout">
       <main>
         <SiteBreadcrumbs />
-        <DrupalTabs v-if="page.local_tasks" :tabs="page.local_tasks" />
+        <DrupalTabs
+          v-if="page.local_tasks"
+          :tabs="page.local_tasks"
+        />
         <component :is="renderCustomElements(page.content)" />
       </main>
     </NuxtLayout>
@@ -11,15 +14,15 @@
 </template>
 
 <script lang="ts" setup>
-const { fetchPage, renderCustomElements } = useDrupalCe()
+const { fetchPage, renderCustomElements, getPageLayout } = useDrupalCe()
 const page = await fetchPage(useRoute().path, { query: useRoute().query })
 // Set to false to support custom layouts, using <NuxtLayout> instead.
 definePageMeta({
   layout: false,
 })
-const layout = computed(() => {
-  return page.value.page_layout || 'default'
-})
+
+const layout = getPageLayout(page)
+
 useHead({
   title: page.value.title,
   meta: page.value.metatags.meta,

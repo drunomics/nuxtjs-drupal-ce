@@ -1,6 +1,9 @@
 <template>
   <div class="language-switcher">
-    <div v-for="availableLocale in availableLocales" :key="availableLocale">
+    <div
+      v-for="availableLocale in availableLocales"
+      :key="availableLocale"
+    >
       <a
         v-if="alternateLinkPath(availableLocale)"
         :href="alternateLinkPath(availableLocale)"
@@ -35,7 +38,6 @@ const alternateLinkPath = (langCode) => {
   const alternateLinkURL = new URL(alternateLink.href)
   return alternateLinkURL.pathname
 }
-
 </script>
 
 <style lang="css" scoped>

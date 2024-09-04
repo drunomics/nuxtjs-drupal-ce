@@ -1,6 +1,6 @@
 import { fileURLToPath } from 'node:url'
 import { describe, it, expect } from 'vitest'
-import { setup, $fetch, fetch } from '@nuxt/test-utils'
+import { setup, fetch } from '@nuxt/test-utils'
 
 describe('Module error handling', async () => {
   await setup({

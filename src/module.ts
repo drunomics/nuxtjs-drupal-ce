@@ -1,24 +1,24 @@
-import { fileURLToPath } from 'url'
-import { defineNuxtModule, addPlugin, addServerPlugin, createResolver, addImportsDir, addServerHandler } from '@nuxt/kit'
+import { fileURLToPath } from 'node:url'
+import { defineNuxtModule, addServerPlugin, createResolver, addImportsDir, addServerHandler } from '@nuxt/kit'
 import { defu } from 'defu'
 import type { NuxtOptionsWithDrupalCe } from './types'
 
 export interface ModuleOptions {
-  drupalBaseUrl: string,
-  serverDrupalBaseUrl?: string,
-  ceApiEndpoint: string,
-  menuEndpoint: string,
-  menuBaseUrl?: string,
-  addRequestContentFormat?: string,
-  addRequestFormat: boolean,
-  customErrorPages: boolean,
-  fetchOptions: Object,
-  fetchProxyHeaders: string[],
-  useLocalizedMenuEndpoint: boolean,
-  serverApiProxy: boolean,
-  passThroughHeaders?: string[],
-  exposeAPIRouteRules?: boolean,
-  serverLogLevel?: boolean | 'info' | 'error',
+  drupalBaseUrl: string
+  serverDrupalBaseUrl?: string
+  ceApiEndpoint: string
+  menuEndpoint: string
+  menuBaseUrl?: string
+  addRequestContentFormat?: string
+  addRequestFormat: boolean
+  customErrorPages: boolean
+  fetchOptions: object
+  fetchProxyHeaders: string[]
+  useLocalizedMenuEndpoint: boolean
+  serverApiProxy: boolean
+  passThroughHeaders?: string[]
+  exposeAPIRouteRules?: boolean
+  serverLogLevel?: boolean | 'info' | 'error'
 }
 
 export default defineNuxtModule<ModuleOptions>({
@@ -44,7 +44,7 @@ export default defineNuxtModule<ModuleOptions>({
     passThroughHeaders: ['cache-control', 'content-language', 'set-cookie', 'x-drupal-cache', 'x-drupal-dynamic-cache'],
     serverLogLevel: 'info',
   },
-  setup (options, nuxt) {
+  setup(options, nuxt) {
     const nuxtOptions = nuxt.options as NuxtOptionsWithDrupalCe
     // Keep backwards compatibility for exposeAPIRouteRules(deprecated).
     if (!nuxtOptions.drupalCe?.serverApiProxy && options.exposeAPIRouteRules !== undefined) {
@@ -59,11 +59,13 @@ export default defineNuxtModule<ModuleOptions>({
     const { resolve } = createResolver(import.meta.url)
     const runtimeDir = fileURLToPath(new URL('./runtime', import.meta.url))
     nuxt.options.build.transpile.push(runtimeDir)
-    addPlugin(resolve(runtimeDir, 'plugin'))
     if (options.serverLogLevel) {
       addServerPlugin(resolve(runtimeDir, 'server/plugins/errorLogger'))
     }
     addImportsDir(resolve(runtimeDir, 'composables/useDrupalCe'))
+    addServerHandler({
+      handler: resolve(runtimeDir, 'server/middleware/drupalFormHandler'),
+    })
 
     const publicOptions = { ...options }
     // Server options are not needed in the client bundle.

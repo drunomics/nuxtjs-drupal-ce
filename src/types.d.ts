@@ -4,7 +4,7 @@ import type { ModuleOptions } from './module'
 // see https://nuxt.com/docs/guide/going-further/runtime-config#manually-typing-runtime-config
 declare module 'nuxt/schema' {
   interface PublicRuntimeConfig {
-    drupalCe: ModuleOptions,
+    drupalCe: ModuleOptions
   }
 }
 

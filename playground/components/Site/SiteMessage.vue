@@ -9,9 +9,9 @@
 
 <script setup lang="ts">
 const props = defineProps<{
-  type: String;
-  id: String;
-  message: String;
+  type: string
+  id: string
+  message: string
 }>()
 
 const emit = defineEmits(['dismiss'])

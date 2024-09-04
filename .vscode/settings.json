@@ -1,18 +1,18 @@
 {
+  "editor.formatOnSave": true,
+  "eslint.useFlatConfig": true,
+  "volar.validation.template": false,
   "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": true
+    "source.fixAll.eslint": "always",
+    "source.fixAll.vetur": "always",
+    "source.fixAll.vscode": "always"
   },
-  "eslint.options": {
-    "extensions": [
-      ".html",
-      ".js",
-      ".vue"
-    ]
-  },
+  "css.lint.unknownAtRules": "ignore",
   "eslint.validate": [
     "javascript",
     "typescript",
     "vue",
     "vue-html"
   ],
+  "prettier.enable": false
 }
