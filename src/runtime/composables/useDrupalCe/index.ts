@@ -238,7 +238,7 @@ export const useDrupalCe = () => {
       return component
     }
 
-    // Try to lookup a fallback component name.
+    // Progressively remove segments from the custom element name to find a matching default component.
     const regex = /-[a-z]+$/
     let componentName = element
     while (regex.test(componentName)) {
@@ -268,10 +268,10 @@ export const useDrupalCe = () => {
       return
     }
     if (Array.isArray(customElements)) {
-      return h('div', customElements.map((customElement) => {
+      return customElements.map((customElement) => {
         const resolvedElement = resolveCustomElement(customElement.element)
         return resolvedElement ? h(resolvedElement, customElement) : null
-      }))
+      })
     }
     const resolvedElement = resolveCustomElement(customElements.element)
     return resolvedElement ? h((resolvedElement), customElements) : null

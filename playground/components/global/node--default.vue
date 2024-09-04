@@ -16,7 +16,7 @@
 defineProps<{
   title: string
   type: string
-  created: number
+  created: number | string
   body?: string[]
   image?: object
 }>()
