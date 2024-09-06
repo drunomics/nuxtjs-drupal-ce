@@ -116,6 +116,38 @@ Runtime config values can be overridden with environment variables via `NUXT_PUB
 - `menuBaseUrl` -> `NUXT_PUBLIC_DRUPAL_CE_MENU_BASE_URL`
 - `ceApiEndpoint` -> `NUXT_PUBLIC_DRUPAL_CE_CE_API_ENDPOINT`
 
+## Custom elements rendering
+
+Custom elements are rendered as [dynamic components](https://nuxt.com/docs/guide/directory-structure/components#dynamic-components) and need to be registered as global components.
+
+The components should be placed in `~/components/global`, see `/playground` directory for an example.
+
+### Naming
+
+We recommend to name the components lowercase and hyphenate the custom element name, e.g. `custom-element-name.vue`.
+
+### Component fallback (JSON only)
+
+If a custom element is not resolved, the module will try to render a default component of that type.
+
+The default components are named `<custom-element-name>--default.vue`, example:
+
+```
+node--default.vue
+drupal-view--default.vue
+```
+
+When a component is not found, the module will lookup a default component by removing segments from the custom element name, e.g.:
+
+```
+x node-custom-view
+x node-custom-view--default
+x node-custom--default
+✓ node--default
+```
+
+> **Note**: This is JSON only and not available when using the `markup` content format.
+
 ## Deprecated options
 
 The following options are deprecated and only there for improved backwards compatibility.
