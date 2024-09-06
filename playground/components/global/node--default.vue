@@ -1,5 +1,5 @@
 <template>
-  <div class="node">
+  <div class="node node--default">
     <h2>Node: {{ title }}</h2>
     <div
       v-if="image"

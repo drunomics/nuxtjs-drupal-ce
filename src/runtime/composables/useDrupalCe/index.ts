@@ -239,20 +239,15 @@ export const useDrupalCe = () => {
     }
 
     // Progressively remove segments from the custom element name to find a matching default component.
-    const regex = /-[a-z]+$/
+    const regex = /-?[a-z]+$/
     let componentName = element
-    while (regex.test(componentName)) {
-      componentName = componentName.replace(regex, '')
+    while (componentName) {
+      // Try resolving by adding 'Default' suffix.
       const fallbackComponent = nuxtApp.vueApp.component(formatName(componentName) + 'Default')
       if (typeof fallbackComponent === 'object' && fallbackComponent.name) {
         return fallbackComponent
       }
-    }
-
-    // Try resolving by adding 'Default' suffix.
-    const defaultComponent = nuxtApp.vueApp.component(formatName(element) + 'Default')
-    if (typeof defaultComponent === 'object' && defaultComponent.name) {
-      return defaultComponent
+      componentName = componentName.replace(regex, '')
     }
 
     // If not found, try with resolveComponent. This provides a warning if the component is not found.
