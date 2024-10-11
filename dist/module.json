@@ -1,0 +1,12 @@
+{
+  "name": "nuxtjs-drupal-ce",
+  "configKey": "drupalCe",
+  "compatibility": {
+    "nuxt": ">=3.7.0"
+  },
+  "version": "2.1.0",
+  "builder": {
+    "@nuxt/module-builder": "0.8.3",
+    "unbuild": "2.0.0"
+  }
+}
