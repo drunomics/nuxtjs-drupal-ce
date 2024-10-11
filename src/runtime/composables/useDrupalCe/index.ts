@@ -142,7 +142,7 @@ export const useDrupalCe = () => {
     }
     else {
       const { data, error } = await useCeApi(path, useFetchOptions, true)
-      page.value = data.value
+      page.value = data
       pageError.value = error.value
     }
 
@@ -163,8 +163,8 @@ export const useDrupalCe = () => {
       page.value = pageError.value?.data
     }
 
-    pageState.value = page
-    return page
+    pageState.value = page.value
+    return page.value
   }
 
   /**
