@@ -17,6 +17,6 @@ interface ModuleOptions {
     exposeAPIRouteRules?: boolean;
     serverLogLevel?: boolean | 'info' | 'error';
 }
-declare const _default: _nuxt_schema.NuxtModule<ModuleOptions>;
+declare const _default: _nuxt_schema.NuxtModule<ModuleOptions, ModuleOptions, false>;
 
 export { type ModuleOptions, _default as default };

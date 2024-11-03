@@ -74,14 +74,14 @@ export const useDrupalCe = () => {
     }));
     const serverResponse = useState("server-response", () => null);
     useFetchOptions.key = `page-${path}`;
-    const page = ref(null);
+    let page = null;
     const pageError = ref(null);
     if (import.meta.server) {
       serverResponse.value = useRequestEvent(nuxtApp).context.drupalCeCustomPageResponse;
     }
     if (serverResponse.value) {
       if (serverResponse.value._data) {
-        page.value = serverResponse.value._data;
+        page = ref(serverResponse.value._data);
         passThroughHeaders(nuxtApp, serverResponse.value.headers);
       } else if (serverResponse.value.error) {
         pageError.value = serverResponse.value.error;
@@ -91,7 +91,7 @@ export const useDrupalCe = () => {
       }
     } else {
       const { data, error } = await useCeApi(path, useFetchOptions, true);
-      page.value = data;
+      page = data;
       pageError.value = error.value;
     }
     if (page.value?.messages) {
@@ -108,8 +108,8 @@ export const useDrupalCe = () => {
       overrideErrorHandler ? overrideErrorHandler(pageError) : pageErrorHandler(pageError, { config, nuxtApp });
       page.value = pageError.value?.data;
     }
-    pageState.value = page.value;
-    return page.value;
+    pageState.value = page;
+    return page;
   };
   const fetchMenu = async (name, useFetchOptions = {}, overrideErrorHandler) => {
     const nuxtApp = useNuxtApp();

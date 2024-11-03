@@ -6,7 +6,7 @@
   },
   "version": "2.1.0",
   "builder": {
-    "@nuxt/module-builder": "0.8.3",
+    "@nuxt/module-builder": "0.8.4",
     "unbuild": "2.0.0"
   }
 }
