@@ -119,7 +119,7 @@ export const useDrupalCe = () => {
     }))
     const serverResponse = useState('server-response', () => null)
     useFetchOptions.key = `page-${path}`
-    const page = ref(null)
+    let page = null
     const pageError = ref(null)
 
     if (import.meta.server) {
@@ -129,7 +129,7 @@ export const useDrupalCe = () => {
     // Check if the page data is already provided, e.g. by a form response.
     if (serverResponse.value) {
       if (serverResponse.value._data) {
-        page.value = serverResponse.value._data
+        page = ref(serverResponse.value._data)
         passThroughHeaders(nuxtApp, serverResponse.value.headers)
       }
       else if (serverResponse.value.error) {
@@ -142,7 +142,7 @@ export const useDrupalCe = () => {
     }
     else {
       const { data, error } = await useCeApi(path, useFetchOptions, true)
-      page.value = data
+      page = data
       pageError.value = error.value
     }
 
@@ -163,8 +163,8 @@ export const useDrupalCe = () => {
       page.value = pageError.value?.data
     }
 
-    pageState.value = page.value
-    return page.value
+    pageState.value = page
+    return page
   }
 
   /**
