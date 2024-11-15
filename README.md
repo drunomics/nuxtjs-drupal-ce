@@ -204,6 +204,12 @@ You have the option to override the default error handlers by using a parameter 
 
 Note: The `error` parameter is optional and can be omitted.
 
+## Handling form submissions
+
+The module provides a server middleware that handles form submissions sent via `POST` requests.
+
+To skip the form handler, add a `x-drupalce-skip-form-handler: true` header to the `POST` request.
+
 ## Previous options not supported in 2.x version
 
 The following options were support in 1.x but got dropped:
