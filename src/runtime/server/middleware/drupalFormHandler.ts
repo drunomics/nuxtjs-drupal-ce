@@ -4,6 +4,7 @@ import { useRuntimeConfig } from '#imports'
 
 export default defineEventHandler(async (event) => {
   const { ceApiEndpoint } = useRuntimeConfig().public.drupalCe
+
   if (event.node.req.method === 'POST') {
     const formData = await readFormData(event)
 
