@@ -19,6 +19,7 @@ export interface ModuleOptions {
   passThroughHeaders?: string[]
   exposeAPIRouteRules?: boolean
   serverLogLevel?: boolean | 'info' | 'error'
+  disableFormHandler?: boolean
 }
 
 export default defineNuxtModule<ModuleOptions>({
@@ -43,6 +44,7 @@ export default defineNuxtModule<ModuleOptions>({
     serverApiProxy: true,
     passThroughHeaders: ['cache-control', 'content-language', 'set-cookie', 'x-drupal-cache', 'x-drupal-dynamic-cache'],
     serverLogLevel: 'info',
+    disableFormHandler: false,
   },
   setup(options, nuxt) {
     const nuxtOptions = nuxt.options as NuxtOptionsWithDrupalCe
@@ -63,15 +65,18 @@ export default defineNuxtModule<ModuleOptions>({
       addServerPlugin(resolve(runtimeDir, 'server/plugins/errorLogger'))
     }
     addImportsDir(resolve(runtimeDir, 'composables/useDrupalCe'))
-    addServerHandler({
-      handler: resolve(runtimeDir, 'server/middleware/drupalFormHandler'),
-    })
+    if (!options.disableFormHandler) {
+      addServerHandler({
+        handler: resolve(runtimeDir, 'server/middleware/drupalFormHandler'),
+      })
+    }
 
     const publicOptions = { ...options }
     // Server options are not needed in the client bundle.
     delete publicOptions.serverLogLevel
     delete publicOptions.passThroughHeaders
     delete publicOptions.exposeAPIRouteRules
+    delete publicOptions.disableFormHandler
 
     nuxt.options.runtimeConfig.public.drupalCe = defu(nuxt.options.runtimeConfig.public.drupalCe ?? {}, publicOptions)
 

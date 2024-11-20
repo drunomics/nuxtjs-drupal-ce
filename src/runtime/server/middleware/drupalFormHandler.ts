@@ -4,9 +4,7 @@ import { useRuntimeConfig } from '#imports'
 
 export default defineEventHandler(async (event) => {
   const { ceApiEndpoint } = useRuntimeConfig().public.drupalCe
-  const skipFormHandler = event.node.req.headers['x-drupalce-skip-form-handler'] === 'true'
-
-  if (event.node.req.method === 'POST' && !skipFormHandler) {
+  if (event.node.req.method === 'POST') {
     const formData = await readFormData(event)
 
     if (formData) {

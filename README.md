@@ -107,6 +107,8 @@ is added automatically to requests. Defaults to `false`.
   - 'info': Log all server requests and errors.
   - 'error': Log only errors.
 
+- `disableFormHandler`: If set to `true`, the form handler middleware will be disabled. Defaults to `false`.
+
 ## Overriding options with environment variables
 
 Runtime config values can be overridden with environment variables via `NUXT_PUBLIC_` prefix. Supported runtime overrides:
