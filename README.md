@@ -206,12 +206,6 @@ You have the option to override the default error handlers by using a parameter 
 
 Note: The `error` parameter is optional and can be omitted.
 
-## Handling form submissions
-
-The module provides a server middleware that handles form submissions sent via `POST` requests.
-
-To disable the form handler, add `skipFormHandler: true` to the `drupalCe` config.
-
 ## Previous options not supported in 2.x version
 
 The following options were support in 1.x but got dropped:
