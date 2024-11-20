@@ -210,7 +210,7 @@ Note: The `error` parameter is optional and can be omitted.
 
 The module provides a server middleware that handles form submissions sent via `POST` requests.
 
-To skip the form handler, add a `x-drupalce-skip-form-handler: true` header to the `POST` request.
+To disable the form handler, add `skipFormHandler: true` to the `drupalCe` config.
 
 ## Previous options not supported in 2.x version
 
