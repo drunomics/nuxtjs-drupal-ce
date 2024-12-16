@@ -21,7 +21,7 @@
     "playground/app.vue"
   ],
   "scripts": {
-    "prepack": "nuxt-module-build",
+    "prepack": "nuxt-module-build --stub",
     "dev": "nuxi dev playground",
     "dev:build": "nuxi build playground",
     "dev:prepare": "nuxt-module-build --stub && nuxi prepare playground",
@@ -30,11 +30,12 @@
     "lint-fix": "eslint . --fix"
   },
   "dependencies": {
-    "@nuxt/kit": "^3.14.1592",
     "defu": "^6.1.4"
   },
   "devDependencies": {
+    "@nuxt/eslint": "^0.7.3",
     "@nuxt/eslint-config": "^0.7.3",
+    "@nuxt/kit": "^3.14.1592",
     "@nuxt/module-builder": "^0.8.4",
     "@nuxt/schema": "^3.14.1592",
     "@nuxt/test-utils": "^3.15.1",
