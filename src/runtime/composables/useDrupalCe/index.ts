@@ -255,21 +255,62 @@ export const useDrupalCe = () => {
   }
 
   /**
-   * Render elements from page data returned from fetchPage
-   * @param customElements
+   * Renders Vue components from JSON-serialized custom element data.
+   *
+   * @param customElements - Custom element data that can be:
+   *   - null/undefined (returns null, skipping render)
+   *   - string (auto-creates component rendering string as HTML if it contains markup)
+   *   - single custom element object with {element: string, ...props}
+   *   - array of custom element objects
+   * @returns Vue component definition, null for skipped render, or HTML-capable component for strings.
+   *         Result can be used directly with Vue's dynamic component: <component :is="result">
    */
-  const renderCustomElements = (customElements: Record<string, any> | Array<object>) => {
-    if (Object.keys(customElements).length === 0) {
-      return
+  const renderCustomElements = (
+    customElements: null | undefined | string | Record<string, any> | Array<object>
+  ) => {
+    // Handle null/undefined case
+    if (customElements == null) {
+      return null
     }
+
+    // Handle string case by creating a component that can render HTML
+    if (typeof customElements === 'string') {
+      return {
+        template: `<div v-html="content"></div>`,
+        data() {
+          return {
+            content: customElements
+          }
+        }
+      }
+    }
+
+    // Handle empty object case
+    if (typeof customElements === 'object' && Object.keys(customElements).length === 0) {
+      return null
+    }
+
+    // Handle array of custom elements
     if (Array.isArray(customElements)) {
       return customElements.map((customElement) => {
+        if (typeof customElement === 'string') {
+          return {
+            template: `<div v-html="content"></div>`,
+            data() {
+              return {
+                content: customElement
+              }
+            }
+          }
+        }
         const resolvedElement = resolveCustomElement(customElement.element)
         return resolvedElement ? h(resolvedElement, customElement) : null
       })
     }
+
+    // Handle single custom element object
     const resolvedElement = resolveCustomElement(customElements.element)
-    return resolvedElement ? h((resolvedElement), customElements) : null
+    return resolvedElement ? h(resolvedElement, customElements) : null
   }
 
   /**
