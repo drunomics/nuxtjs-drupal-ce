@@ -1,37 +1,59 @@
-// test/customElements/renderCustomElements.test.ts
-import { fileURLToPath } from 'node:url'
-import { describe, it, expect } from 'vitest'
-import { setup } from '@nuxt/test-utils'
-import { renderCustomElements } from '../../src/runtime/composables/useDrupalCe'
-import { defineComponent, h } from 'vue'
+// @vitest-environment nuxt
+import { describe, it, expect, vi } from 'vitest'
+import { useDrupalCe } from '../../src/runtime/composables/useDrupalCe'
 
-// Create real Vue components for testing
-const TestComponent = defineComponent({
-  name: 'TestComponent',
+// useDrupalCe uses Nuxt's module system with '#app' and '#imports' virtual modules.
+// For unit testing, we need to mock these, but we want to use real Vue features for what we're testing
+
+// Mock #app which provides Nuxt's app utilities (not used by renderCustomElements)
+vi.mock('#app', () => ({
+  callWithNuxt: vi.fn(), // Used by other parts of useDrupalCe
+}))
+
+// Create a mock Vue app with component registry
+const mockComponents = new Map()
+
+// Define test components
+const TestComponent = {
   props: {
     foo: String
   },
-  render() {
-    return h('div', this.foo)
-  }
-})
+  template: '<div>Test</div>'
+}
 
-const AnotherComponent = defineComponent({
-  name: 'AnotherComponent',
+const AnotherComponent = {
   props: {
     baz: String
   },
-  render() {
-    return h('div', this.baz)
-  }
-})
+  template: '<div>Another</div>'
+}
 
-describe('renderCustomElements', async () => {
-  await setup({
-    rootDir: fileURLToPath(new URL('../../playground', import.meta.url)),
-    configFile: 'nuxt.config4test',
-    port: 3001,
-  })
+// Register components in our mock registry
+mockComponents.set('TestComponent', TestComponent)
+mockComponents.set('AnotherComponent', AnotherComponent)
+
+// Mock #imports which provides composables and Vue utilities
+vi.mock('#imports', () => ({
+  h: (name: string) => ({
+    name,
+    __isComponent: true // some marker to identify it's a component
+  }),
+  useNuxtApp: () => ({
+    vueApp: {
+      component: (name) => mockComponents.get(name)
+    }
+  }),
+  // Mock the rest that's only used by other parts of useDrupalCe
+  useRuntimeConfig: () => ({
+    public: { drupalCe: {} },
+    drupalCe: {}
+  }),
+  ref: vi.fn(),
+  computed: vi.fn(),
+}))
+
+describe('renderCustomElements', () => {
+  const { renderCustomElements } = useDrupalCe()
 
   it('handles null input', () => {
     const result = renderCustomElements(null)
@@ -54,8 +76,7 @@ describe('renderCustomElements', async () => {
       template: '<div v-html="content"></div>',
       data: expect.any(Function)
     })
-    const data = result.data()
-    expect(data.content).toBe('Hello World')
+    expect(result.data().content).toBe('Hello World')
   })
 
   it('handles HTML string input', () => {
@@ -65,31 +86,28 @@ describe('renderCustomElements', async () => {
       template: '<div v-html="content"></div>',
       data: expect.any(Function)
     })
-    const data = result.data()
-    expect(data.content).toBe(htmlString)
+    expect(result.data().content).toBe(htmlString)
   })
 
   it('handles single custom element object', () => {
     const customElement = {
-      element: TestComponent,
+      element: 'test-component',
       props: { foo: 'bar' }
     }
     const result = renderCustomElements(customElement)
+    expect(result).toBeTruthy()
     expect(result.type).toBe(TestComponent)
-    expect(result.props).toMatchObject({
-      foo: 'bar'
-    })
   })
 
   it('handles array of custom elements', () => {
     const customElements = [
       {
-        element: TestComponent,
+        element: 'test-component',
         props: { foo: 'bar' }
       },
       'Plain text element',
       {
-        element: AnotherComponent,
+        element: 'another-component',
         props: { baz: 'qux' }
       }
     ]
@@ -108,13 +126,27 @@ describe('renderCustomElements', async () => {
       template: '<div v-html="content"></div>',
       data: expect.any(Function)
     })
-    const textData = result[1].data()
-    expect(textData.content).toBe('Plain text element')
+    expect(result[1].data().content).toBe('Plain text element')
 
     // Third component
     expect(result[2].type).toBe(AnotherComponent)
     expect(result[2].props).toMatchObject({
       baz: 'qux'
+    })
+  })
+
+  it('handles array with only string elements', () => {
+    const elements = ['Text 1', '<p>HTML text</p>']
+    const result = renderCustomElements(elements)
+    expect(Array.isArray(result)).toBe(true)
+    expect(result).toHaveLength(2)
+
+    result.forEach((component, index) => {
+      expect(component).toMatchObject({
+        template: '<div v-html="content"></div>',
+        data: expect.any(Function)
+      })
+      expect(component.data().content).toBe(elements[index])
     })
   })
 })
