@@ -1,152 +1,164 @@
+// test/customElements/renderCustomElements.test.ts
 // @vitest-environment nuxt
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect } from 'vitest'
+import { mountSuspended } from '@nuxt/test-utils/runtime'
+import { defineComponent } from 'vue'
 import { useDrupalCe } from '../../src/runtime/composables/useDrupalCe'
-
-// useDrupalCe uses Nuxt's module system with '#app' and '#imports' virtual modules.
-// For unit testing, we need to mock these, but we want to use real Vue features for what we're testing
-
-// Mock #app which provides Nuxt's app utilities (not used by renderCustomElements)
-vi.mock('#app', () => ({
-  callWithNuxt: vi.fn(), // Used by other parts of useDrupalCe
-}))
-
-// Create a mock Vue app with component registry
-const mockComponents = new Map()
-
-// Define test components
-const TestComponent = {
-  props: {
-    foo: String
-  },
-  template: '<div>Test</div>'
-}
-
-const AnotherComponent = {
-  props: {
-    baz: String
-  },
-  template: '<div>Another</div>'
-}
-
-// Register components in our mock registry
-mockComponents.set('TestComponent', TestComponent)
-mockComponents.set('AnotherComponent', AnotherComponent)
-
-// Mock #imports which provides composables and Vue utilities
-vi.mock('#imports', () => ({
-  h: (name: string) => ({
-    name,
-    __isComponent: true // some marker to identify it's a component
-  }),
-  useNuxtApp: () => ({
-    vueApp: {
-      component: (name) => mockComponents.get(name)
-    }
-  }),
-  // Mock the rest that's only used by other parts of useDrupalCe
-  useRuntimeConfig: () => ({
-    public: { drupalCe: {} },
-    drupalCe: {}
-  }),
-  ref: vi.fn(),
-  computed: vi.fn(),
-}))
 
 describe('renderCustomElements', () => {
   const { renderCustomElements } = useDrupalCe()
 
-  it('handles null input', () => {
-    const result = renderCustomElements(null)
-    expect(result).toBe(null)
+  // Define reusable test components
+  const TestComponent = defineComponent({
+    props: {
+      foo: String
+    },
+    template: '<div>Test Component: {{ foo || "" }}</div>'
   })
 
-  it('handles undefined input', () => {
-    const result = renderCustomElements(undefined)
-    expect(result).toBe(null)
+  const AnotherComponent = defineComponent({
+    props: {
+      bar: String
+    },
+    template: '<div>Another Component: {{ bar }}</div>'
   })
 
-  it('handles empty object input', () => {
-    const result = renderCustomElements({})
-    expect(result).toBe(null)
-  })
-
-  it('handles plain string input', () => {
-    const result = renderCustomElements('Hello World')
-    expect(result).toMatchObject({
-      template: '<div v-html="content"></div>',
-      data: expect.any(Function)
-    })
-    expect(result.data().content).toBe('Hello World')
-  })
-
-  it('handles HTML string input', () => {
-    const htmlString = '<p>Hello <strong>World</strong></p>'
-    const result = renderCustomElements(htmlString)
-    expect(result).toMatchObject({
-      template: '<div v-html="content"></div>',
-      data: expect.any(Function)
-    })
-    expect(result.data().content).toBe(htmlString)
-  })
-
-  it('handles single custom element object', () => {
-    const customElement = {
-      element: 'test-component',
-      props: { foo: 'bar' }
-    }
-    const result = renderCustomElements(customElement)
-    expect(result).toBeTruthy()
-    expect(result.type).toBe(TestComponent)
-  })
-
-  it('handles array of custom elements', () => {
-    const customElements = [
-      {
-        element: 'test-component',
-        props: { foo: 'bar' }
+  describe('basic input handling', () => {
+    const NullRenderer = defineComponent({
+      setup() {
+        return { component: renderCustomElements(null) }
       },
-      'Plain text element',
-      {
-        element: 'another-component',
-        props: { baz: 'qux' }
-      }
-    ]
-    const result = renderCustomElements(customElements)
-    expect(Array.isArray(result)).toBe(true)
-    expect(result).toHaveLength(3)
-
-    // First component
-    expect(result[0].type).toBe(TestComponent)
-    expect(result[0].props).toMatchObject({
-      foo: 'bar'
+      template: '<component :is="component" />'
     })
 
-    // Text element
-    expect(result[1]).toMatchObject({
-      template: '<div v-html="content"></div>',
-      data: expect.any(Function)
+    it('should return null for empty inputs', () => {
+      expect(renderCustomElements(null)).toBe(null)
+      expect(renderCustomElements(undefined)).toBe(null)
+      expect(renderCustomElements({})).toBe(null)
     })
-    expect(result[1].data().content).toBe('Plain text element')
 
-    // Third component
-    expect(result[2].type).toBe(AnotherComponent)
-    expect(result[2].props).toMatchObject({
-      baz: 'qux'
+    it('should render nothing when component is null', async () => {
+      const wrapper = await mountSuspended(NullRenderer)
+      expect(wrapper.html()).toBe('')
     })
   })
 
-  it('handles array with only string elements', () => {
-    const elements = ['Text 1', '<p>HTML text</p>']
-    const result = renderCustomElements(elements)
-    expect(Array.isArray(result)).toBe(true)
-    expect(result).toHaveLength(2)
-
-    result.forEach((component, index) => {
-      expect(component).toMatchObject({
-        template: '<div v-html="content"></div>',
-        data: expect.any(Function)
+  describe('string rendering', () => {
+    it('should render plain text', async () => {
+      const TextRenderer = defineComponent({
+        setup() {
+          return { component: renderCustomElements('Hello World') }
+        },
+        template: '<component :is="component" />'
       })
-      expect(component.data().content).toBe(elements[index])
+      const wrapper = await mountSuspended(TextRenderer)
+      expect(wrapper.text()).toBe('Hello World')
+    })
+
+    it('should render HTML string preserving markup', async () => {
+      const htmlString = '<p>Hello <strong>World</strong></p>'
+      const HtmlRenderer = defineComponent({
+        setup() {
+          return { component: renderCustomElements(htmlString) }
+        },
+        template: '<component :is="component" />'
+      })
+      const wrapper = await mountSuspended(HtmlRenderer)
+      expect(wrapper.html()).toContain(htmlString)
+      expect(wrapper.text()).toBe('Hello World')
+    })
+  })
+
+  describe('custom element rendering', () => {
+    it('should render a single custom element', async () => {
+      const ComponentRenderer = defineComponent({
+        components: { TestComponent },
+        setup() {
+          return { component: renderCustomElements({
+              element: 'test-component',
+              foo: 'bar'
+            })}
+        },
+        template: '<component :is="component" />'
+      })
+      const wrapper = await mountSuspended(ComponentRenderer)
+      expect(wrapper.text()).toBe('Test Component: bar')
+    })
+  })
+
+  describe('array handling', () => {
+    it('should render array of strings', async () => {
+      const StringArrayRenderer = defineComponent({
+        setup() {
+          const content = ['Text 1', '<p>Text 2</p>']
+          return {
+            components: content.map(item => renderCustomElements(item))
+          }
+        },
+        template: '<div><component v-for="comp in components" :is="comp" /></div>'
+      })
+      const wrapper = await mountSuspended(StringArrayRenderer)
+      expect(wrapper.text()).toContain('Text 1')
+      expect(wrapper.text()).toContain('Text 2')
+      expect(wrapper.html()).toContain('<p>Text 2</p>')
+    })
+
+    it('should render array of custom elements', async () => {
+      const ElementArrayRenderer = defineComponent({
+        components: { TestComponent, AnotherComponent },
+        setup() {
+          const content = [
+            { element: 'test-component', foo: 'one' },
+            { element: 'another-component', bar: 'two' }
+          ]
+          return {
+            components: content.map(item => renderCustomElements(item))
+          }
+        },
+        template: '<div><component v-for="comp in components" :is="comp" /></div>'
+      })
+      const wrapper = await mountSuspended(ElementArrayRenderer)
+      expect(wrapper.text()).toContain('Test Component: one')
+      expect(wrapper.text()).toContain('Another Component: two')
+    })
+  })
+
+  describe('edge cases', () => {
+    it('should handle malformed element objects', async () => {
+      const MalformedRenderer = defineComponent({
+        components: { TestComponent },
+        setup() {
+          return { component: renderCustomElements({ element: 'test-component' })}
+        },
+        template: '<component :is="component" />'
+      })
+      const wrapper = await mountSuspended(MalformedRenderer)
+      expect(wrapper.text()).toBe('Test Component:')
+    })
+
+    it('should handle nonexistent components', async () => {
+      const NonexistentRenderer = defineComponent({
+        setup() {
+          return { component: renderCustomElements({
+              element: 'nonexistent-component',
+              foo: 'bar'
+            })}
+        },
+        template: '<component :is="component" />'
+      })
+      const wrapper = await mountSuspended(NonexistentRenderer)
+      expect(wrapper.html()).toBe('')
+    })
+
+    it('should handle empty arrays', async () => {
+      const EmptyArrayRenderer = defineComponent({
+        setup() {
+          return { component: renderCustomElements([]) }
+        },
+        template: '<component :is="component" />'
+      })
+      const wrapper = await mountSuspended(EmptyArrayRenderer)
+      expect(wrapper.html()).toBe('')
     })
   })
 })
