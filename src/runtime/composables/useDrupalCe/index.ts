@@ -293,18 +293,7 @@ export const useDrupalCe = () => {
     // Handle array of custom elements
     if (Array.isArray(customElements)) {
       return customElements.map((customElement) => {
-        if (typeof customElement === 'string') {
-          return {
-            template: `<div v-html="content"></div>`,
-            data() {
-              return {
-                content: customElement
-              }
-            }
-          }
-        }
-        const resolvedElement = resolveCustomElement(customElement.element)
-        return resolvedElement ? h(resolvedElement, customElement) : null
+        return renderCustomElements(customElement)
       })
     }
 
