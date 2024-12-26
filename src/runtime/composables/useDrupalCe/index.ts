@@ -83,7 +83,7 @@ export const useDrupalCe = () => {
    */
   const getCeApiEndpoint = (localize: boolean = true) => {
     const nuxtApp = useNuxtApp()
-    if (localize && nuxtApp.$i18n?.locale && nuxtApp.$i18n.locale.value !== nuxtApp.$i18n.defaultLocale) {
+    if (localize && nuxtApp.$i18n?.locale?.value && nuxtApp.$i18n.locale.value !== nuxtApp.$i18n.defaultLocale) {
       return `${config.ceApiEndpoint}/${nuxtApp.$i18n.locale.value}`
     }
     return config.ceApiEndpoint
