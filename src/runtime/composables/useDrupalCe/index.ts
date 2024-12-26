@@ -275,14 +275,13 @@ export const useDrupalCe = () => {
 
     // Handle string case by creating a component that can render HTML
     if (typeof customElements === 'string') {
-      return {
-        template: `<div v-html="content"></div>`,
-        data() {
-          return {
-            content: customElements
-          }
+      return defineComponent({
+        setup() {
+          return () => h('div', {
+            innerHTML: customElements
+          })
         }
-      }
+      })
     }
 
     // Handle empty object case
