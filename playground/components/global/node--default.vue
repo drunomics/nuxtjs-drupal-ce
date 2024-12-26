@@ -1,15 +1,7 @@
 <template>
   <div class="node">
     <h2 v-if="title">Node: {{ title }}</h2>
-    <slot name="image">
-      <component :is="useDrupalCe().renderCustomElements($attrs.image)" />
-    </slot>
-    <slot name="body">
-      <component :is="useDrupalCe().renderCustomElements($attrs.body)" />
-    </slot>
-    <div v-if="sections">
-      <component :is="useDrupalCe().renderCustomElements(sections)" />
-    </div>
+
   </div>
 </template>
 

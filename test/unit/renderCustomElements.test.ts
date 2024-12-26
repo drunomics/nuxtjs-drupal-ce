@@ -1,4 +1,3 @@
-// test/customElements/renderCustomElements.test.ts
 // @vitest-environment nuxt
 import { describe, it, expect } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
