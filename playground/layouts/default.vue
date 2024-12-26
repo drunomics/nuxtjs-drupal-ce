@@ -1,6 +1,6 @@
 <template>
   <div>
-    <SiteLanguageSwitcher v-if="$i18n" />
+    <SiteLanguageSwitcher v-if="useNuxtApp().$i18n" />
     <NavigationMain />
     <SiteMessages />
     <div id="main">
