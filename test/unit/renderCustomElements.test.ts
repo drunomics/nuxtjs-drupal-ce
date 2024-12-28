@@ -1,4 +1,3 @@
-// test/customElements/renderCustomElements.test.ts
 // @vitest-environment nuxt
 import { describe, it, expect } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
@@ -13,7 +12,7 @@ describe('renderCustomElements', () => {
     props: {
       foo: String
     },
-    template: '<div>Test Component: {{ foo || "" }}</div>'
+    template: '<div>Test Component: {{ foo }}</div>'
   })
 
   const AnotherComponent = defineComponent({
