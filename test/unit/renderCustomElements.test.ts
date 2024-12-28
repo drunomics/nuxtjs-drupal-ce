@@ -78,7 +78,7 @@ describe('renderCustomElements', () => {
               foo: 'bar'
             })}
         },
-        temp  late: '<component :is="component" />'
+        template: '<component :is="component" />'
       })
       const wrapper = await mountSuspended(ComponentRenderer)
       expect(wrapper.text()).toBe('Test Component: bar')
