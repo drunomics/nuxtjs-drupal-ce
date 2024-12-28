@@ -1,9 +1,13 @@
 <template>
-  <div v-html="content" />
+  <div>
+    <slot>
+      <component :is="useDrupalCe().renderCustomElements($attrs.content)" />
+    </slot>
+  </div>
 </template>
 
 <script setup lang="ts">
-defineProps<{
-  content: string
+defineSlots<{
+  default();
 }>()
 </script>
