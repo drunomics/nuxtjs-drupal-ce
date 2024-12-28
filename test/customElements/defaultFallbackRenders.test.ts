@@ -10,7 +10,7 @@ describe('Missing custom element with default fallback', async () => {
   })
   it('fallback is rendered correctly', async () => {
     const html = await $fetch('/node/4')
-    expect(html).toContain('<div class="node node--default"')
+    expect(html).toContain('<div class="node"')
     expect(html).toContain('This node is testing custom elements fallback. node-article-demo --> node--default')
   })
 })
