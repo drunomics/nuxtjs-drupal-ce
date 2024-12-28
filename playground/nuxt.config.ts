@@ -9,8 +9,6 @@ export default defineNuxtConfig({
   drupalCe: {
     drupalBaseUrl: 'http://127.0.0.1:3000',
     ceApiEndpoint: '/api',
-    serverLogLevel: 'info',
-    serverApiProxy: false,
   },
   i18n: {
     locales: ['en', 'de'],

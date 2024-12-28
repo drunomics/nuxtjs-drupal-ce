@@ -12,7 +12,7 @@ describe('renderCustomElements', () => {
     props: {
       foo: String
     },
-    template: '<div>Test Component: {{ foo || "" }}</div>'
+    template: '<div>Test Component: {{ foo }}</div>'
   })
 
   const AnotherComponent = defineComponent({
@@ -78,7 +78,7 @@ describe('renderCustomElements', () => {
               foo: 'bar'
             })}
         },
-        template: '<component :is="component" />'
+        temp  late: '<component :is="component" />'
       })
       const wrapper = await mountSuspended(ComponentRenderer)
       expect(wrapper.text()).toBe('Test Component: bar')
