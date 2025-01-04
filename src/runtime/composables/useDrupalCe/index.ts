@@ -18,7 +18,7 @@ export const useDrupalCe = () => {
    * @returns UseFetchOptions<any>
    */
   const processFetchOptions = (fetchOptions: UseFetchOptions<any> = {}, skipDrupalCeApiProxy: boolean = false) => {
-    if (config.serverApiProxy && !skipDrupalCeApiProxy && routeRules.drupalCeApiProxy !== false) {
+    if (config.serverApiProxy && !skipDrupalCeApiProxy && useRoute().meta.drupalCeApiProxy !== false) {
       fetchOptions.baseURL = '/api/drupal-ce'
     }
     else {
@@ -84,17 +84,13 @@ export const useDrupalCe = () => {
 
   /**
    * Returns the API endpoint with localization (if available)
-   * @param localize Whether to include localization in the endpoint
-   * @param skipDrupalCeApiProxy Force skip the Drupal CE API proxy. Defaults to false.
    */
-  const getCeApiEndpoint = (localize: boolean = true, skipDrupalCeApiProxy: boolean = false) => {
+  const getCeApiEndpoint = (localize: boolean = true) => {
     const nuxtApp = useNuxtApp()
-    const fetchOptions = processFetchOptions({}, skipDrupalCeApiProxy)
-    const baseUrl = fetchOptions.baseURL
     if (localize && nuxtApp.$i18n?.locale?.value && nuxtApp.$i18n.locale.value !== nuxtApp.$i18n.defaultLocale) {
-      return `${baseUrl}/${nuxtApp.$i18n.locale.value}`
+      return `${config.ceApiEndpoint}/${nuxtApp.$i18n.locale.value}`
     }
-    return baseUrl
+    return config.ceApiEndpoint
   }
 
   /**
@@ -185,7 +181,9 @@ export const useDrupalCe = () => {
    * @param skipDrupalCeApiProxy Force skip the Drupal CE API proxy. Defaults to false.
    *                            The proxy might still be skipped if disabled globally or via route rules.
    */
-  const fetchMenu = async (name: string, useFetchOptions: UseFetchOptions<any> = {}, overrideErrorHandler?: (error?: any) => void, skipDrupalCeApiProxy: boolean = false) => {    const nuxtApp = useNuxtApp()
+  const fetchMenu = async (name: string, useFetchOptions: UseFetchOptions<any> = {}, overrideErrorHandler?: (error?: any) => void, skipDrupalCeApiProxy: boolean = false) => {
+    const nuxtApp = useNuxtApp()
+    useFetchOptions = processFetchOptions(useFetchOptions)
     useFetchOptions.key = `menu-${name}`
     useFetchOptions.getCachedData = (key) => {
       if (nuxtApp.payload.data[key]) {
@@ -208,8 +206,8 @@ export const useDrupalCe = () => {
         menuPath.value = menuLocalePath
       })
     }
-    // @todo: Apply route rule and skipDrupalCeApiProxy
-    if (config.serverApiProxy) {
+
+    if (config.serverApiProxy && !skipDrupalCeApiProxy && useRoute().meta.drupalCeApiProxy !== false) {
       useFetchOptions.baseURL = '/api/menu'
       // menuPath should not start with a slash.
       if (menuPath.value.startsWith('/')) {

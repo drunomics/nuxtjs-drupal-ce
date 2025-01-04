@@ -13,10 +13,6 @@ declare module 'nitropack' {
   }
 }
 
-export interface DrupalCeFetchOptions {
-  skipDrupalCeApiProxy?: boolean
-}
-
 export interface NuxtOptionsWithDrupalCe extends NuxtOptions {
   drupalCe?: ModuleOptions
 }
