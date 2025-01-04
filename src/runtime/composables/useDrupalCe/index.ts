@@ -13,10 +13,12 @@ export const useDrupalCe = () => {
   /**
    * Processes the given fetchOptions to apply module defaults
    * @param fetchOptions Optional Nuxt useFetch options
+   * @param skipDrupalCeApiProxy Force skip the Drupal CE API proxy. Defaults to false.
+   *                            The proxy might still be skipped if disabled globally or via route rules.
    * @returns UseFetchOptions<any>
    */
-  const processFetchOptions = (fetchOptions: UseFetchOptions<any> = {}) => {
-    if (config.serverApiProxy) {
+  const processFetchOptions = (fetchOptions: UseFetchOptions<any> = {}, skipDrupalCeApiProxy: boolean = false) => {
+    if (config.serverApiProxy && !skipDrupalCeApiProxy && routeRules.drupalCeApiProxy !== false) {
       fetchOptions.baseURL = '/api/drupal-ce'
     }
     else {
@@ -48,9 +50,10 @@ export const useDrupalCe = () => {
   /**
    * Custom $fetch instance
    * @param fetchOptions UseFetchOptions<any>
+   * @param skipDrupalCeApiProxy Force skip the Drupal CE API proxy. Defaults to false.
    */
-  const $ceApi = (fetchOptions: UseFetchOptions<any> = {}): $Fetch<unknown, NitroFetchRequest> => {
-    const useFetchOptions = processFetchOptions(fetchOptions)
+  const $ceApi = (fetchOptions: UseFetchOptions<any> = {}, skipDrupalCeApiProxy: boolean = false): $Fetch<unknown, NitroFetchRequest> => {
+    const useFetchOptions = processFetchOptions(fetchOptions, skipDrupalCeApiProxy)
 
     return $fetch.create({
       ...useFetchOptions,
@@ -62,8 +65,9 @@ export const useDrupalCe = () => {
    * @param path Path of the Drupal ce-API endpoint to fetch
    * @param fetchOptions UseFetchOptions<any>
    * @param doPassThroughHeaders Whether to pass through headers from Drupal to the client
+   * @param skipDrupalCeApiProxy Force skip the Drupal CE API proxy. Defaults to false.
    */
-  const useCeApi = (path: string | Ref<string>, fetchOptions: UseFetchOptions<any> = {}, doPassThroughHeaders?: boolean): Promise<any> => {
+  const useCeApi = (path: string | Ref<string>, fetchOptions: UseFetchOptions<any> = {}, doPassThroughHeaders?: boolean, skipDrupalCeApiProxy: boolean = false): Promise<any> => {
     const nuxtApp = useNuxtApp()
     fetchOptions.onResponse = (context) => {
       if (doPassThroughHeaders && import.meta.server && privateConfig?.passThroughHeaders) {
@@ -74,28 +78,34 @@ export const useDrupalCe = () => {
 
     return useFetch(path, {
       ...fetchOptions,
-      $fetch: $ceApi(fetchOptions),
+      $fetch: $ceApi(fetchOptions, skipDrupalCeApiProxy),
     })
   }
 
   /**
    * Returns the API endpoint with localization (if available)
+   * @param localize Whether to include localization in the endpoint
+   * @param skipDrupalCeApiProxy Force skip the Drupal CE API proxy. Defaults to false.
    */
-  const getCeApiEndpoint = (localize: boolean = true) => {
+  const getCeApiEndpoint = (localize: boolean = true, skipDrupalCeApiProxy: boolean = false) => {
     const nuxtApp = useNuxtApp()
+    const fetchOptions = processFetchOptions({}, skipDrupalCeApiProxy)
+    const baseUrl = fetchOptions.baseURL
     if (localize && nuxtApp.$i18n?.locale?.value && nuxtApp.$i18n.locale.value !== nuxtApp.$i18n.defaultLocale) {
-      return `${config.ceApiEndpoint}/${nuxtApp.$i18n.locale.value}`
+      return `${baseUrl}/${nuxtApp.$i18n.locale.value}`
     }
-    return config.ceApiEndpoint
+    return baseUrl
   }
 
   /**
    * Fetches page data from Drupal, handles redirects, errors and messages
    * @param path Path of the Drupal page to fetch
    * @param useFetchOptions Optional Nuxt useFetch options
+   * @param overrideErrorHandler Optional error handler
+   * @param skipDrupalCeApiProxy Force skip the Drupal CE API proxy. Defaults to false.
+   *                            The proxy might still be skipped if disabled globally or via route rules.
    */
-  const fetchPage = async (path: string, useFetchOptions: UseFetchOptions<any> = {}, overrideErrorHandler?: (error?: any) => void) => {
-    const nuxtApp = useNuxtApp()
+  const fetchPage = async (path: string, useFetchOptions: UseFetchOptions<any> = {}, overrideErrorHandler?: (error?: any) => void, skipDrupalCeApiProxy: boolean = false) => {    const nuxtApp = useNuxtApp()
 
     // Workaround for issue - useState is not available after async call (Nuxt instance unavailable)
     // Initialize state with default values
@@ -141,7 +151,7 @@ export const useDrupalCe = () => {
       }
     }
     else {
-      const { data, error } = await useCeApi(path, useFetchOptions, true)
+      const { data, error } = await useCeApi(path, useFetchOptions, true, skipDrupalCeApiProxy)
       page = data
       pageError.value = error.value
     }
@@ -171,10 +181,11 @@ export const useDrupalCe = () => {
    * Fetches menu data from Drupal (configured by menuEndpoint option), handles errors
    * @param name Menu name being fetched
    * @param useFetchOptions Optional Nuxt useFetch options
+   * @param overrideErrorHandler Optional error handler
+   * @param skipDrupalCeApiProxy Force skip the Drupal CE API proxy. Defaults to false.
+   *                            The proxy might still be skipped if disabled globally or via route rules.
    */
-  const fetchMenu = async (name: string, useFetchOptions: UseFetchOptions<any> = {}, overrideErrorHandler?: (error?: any) => void) => {
-    const nuxtApp = useNuxtApp()
-    useFetchOptions = processFetchOptions(useFetchOptions)
+  const fetchMenu = async (name: string, useFetchOptions: UseFetchOptions<any> = {}, overrideErrorHandler?: (error?: any) => void, skipDrupalCeApiProxy: boolean = false) => {    const nuxtApp = useNuxtApp()
     useFetchOptions.key = `menu-${name}`
     useFetchOptions.getCachedData = (key) => {
       if (nuxtApp.payload.data[key]) {
@@ -197,7 +208,7 @@ export const useDrupalCe = () => {
         menuPath.value = menuLocalePath
       })
     }
-
+    // @todo: Apply route rule and skipDrupalCeApiProxy
     if (config.serverApiProxy) {
       useFetchOptions.baseURL = '/api/menu'
       // menuPath should not start with a slash.
@@ -206,7 +217,7 @@ export const useDrupalCe = () => {
       }
     }
 
-    const { data: menu, error } = await useCeApi(menuPath, useFetchOptions)
+    const { data: menu, error } = await useCeApi(menuPath, useFetchOptions, false, skipDrupalCeApiProxy)
 
     if (error.value) {
       overrideErrorHandler ? overrideErrorHandler(error) : menuErrorHandler(error)
