@@ -184,7 +184,7 @@ export const useDrupalCe = () => {
   const fetchMenu = async (name: string, useFetchOptions: UseFetchOptions<any> = {}, overrideErrorHandler?: (error?: any) => void, skipDrupalCeApiProxy: boolean = false) => {
     const nuxtApp = useNuxtApp()
     useFetchOptions = processFetchOptions(useFetchOptions)
-    useFetchOptions.key = `menu-${name}`
+    useFetchOptions.key = useFetchOptions.key || `menu-${name}`
     useFetchOptions.getCachedData = (key) => {
       if (nuxtApp.payload.data[key]) {
         return nuxtApp.payload.data[key]
@@ -192,30 +192,31 @@ export const useDrupalCe = () => {
     }
 
     const baseMenuPath = config.menuEndpoint.replace('$$$NAME$$$', name)
-    const menuPath = ref(baseMenuPath)
+    let menuPath = ref(baseMenuPath)
+
+    // Ensure menuPath has no leading slash
+    const sanitizeMenuPath = (path: string) => path.startsWith('/') ? path.substring(1) : path
 
     if (config.useLocalizedMenuEndpoint && nuxtApp.$i18n) {
       // API path with localization
-      menuPath.value = nuxtApp.$localePath('/' + baseMenuPath)
+      menuPath.value = sanitizeMenuPath(nuxtApp.$localePath('/' + baseMenuPath))
       watch(nuxtApp.$i18n.locale, () => {
-        let menuLocalePath = nuxtApp.$localePath('/' + baseMenuPath)
-        // menuPath should not start with a slash.
-        if (config.serverApiProxy && menuLocalePath.startsWith('/')) {
-          menuLocalePath = menuLocalePath.substring(1)
-        }
-        menuPath.value = menuLocalePath
+        menuPath.value = sanitizeMenuPath(nuxtApp.$localePath('/' + baseMenuPath))
       })
     }
-
-    if (config.serverApiProxy && !skipDrupalCeApiProxy && useRoute().meta.drupalCeApiProxy !== false) {
-      useFetchOptions.baseURL = '/api/menu'
-      // menuPath should not start with a slash.
-      if (menuPath.value.startsWith('/')) {
-        menuPath.value = menuPath.value.substring(1)
-      }
+    else {
+      menuPath.value = sanitizeMenuPath(menuPath.value)
     }
 
-    const { data: menu, error } = await useCeApi(menuPath, useFetchOptions, false, skipDrupalCeApiProxy)
+    // Override baseURL specifically for menu endpoints
+    if (config.serverApiProxy && !skipDrupalCeApiProxy && useRoute().meta.drupalCeApiProxy !== false) {
+      useFetchOptions.baseURL = '/api/menu'
+    }
+    else {
+      useFetchOptions.baseURL = getDrupalBaseUrl() + getCeApiEndpoint(false)
+    }
+
+    const { data: menu, error } = await useFetch(menuPath, useFetchOptions)
 
     if (error.value) {
       overrideErrorHandler ? overrideErrorHandler(error) : menuErrorHandler(error)
