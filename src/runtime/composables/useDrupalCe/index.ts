@@ -14,11 +14,11 @@ export const useDrupalCe = () => {
    * Processes the given fetchOptions to apply module defaults
    * @param fetchOptions Optional Nuxt useFetch options
    * @param skipDrupalCeApiProxy Force skip the Drupal CE API proxy. Defaults to false.
-   *                            The proxy might still be skipped if disabled globally or via route rules.
+   *                            The proxy might still be skipped if serverApiProxy is set to false globally.
    * @returns UseFetchOptions<any>
    */
   const processFetchOptions = (fetchOptions: UseFetchOptions<any> = {}, skipDrupalCeApiProxy: boolean = false) => {
-    if (config.serverApiProxy && !skipDrupalCeApiProxy && useRoute().meta.drupalCeApiProxy !== false) {
+    if (config.serverApiProxy && !skipDrupalCeApiProxy) {
       fetchOptions.baseURL = '/api/drupal-ce'
     }
     else {
@@ -99,7 +99,7 @@ export const useDrupalCe = () => {
    * @param useFetchOptions Optional Nuxt useFetch options
    * @param overrideErrorHandler Optional error handler
    * @param skipDrupalCeApiProxy Force skip the Drupal CE API proxy. Defaults to false.
-   *                            The proxy might still be skipped if disabled globally or via route rules.
+   *                             The proxy might still be skipped if serverApiProxy is set to false globally.
    */
   const fetchPage = async (path: string, useFetchOptions: UseFetchOptions<any> = {}, overrideErrorHandler?: (error?: any) => void, skipDrupalCeApiProxy: boolean = false) => {    const nuxtApp = useNuxtApp()
 
@@ -179,7 +179,7 @@ export const useDrupalCe = () => {
    * @param useFetchOptions Optional Nuxt useFetch options
    * @param overrideErrorHandler Optional error handler
    * @param skipDrupalCeApiProxy Force skip the Drupal CE API proxy. Defaults to false.
-   *                            The proxy might still be skipped if disabled globally or via route rules.
+   *                             The proxy might still be skipped if serverApiProxy is set to false globally.
    */
   const fetchMenu = async (name: string, useFetchOptions: UseFetchOptions<any> = {}, overrideErrorHandler?: (error?: any) => void, skipDrupalCeApiProxy: boolean = false) => {
     const nuxtApp = useNuxtApp()
@@ -209,7 +209,7 @@ export const useDrupalCe = () => {
     }
 
     // Override baseURL specifically for menu endpoints
-    if (config.serverApiProxy && !skipDrupalCeApiProxy && useRoute().meta.drupalCeApiProxy !== false) {
+    if (config.serverApiProxy && !skipDrupalCeApiProxy) {
       useFetchOptions.baseURL = '/api/menu'
     }
     else {
