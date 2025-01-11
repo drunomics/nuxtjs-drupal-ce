@@ -1,4 +1,4 @@
-// This file is only there for manual testing and used in actual test cases.
+// This file is only there for manual testing and NOT used in actual test cases.
 export default defineEventHandler(() => {
   return {
     breadcrumbs: [
