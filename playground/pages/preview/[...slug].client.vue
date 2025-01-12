@@ -1,7 +1,6 @@
 <script lang="ts">
-// This handles node edit previews. It works like the default page route,
-// but it ensures that it works with the backend login of the user previewing
-// changes.
+// This route works like default page route, but it ensures that
+// it works with the backend login of the user previewing changes.
 
 // By default, backend and frontend do not share the same cookie domain.
 // Still, we apply the backend cookie by making sure that the Drupal-API request
