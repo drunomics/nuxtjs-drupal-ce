@@ -1,5 +1,10 @@
-// This file is only there for manual testing and NOT used in actual test cases.
-export default defineEventHandler(() => {
+// This file is only there for manual testing AND used in e2e test cases.
+// This is for testing the /preview/* route via /preview/node.
+export default defineEventHandler(async (event) => {
+  setHeaders(event, {
+    'Access-Control-Allow-Origin': 'http://localhost:3000',
+    'Access-Control-Allow-Credentials': true,
+  })
   return {
     breadcrumbs: [
       {
