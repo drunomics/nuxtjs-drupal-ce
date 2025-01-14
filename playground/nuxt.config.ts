@@ -8,7 +8,7 @@ export default defineNuxtConfig({
   compatibilityDate: '2024-12-16',
   drupalCe: {
     drupalBaseUrl: 'http://127.0.0.1:3000',
-    ceApiEndpoint: '/api',
+    ceApiEndpoint: '/ce-api',
   },
   i18n: {
     locales: ['en', 'de'],

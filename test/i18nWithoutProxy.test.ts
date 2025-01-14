@@ -13,7 +13,7 @@ describe('Module @nuxtjs/i18n integration works', async () => {
       ],
       drupalCe: {
         drupalBaseUrl: 'http://127.0.0.1:3003',
-        ceApiEndpoint: '/api',
+        ceApiEndpoint: '/ce-api',
         serverApiProxy: false,
       },
       i18n: {
