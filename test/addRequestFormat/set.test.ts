@@ -12,7 +12,7 @@ describe('Module addRequestFormat option set to true', async () => {
       ],
       drupalCe: {
         drupalBaseUrl: 'http://127.0.0.1:3200',
-        ceApiEndpoint: '/api',
+        ceApiEndpoint: '/ce-api',
         addRequestFormat: true,
       },
     },

@@ -12,7 +12,7 @@ export default defineVitestConfig({
           modules: ['../dist/module.mjs'],
           drupalCe: {
             drupalBaseUrl: 'http://127.0.0.1:3001',
-            ceApiEndpoint: '/api',
+            ceApiEndpoint: '/ce-api',
           }
         }
       }
