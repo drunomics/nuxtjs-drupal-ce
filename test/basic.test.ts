@@ -39,5 +39,29 @@ describe('Module renders pages', async () => {
     expect(html).toContain('href="/node/1/edit"')
     expect(html).toContain('href="/node/1/delete"')
     expect(html).toContain('href="/node/1/revisions"')
+
+    // JSON-LD check
+    const jsonLdMatch = html.match(/<script type="application\/ld\+json">(.*?)<\/script>/s)
+    expect(jsonLdMatch).toBeTruthy()
+
+    const jsonLd = JSON.parse(jsonLdMatch[1])
+    expect(jsonLd).toEqual({
+      '@context': 'https://schema.org',
+      '@graph': [
+        {
+          '@type': 'WebPage',
+          '@id': 'https://example.com/testing/metadata',
+          'headline': 'Test Page',
+          'description': 'Test page description for metadata verification',
+          'datePublished': '2024-01-14T08:49:16+0200',
+          'image': {
+            '@type': 'ImageObject',
+            'url': 'https://example.com/image.jpg',
+            'width': '1200',
+            'height': '630',
+          },
+        },
+      ],
+    })
   })
 })
