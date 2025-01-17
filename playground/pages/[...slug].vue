@@ -2,9 +2,9 @@
   <div>
     <NuxtLayout :name="layout">
       <main>
-        <SiteBreadcrumbs />
-        <DrupalTabs
-          v-if="page.local_tasks"
+        <LazySiteBreadcrumbs v-if="page.breadcrumbs && page.breadcrumbs.length > 0" />
+        <LazyDrupalTabs
+          v-if="page.local_tasks.primary || page.local_tasks.secondary"
           :tabs="page.local_tasks"
         />
         <component :is="renderCustomElements(page.content)" />
