@@ -101,7 +101,8 @@ export const useDrupalCe = () => {
    * @param skipDrupalCeApiProxy Force skip the Drupal CE API proxy. Defaults to false.
    *                             The proxy might still be skipped if serverApiProxy is set to false globally.
    */
-  const fetchPage = async (path: string, useFetchOptions: UseFetchOptions<any> = {}, overrideErrorHandler?: (error?: any) => void, skipDrupalCeApiProxy: boolean = false) => {    const nuxtApp = useNuxtApp()
+  const fetchPage = async (path: string, useFetchOptions: UseFetchOptions<any> = {}, overrideErrorHandler?: (error?: any) => void, skipDrupalCeApiProxy: boolean = false) => {
+    const nuxtApp = useNuxtApp()
 
     // Workaround for issue - useState is not available after async call (Nuxt instance unavailable)
     // Initialize state with default values
@@ -192,7 +193,7 @@ export const useDrupalCe = () => {
     }
 
     const baseMenuPath = config.menuEndpoint.replace('$$$NAME$$$', name)
-    let menuPath = ref(baseMenuPath)
+    const menuPath = ref(baseMenuPath)
 
     // Ensure menuPath has no leading slash
     const sanitizeMenuPath = (path: string) => path.startsWith('/') ? path.substring(1) : path
@@ -276,7 +277,7 @@ export const useDrupalCe = () => {
    *         Result can be used directly with Vue's dynamic component: <component :is="result">
    */
   const renderCustomElements = (
-    customElements: null | undefined | string | Record<string, any> | Array<object>
+    customElements: null | undefined | string | Record<string, any> | Array<object>,
   ) => {
     // Handle null/undefined case
     if (customElements == null) {
@@ -288,9 +289,9 @@ export const useDrupalCe = () => {
       return defineComponent({
         setup() {
           return () => h('div', {
-            innerHTML: customElements
+            innerHTML: customElements,
           })
-        }
+        },
       })
     }
 
@@ -332,12 +333,31 @@ export const useDrupalCe = () => {
   }
 
   /**
-   * Determines the page layout based on the Drupal page data.
+   * Sets page head metadata from Drupal page data
    * @param page Ref containing the Drupal page data
-   * @returns A computed property resolving to the specified page_layout or 'default' if unspecified.
+   * @param include Optional array of parts to include: 'title', 'meta', 'link', 'jsonld'
    */
-  const getPageLayout = (page: Ref<any>): ComputedRef<string> => {
-    return computed(() => page.value.page_layout || 'default')
+  const usePageHead = (page: Ref<any>, include?: Array<'title' | 'meta' | 'link' | 'jsonld'>) => {
+    const parts = include || ['title', 'meta', 'link', 'jsonld']
+    useHead({
+      ...(parts.includes('title') && { title: page.value.title }),
+      ...(parts.includes('meta') && { meta: page.value.metatags.meta }),
+      ...(parts.includes('link') && { link: page.value.metatags.link }),
+      ...(parts.includes('jsonld') && { script: [{
+        type: 'application/ld+json',
+        children: JSON.stringify(page.value.metatags.jsonld || [], null, ''),
+      }] }),
+    })
+  }
+
+  /**
+   * Gets the current page layout.
+   * @param page Optional Ref containing the Drupal page data. If not provided, gets data from global state.
+   * @returns ComputedRef resolving to the current layout name
+   */
+  const getPageLayout = (page?: Ref<any>): ComputedRef<string> => {
+    const pageData = page || getPage()
+    return computed(() => pageData.value?.page_layout || 'default')
   }
 
   return {
@@ -353,6 +373,7 @@ export const useDrupalCe = () => {
     getDrupalBaseUrl,
     getMenuBaseUrl,
     getPageLayout,
+    usePageHead,
   }
 }
 
