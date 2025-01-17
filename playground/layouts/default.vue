@@ -1,10 +1,10 @@
 <template>
-  <div>
+  <header>
     <SiteLanguageSwitcher v-if="useNuxtApp().$i18n" />
     <NavigationMain />
-    <SiteMessages />
-    <div id="main">
-      <slot />
-    </div>
-  </div>
+  </header>
+  <SiteMessages />
+  <main id="main">
+    <slot />
+  </main>
 </template>

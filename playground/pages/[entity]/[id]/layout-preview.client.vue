@@ -2,7 +2,6 @@
 // This handles layout-builder previews. It works like the default page route,
 // but it ensures that it works with the backend login of the user previewing
 // changes.
-
 // By default, backend and frontend do not share the same cookie domain.
 // Still, we apply the backend cookie by making sure that the Drupal-API request
 // is done client-side and without API-proxy, such that the cookie is forwarded by
@@ -13,28 +12,13 @@ import DefaultPage from '../../[...slug].vue'
 export default {
   extends: DefaultPage,
   async setup() {
-    const { fetchPage, renderCustomElements, getPageLayout } = useDrupalCe()
+    const { fetchPage, renderCustomElements, usePageHead, getPageLayout } = useDrupalCe()
     const page = await fetchPage(useRoute().path, {
       query: useRoute().query,
     }, undefined, true)
 
-    definePageMeta({
-      layout: false,
-    })
-
     const layout = getPageLayout(page)
-
-    useHead({
-      title: page.value.title,
-      meta: page.value.metatags.meta,
-      link: page.value.metatags.link,
-      script: [
-        {
-          type: 'application/ld+json',
-          children: JSON.stringify(page.value.metatags.jsonld || [], null, ''),
-        },
-      ],
-    })
+    usePageHead(page)
 
     return {
       page,
