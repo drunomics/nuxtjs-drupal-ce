@@ -107,6 +107,8 @@ is added automatically to requests. Defaults to `false`.
   - 'info': Log all server requests and errors.
   - 'error': Log only errors.
 
+- `disableFormHandler`: If set to `true`, the form handler middleware will be disabled. Defaults to `false`.
+
 ## Overriding options with environment variables
 
 Runtime config values can be overridden with environment variables via `NUXT_PUBLIC_` prefix. Supported runtime overrides:
@@ -115,6 +117,44 @@ Runtime config values can be overridden with environment variables via `NUXT_PUB
 - `serverDrupalBaseUrl` -> `NUXT_PUBLIC_DRUPAL_CE_SERVER_DRUPAL_BASE_URL`
 - `menuBaseUrl` -> `NUXT_PUBLIC_DRUPAL_CE_MENU_BASE_URL`
 - `ceApiEndpoint` -> `NUXT_PUBLIC_DRUPAL_CE_CE_API_ENDPOINT`
+
+## Rendering custom elements
+
+Generally, custom elements are rendered as [dynamic components](https://nuxt.com/docs/guide/directory-structure/components#dynamic-components) and simply need to be registered as global components.
+
+The components should be placed in `~/components/global`, refer to the `/playground` directory for an example.
+For example, for the custom element `node-article-teaser` a global component `node-article-teaser.vue` would be
+picked up for rendering.
+
+### Naming recommendation
+
+We recommend to name the components lowercase using kebap-case, such that there is a clear 1:1 mapping between
+custom element names used in the API response and the frontend components. For
+example use `custom-element-name.vue` instead of `CustomElementName.vue`. Both variants work though.
+
+### Default components (JSON only)
+
+When using JSON-based rendering of custom elements, the module offers fallback component support. If a custom element lacks a corresponding Vue component, the module attempts to find a suitable default component.
+
+#### How it works:
+
+1. The module removes the last `-`-separated prefix from the element name.
+2. It then appends a `--default` suffix.
+3. If this modified component exists, it's used for rendering.
+4. If the component is not exiting, the process is repeated.
+
+This approach allows for generic default components like `drupal-form--default.vue` to be used for specific elements such as `drupal-form-user-login-form.vue`. For customization, developers can simply copy and modify the default component as needed.
+
+#### Example lookup process
+
+When a specific component isn't found, the module searches for a default component by progressively removing segments from the custom element name. For example when rendering the custom element `node-custom-view` it looks for components in the following order:
+
+```
+x node-custom-view.vue
+x node-custom-view--default.vue
+x node-custom--default.vue
+✓ node--default.vue
+```
 
 ## Deprecated options
 

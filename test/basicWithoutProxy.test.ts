@@ -12,7 +12,7 @@ describe('Site works with serverApiProxy disabled', async () => {
       ],
       drupalCe: {
         drupalBaseUrl: 'http://127.0.0.1:3002',
-        ceApiEndpoint: '/api',
+        ceApiEndpoint: '/ce-api',
         serverApiProxy: false,
       },
     },
