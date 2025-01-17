@@ -1,7 +1,7 @@
 <template>
   <NuxtLayout :name="layout">
-    <SiteBreadcrumbs />
-    <DrupalTabs
+    <LazySiteBreadcrumbs />
+    <LazyDrupalTabs
       v-if="page.local_tasks"
       :tabs="page.local_tasks"
     />
