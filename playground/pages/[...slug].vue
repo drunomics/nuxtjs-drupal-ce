@@ -1,16 +1,12 @@
 <template>
-  <div>
-    <NuxtLayout :name="layout">
-      <main>
-        <SiteBreadcrumbs />
-        <DrupalTabs
-          v-if="page.local_tasks"
-          :tabs="page.local_tasks"
-        />
-        <component :is="renderCustomElements(page.content)" />
-      </main>
-    </NuxtLayout>
-  </div>
+  <NuxtLayout :name="layout">
+    <SiteBreadcrumbs />
+    <DrupalTabs
+      v-if="page.local_tasks"
+      :tabs="page.local_tasks"
+    />
+    <component :is="renderCustomElements(page.content)" />
+  </NuxtLayout>
 </template>
 
 <script lang="ts" setup>
