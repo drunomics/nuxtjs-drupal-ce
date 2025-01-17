@@ -4,7 +4,7 @@ import type { $Fetch, NitroFetchRequest } from 'nitropack'
 import { getDrupalBaseUrl, getMenuBaseUrl } from './server'
 import type { UseFetchOptions } from '#app'
 import { callWithNuxt } from '#app'
-import { useRuntimeConfig, useState, useFetch, navigateTo, createError, h, resolveComponent, setResponseStatus, useNuxtApp, useRequestHeaders, ref, watch, useRequestEvent, computed } from '#imports'
+import { useRuntimeConfig, useState, useFetch, navigateTo, createError, h, resolveComponent, setResponseStatus, useNuxtApp, useRequestHeaders, ref, watch, useRequestEvent, computed, defineComponent } from '#imports'
 
 export const useDrupalCe = () => {
   const config = useRuntimeConfig().public.drupalCe
@@ -278,7 +278,7 @@ export const useDrupalCe = () => {
    */
   const renderCustomElements = (
     customElements: null | undefined | string | Record<string, any> | Array<object>,
-  ) => {
+  ): ReturnType<typeof defineComponent> | null => {
     // Handle null/undefined case
     if (customElements == null) {
       return null
@@ -302,8 +302,15 @@ export const useDrupalCe = () => {
 
     // Handle array of custom elements
     if (Array.isArray(customElements)) {
-      return customElements.map((customElement) => {
-        return renderCustomElements(customElement)
+      if (customElements.length === 1) {
+        return renderCustomElements(customElements[0])
+      }
+      return defineComponent({
+        setup() {
+          return () => h('div', {},
+            customElements.map(customElement => h(renderCustomElements(customElement))),
+          )
+        },
       })
     }
 
