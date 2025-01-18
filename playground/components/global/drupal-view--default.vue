@@ -6,7 +6,7 @@
       v-for="(row, index) in rows"
       :key="index"
     />
-    <DrupalPagination
+    <DrupalViewsPagination
       :total-pages="pager.totalPages"
       :current="pager.current"
     />
@@ -20,5 +20,5 @@ defineProps<{
   pager?: object
 }>()
 
-const { renderCustomElements } = useDrupalCe()
+const {renderCustomElements} = useDrupalCe()
 </script>

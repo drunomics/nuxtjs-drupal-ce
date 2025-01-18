@@ -1,25 +1,14 @@
 <template>
   <div class="drupal-tabs">
-    <ul
-      v-if="tabs.primary"
-      class="tabs primary"
-    >
-      <li
-        v-for="tab in tabs.primary"
-        :key="tab.url"
-      >
+    <ul v-if="tabs.primary" class="tabs primary">
+      <li v-for="tab in tabs.primary" :key="tab.url">
         <nuxt-link
           :href="tab.url"
           tabindex="-1"
           :class="{ 'is-active': tab.active }"
         >
           {{ tab.label }}
-          <span
-            v-if="tab.active"
-            class="visually-hidden"
-          >
-            (active tab)
-          </span>
+          <span v-if="tab.active" class="visually-hidden"> (active tab) </span>
         </nuxt-link>
       </li>
     </ul>
@@ -28,7 +17,7 @@
 
 <script setup lang="ts">
 defineProps<{
-  tabs: object
+  tabs: object;
 }>()
 </script>
 
