@@ -4,7 +4,7 @@ import { mountSuspended, registerEndpoint } from '@nuxt/test-utils/runtime'
 import App from '~/app.vue'
 
 describe('Preview routes', () => {
-  registerEndpoint('http://127.0.0.1:3001/ce-api/preview/node', () => ({
+  registerEndpoint('http://127.0.0.1:3001/ce-api/node/preview/node', () => ({
     content: {
       element: 'node-article',
       body: '<p>Some <b>example</b> body.</p>'
@@ -30,7 +30,7 @@ describe('Preview routes', () => {
 
   it('renders preview/node with direct backend request, skipping drupal-ce-proxy', async () => {
     const component = await mountSuspended(App, {
-      route: '/preview/node'
+      route: '/node/preview/node'
     })
     expect(component.html()).toContain('<p>Some <b>example</b> body.</p>')
   })

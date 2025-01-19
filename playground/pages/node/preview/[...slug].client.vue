@@ -7,7 +7,7 @@
 // is done client-side and without API-proxy, such that the cookie is forwarded by
 // the browser. It requires the CORS helper module to be enabled.
 
-import DefaultPage from '../[...slug].vue'
+import DefaultPage from '../../[...slug].vue'
 
 export default {
   extends: DefaultPage,
