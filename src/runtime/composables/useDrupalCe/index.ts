@@ -1,7 +1,7 @@
 import { defu } from 'defu'
 import { appendResponseHeader } from 'h3'
 import type { $Fetch, NitroFetchRequest } from 'nitropack'
-import type { Ref, ComputedRef } from 'vue'
+import type { Ref, ComputedRef, Component } from 'vue'
 import { getDrupalBaseUrl, getMenuBaseUrl } from './server'
 import type { UseFetchOptions } from '#app'
 import { callWithNuxt } from '#app'
@@ -271,21 +271,22 @@ export const useDrupalCe = () => {
    *
    * @param customElements - Custom element data that can be:
    *   - null/undefined (returns null, skipping render)
-   *   - string (auto-creates component rendering string as HTML if it contains markup)
+   *   - string (rendered inside a wrapping div element)
    *   - single custom element object with {element: string, ...props}
-   *   - array of custom element objects
-   * @returns Vue component definition, null for skipped render, or HTML-capable component for strings.
-   *         Result can be used directly with Vue's dynamic component: <component :is="result">
+   *   - array of strings or custom element objects (rendered inside a wrapping div element)
+   * @returns Component | null - A Vue component that can be used with <component :is="component" />.
+   *          Returns null for skipped render, otherwise returns a Vue component
+   *          (either a custom element component or a wrapping div component for strings/arrays).
    */
   const renderCustomElements = (
-    customElements: null | undefined | string | Record<string, any> | Array<object>,
-  ) => {
+    customElements: null | undefined | string | Record<string, any> | Array<string | object>,
+  ): Component | null => {
     // Handle null/undefined case
     if (customElements == null) {
       return null
     }
 
-    // Handle string case by creating a component that can render HTML
+    // Handle string case by creating a component with wrapping div
     if (typeof customElements === 'string') {
       return defineComponent({
         setup() {
@@ -297,14 +298,21 @@ export const useDrupalCe = () => {
     }
 
     // Handle empty object case
-    if (typeof customElements === 'object' && Object.keys(customElements).length === 0) {
+    if (Object.keys(customElements).length === 0) {
       return null
     }
 
-    // Handle array of custom elements
+    // Handle array case by creating a wrapper div component that renders all children
     if (Array.isArray(customElements)) {
-      return customElements.map((customElement) => {
-        return renderCustomElements(customElement)
+      return defineComponent({
+        setup() {
+          return () => h('div', {},
+            customElements.map(element => {
+              const rendered = renderCustomElements(element)
+              return rendered ? h(rendered) : null
+            })
+          )
+        }
       })
     }
 
