@@ -3,12 +3,14 @@ import { describe, it, expect } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import { defineComponent } from 'vue'
 import { useDrupalCe } from '../../src/runtime/composables/useDrupalCe'
+import {useNuxtApp} from "#imports";
 
 describe('renderCustomElements', () => {
   const { renderCustomElements } = useDrupalCe()
 
   // Define reusable test components
   const TestComponent = defineComponent({
+    name: 'TestComponent',
     props: {
       foo: String
     },
@@ -16,11 +18,15 @@ describe('renderCustomElements', () => {
   })
 
   const AnotherComponent = defineComponent({
+    name: 'AnotherComponent',
     props: {
       bar: String
     },
     template: '<div>Another Component: {{ bar }}</div>'
   })
+  const app = useNuxtApp()
+  app.vueApp.component('TestComponent', TestComponent)
+  app.vueApp.component('AnotherComponent', AnotherComponent)
 
   describe('basic input handling', () => {
     it('should return null for empty inputs', () => {
@@ -67,7 +73,6 @@ describe('renderCustomElements', () => {
   describe('custom element rendering', () => {
     it('should render a single custom element', async () => {
       const wrapper = await mountSuspended(defineComponent({
-        components: { TestComponent },
         setup() {
           return { component: renderCustomElements({
               element: 'test-component',
@@ -96,7 +101,6 @@ describe('renderCustomElements', () => {
 
     it('should render array of custom elements in a wrapper div', async () => {
       const wrapper = await mountSuspended(defineComponent({
-        components: { TestComponent, AnotherComponent },
         setup() {
           return { component: renderCustomElements([
               { element: 'test-component', foo: 'one' },
@@ -114,7 +118,6 @@ describe('renderCustomElements', () => {
   describe('edge cases', () => {
     it('should handle malformed element objects', async () => {
       const wrapper = await mountSuspended(defineComponent({
-        components: { TestComponent },
         setup() {
           return { component: renderCustomElements({ element: 'test-component' })}
         },
