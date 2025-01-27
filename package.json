@@ -35,15 +35,15 @@
   "devDependencies": {
     "@nuxt/eslint": "^0.7.5",
     "@nuxt/eslint-config": "^0.7.5",
-    "@nuxt/kit": "^3.15.2",
+    "@nuxt/kit": "^3.15.3",
     "@nuxt/module-builder": "^0.8.4",
-    "@nuxt/schema": "^3.15.2",
+    "@nuxt/schema": "^3.15.3",
     "@nuxt/test-utils": "^3.15.4",
     "@nuxtjs/i18n": "^8.5.6",
     "@vue/test-utils": "^2.4.6",
-    "eslint": "^9.18.0",
+    "eslint": "^9.19.0",
     "happy-dom": "^15.11.7",
-    "nuxt": "^3.15.2",
+    "nuxt": "^3.15.3",
     "typescript": "^5.7.3",
     "vitest": "^3.0.4"
   }
