@@ -6,6 +6,14 @@ export default defineNuxtConfig({
     DrupalCe,
   ],
   compatibilityDate: '2024-12-16',
+  nitro: {
+    compressPublicAssets: true,
+  },
+  vite: {
+    server: {
+      allowedHosts: ['.gitpod.io'],
+    },
+  },
   drupalCe: {
     drupalBaseUrl: 'http://127.0.0.1:3000',
     ceApiEndpoint: '/ce-api',
