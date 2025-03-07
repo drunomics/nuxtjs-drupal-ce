@@ -1,15 +1,17 @@
 <template>
-  <header>
-    <SiteLanguageSwitcher v-if="useNuxtApp().$i18n" />
-    <NavigationMain />
-  </header>
-  <SiteMessages />
-  <main id="main">
-    <slot />
-  </main>
-  <footer>
-    <NavigationAccount />
-  </footer>
+  <div>
+    <header>
+      <SiteLanguageSwitcher v-if="useNuxtApp().$i18n" />
+      <NavigationMain />
+    </header>
+    <SiteMessages />
+    <main id="main">
+      <slot />
+    </main>
+    <footer>
+      <NavigationAccount />
+    </footer>
+  </div>
 </template>
 
 <style>
