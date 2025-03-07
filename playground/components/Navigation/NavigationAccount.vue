@@ -16,7 +16,6 @@
 
 <script setup lang="ts">
 const accountMenu = await useDrupalCe().fetchMenu('account')
-console.log(accountMenu)
 </script>
 
 <style lang="css" scoped>
