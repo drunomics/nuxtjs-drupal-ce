@@ -6,6 +6,10 @@ export default defineEventHandler(async (event) => {
   const { ceApiEndpoint } = useRuntimeConfig().public.drupalCe
 
   if (event.node.req.method === 'POST') {
+    if (event.req.headers['x-form-processed']) {
+      return
+    }
+
     const formData = await readFormData(event)
 
     if (formData) {
@@ -13,6 +17,9 @@ export default defineEventHandler(async (event) => {
       const response = await $fetch.raw(getDrupalBaseUrl() + ceApiEndpoint + targetUrl, {
         method: 'POST',
         body: formData,
+        headers: {
+          'x-form-processed': 'true',
+        },
       }).catch((error) => {
         event.context.drupalCeCustomPageResponse = {
           error: {
