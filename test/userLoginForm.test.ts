@@ -1,16 +1,25 @@
 import { fileURLToPath } from 'node:url'
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, afterEach } from 'vitest'
 import { setup, createPage } from '@nuxt/test-utils/e2e'
 
 describe('User login form', async () => {
+  let page
+
+  afterEach(async () => {
+    if (page) {
+      await page.context().clearCookies()
+      await page.close()
+    }
+  })
   await setup({
     rootDir: fileURLToPath(new URL('../playground', import.meta.url)),
     configFile: 'nuxt.config4test',
     port: 3001,
+    browser: true,
   })
 
   it('catches wrong credentials message', async () => {
-    const page = await createPage('/user/login')
+    page = await createPage('/user/login')
 
     const name = page.locator('input[name="name"]')
     const pwd = page.locator('input[name="pass"]')
@@ -27,7 +36,7 @@ describe('User login form', async () => {
   })
 
   it('correctly logs-in user', async () => {
-    const page = await createPage('/user/login')
+    page = await createPage('/user/login')
 
     const name = page.locator('input[name="name"]')
     const pwd = page.locator('input[name="pass"]')
