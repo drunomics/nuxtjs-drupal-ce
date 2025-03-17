@@ -5,7 +5,7 @@ on:
     branches:
       - 2.x
   push:
-    branches:    
+    branches:
       - 2.x
 
 jobs:
@@ -24,5 +24,6 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: "npm"
       - run: npm ci
+      - run: npx playwright install --with-deps
       - run: npm run dev:prepare
       - run: npm run test
