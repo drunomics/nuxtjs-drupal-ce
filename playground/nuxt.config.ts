@@ -10,6 +10,9 @@ export default defineNuxtConfig({
     drupalBaseUrl: 'http://127.0.0.1:3000',
     ceApiEndpoint: '/ce-api',
   },
+  vue: {
+    runtimeCompiler: true,
+  },
   i18n: {
     locales: ['en', 'de'],
     defaultLocale: 'en',
