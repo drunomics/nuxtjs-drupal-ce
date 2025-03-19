@@ -1,16 +1,8 @@
 import { fileURLToPath } from 'node:url'
-import { describe, it, expect, afterEach } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import { setup, createPage } from '@nuxt/test-utils/e2e'
 
 describe('User login form', async () => {
-  let page
-
-  afterEach(async () => {
-    if (page) {
-      await page.context().clearCookies()
-      await page.close()
-    }
-  })
   await setup({
     rootDir: fileURLToPath(new URL('../playground', import.meta.url)),
     configFile: 'nuxt.config4test',
@@ -18,7 +10,7 @@ describe('User login form', async () => {
   })
 
   it('catches wrong credentials message', async () => {
-    page = await createPage('/user/login')
+    const page = await createPage('/user/login')
 
     const name = page.locator('input[name="name"]')
     const pwd = page.locator('input[name="pass"]')
@@ -35,7 +27,7 @@ describe('User login form', async () => {
   })
 
   it('correctly logs-in user', async () => {
-    page = await createPage('/user/login')
+    const page = await createPage('/user/login')
 
     const name = page.locator('input[name="name"]')
     const pwd = page.locator('input[name="pass"]')
@@ -53,5 +45,7 @@ describe('User login form', async () => {
     // Check for session cookie
     const cookies = await page.context().cookies()
     expect(cookies.some(cookie => cookie.name === 'SSESSf9f2dc90f4drupal')).toBe(true)
+    // Cleanup
+    await page.context().clearCookies()
   })
 })
