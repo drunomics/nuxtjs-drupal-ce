@@ -1,12 +1,21 @@
 import { fileURLToPath } from 'node:url'
 import { describe, it, expect } from 'vitest'
 import { setup, createPage } from '@nuxt/test-utils/e2e'
+import DrupalCe from '../'
 
 describe('User login form', async () => {
   await setup({
     rootDir: fileURLToPath(new URL('../playground', import.meta.url)),
-    configFile: 'nuxt.config4test',
-    port: 3001,
+    nuxtConfig: {
+      modules: [
+        DrupalCe,
+      ],
+      drupalCe: {
+        drupalBaseUrl: 'http://127.0.0.1:3011',
+        ceApiEndpoint: '/ce-api',
+      },
+    },
+    port: 3011,
   })
 
   it('catches wrong credentials message', async () => {
