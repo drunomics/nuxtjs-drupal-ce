@@ -15,7 +15,6 @@ describe('User login form', async () => {
     rootDir: fileURLToPath(new URL('../playground', import.meta.url)),
     configFile: 'nuxt.config4test',
     port: 3001,
-    browser: true,
   })
 
   it('catches wrong credentials message', async () => {
