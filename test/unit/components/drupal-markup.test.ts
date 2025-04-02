@@ -26,6 +26,14 @@ describe('drupal-markup custom element', () => {
     expect(wrapper.html()).toContain('<p>Some <b>formatted</b> content.</p>')
   })
 
+  it('renders markup content given via attribute ', async () => {
+    const TestComponent = defineComponent({
+      template: '<drupal-markup content="<p>Slotted <b>content</b></p>"></drupal-markup>'
+    })
+    const wrapper = await mountSuspended(TestComponent)
+    expect(wrapper.html()).toContain('<p>Slotted <b>content</b></p>')
+  })
+
   it('renders markup content via custom element markup ', async () => {
     const TestComponent = defineComponent({
       components: { 'drupal-markup': DrupalMarkup },

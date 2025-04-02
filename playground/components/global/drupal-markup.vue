@@ -1,9 +1,7 @@
 <template>
-  <div>
-    <slot>
-      <component :is="useDrupalCe().renderCustomElements($attrs.content)" />
-    </slot>
-  </div>
+  <slot>
+    <component :is="useDrupalCe().renderCustomElements($attrs.content)" />
+  </slot>
 </template>
 
 <script setup lang="ts">
