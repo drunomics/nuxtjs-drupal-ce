@@ -32,6 +32,7 @@ describe('User login form', async () => {
 
     await submit.click()
 
+    await page.waitForSelector('text=Unrecognized username or password', { timeout: 5000 })
     expect(await page.getByText('Unrecognized username or password').isVisible()).toBe(true)
   })
 
