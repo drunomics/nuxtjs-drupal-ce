@@ -42,10 +42,9 @@ describe('node--default custom element', () => {
   it('renders node with only title while body and image are undefined', async () => {
     const wrapper = await mountSuspended(createNodeComponent({
       element: 'node',
-      title: 'Just a title'
+      title: 'Just a title',
     }))
     expect(wrapper.find('h2').text()).toBe('Node: Just a title')
-    expect(wrapper.find('.node').attributes('element')).toBe('node')
     expect(wrapper.find('img').exists()).toBe(false)
     expect(wrapper.find('p').exists()).toBe(false)
   })

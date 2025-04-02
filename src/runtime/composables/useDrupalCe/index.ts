@@ -317,8 +317,8 @@ export const useDrupalCe = () => {
 
     // Handle single custom element object
     const resolvedElement = resolveCustomElement(customElements.element)
-    customElements.element = undefined
-    return resolvedElement ? h(resolvedElement, customElements) : null
+    const { element, ...restOfProps } = customElements
+    return resolvedElement ? h(resolvedElement, restOfProps) : null
   }
 
   /**

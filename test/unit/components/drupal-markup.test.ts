@@ -4,26 +4,24 @@ import { describe, it, expect } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import { defineComponent } from 'vue'
 import { useDrupalCe } from '../../../src/runtime/composables/useDrupalCe'
-import DrupalMarkup from '../../../playground/components/global/drupal-markup.vue'
 
 describe('drupal-markup custom element', () => {
-  const markupData = {
-    element: 'drupal-markup',
-    content: '<p>Some <b>formatted</b> content.</p>'
-  }
-
-  const createMarkupComponent = (data = markupData) => defineComponent({
-    components: { 'drupal-markup': DrupalMarkup },
-    setup() {
-      const { renderCustomElements } = useDrupalCe()
-      return { component: renderCustomElements(data) }
-    },
-    template: '<component :is="component" />'
-  })
+  const { renderCustomElements } = useDrupalCe()
 
   it('renders markup content via custom element json', async () => {
-    const wrapper = await mountSuspended(createMarkupComponent())
+    const component = defineComponent({
+      setup() {
+        return { component: renderCustomElements({
+            element: 'drupal-markup',
+            content: '<p>Some <b>formatted</b> content.</p>'
+          }) }
+      },
+      template: '<component :is="component" />'
+    })
+    const wrapper = await mountSuspended(component)
     expect(wrapper.html()).toContain('<p>Some <b>formatted</b> content.</p>')
+    // drupal-markup should not add a wrapping element
+    expect(wrapper.html()).toEqual('<p>Some <b>formatted</b> content.</p>')
   })
 
   it('renders markup content given via attribute ', async () => {
@@ -31,15 +29,16 @@ describe('drupal-markup custom element', () => {
       template: '<drupal-markup content="<p>Slotted <b>content</b></p>"></drupal-markup>'
     })
     const wrapper = await mountSuspended(TestComponent)
-    expect(wrapper.html()).toContain('<p>Slotted <b>content</b></p>')
+    expect(wrapper.html()).toEqual('<p>Slotted <b>content</b></p>')
   })
 
   it('renders markup content via custom element markup ', async () => {
     const TestComponent = defineComponent({
-      components: { 'drupal-markup': DrupalMarkup },
       template: '<drupal-markup><p>Slotted <b>content</b></p></drupal-markup>'
     })
     const wrapper = await mountSuspended(TestComponent)
     expect(wrapper.html()).toContain('<p>Slotted <b>content</b></p>')
+    // drupal-markup should not add a wrapping element
+    expect(wrapper.html()).toEqual('<p>Slotted <b>content</b></p>')
   })
 })

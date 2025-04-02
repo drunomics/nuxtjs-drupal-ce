@@ -8,4 +8,7 @@
 defineSlots<{
   default();
 }>()
+defineOptions({
+  inheritAttrs: false
+})
 </script>
