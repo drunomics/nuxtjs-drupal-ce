@@ -14,7 +14,7 @@ describe('renderCustomElements', () => {
     props: {
       foo: String
     },
-    template: '<div>Test Component: {{ foo }}</div>'
+    template: '<section>Test Component: {{ foo }}</section>'
   })
 
   const AnotherComponent = defineComponent({
@@ -22,7 +22,7 @@ describe('renderCustomElements', () => {
     props: {
       bar: String
     },
-    template: '<div>Another Component: {{ bar }}</div>'
+    template: '<section>Another Component: {{ bar }}</section>'
   })
   const app = useNuxtApp()
   app.vueApp.component('TestComponent', TestComponent)
@@ -65,7 +65,7 @@ describe('renderCustomElements', () => {
         },
         template: '<component :is="component" />'
       }))
-      expect(wrapper.html()).toContain(htmlString)
+      expect(wrapper.html()).toEqual(htmlString)
       expect(wrapper.text()).toBe('Hello World')
     })
   })
@@ -82,24 +82,26 @@ describe('renderCustomElements', () => {
         template: '<component :is="component" />'
       }))
       expect(wrapper.text()).toBe('Test Component: bar')
+      expect(wrapper.html()).toEqual('<section>Test Component: bar</section>')
+
     })
   })
 
   describe('array handling', () => {
-    it('should render array of strings in a wrapper div', async () => {
+    it('should render array of strings without a wrapper div', async () => {
       const wrapper = await mountSuspended(defineComponent({
         setup() {
           return { component: renderCustomElements(['Text 1', '<p>Text 2</p>']) }
         },
         template: '<component :is="component" />'
       }))
-      expect(wrapper.html()).toContain('<div>')
+      expect(wrapper.html()).not.toContain('<div>')
       expect(wrapper.text()).toContain('Text 1')
       expect(wrapper.text()).toContain('Text 2')
-      expect(wrapper.html()).toContain('<p>Text 2</p>')
+      expect(wrapper.html()).toEqual("Text 1\n<p>Text 2</p>")
     })
 
-    it('should render array of custom elements in a wrapper div', async () => {
+    it('should render array of custom elements without a wrapper div', async () => {
       const wrapper = await mountSuspended(defineComponent({
         setup() {
           return { component: renderCustomElements([
@@ -109,9 +111,11 @@ describe('renderCustomElements', () => {
         },
         template: '<component :is="component" />'
       }))
-      expect(wrapper.html()).toContain('<div>')
+      expect(wrapper.html()).not.toContain('<div>')
       expect(wrapper.text()).toContain('Test Component: one')
       expect(wrapper.text()).toContain('Another Component: two')
+      expect(wrapper.html()).toEqual("<section>Test Component: one</section>\n" +
+        "<section>Another Component: two</section>")
     })
   })
 

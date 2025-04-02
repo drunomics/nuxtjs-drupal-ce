@@ -2,6 +2,7 @@ import { defu } from 'defu'
 import { appendResponseHeader } from 'h3'
 import type { $Fetch, NitroFetchRequest } from 'nitropack'
 import type { Ref, ComputedRef, Component } from 'vue'
+import { createStaticVNode } from 'vue'
 import { getDrupalBaseUrl, getMenuBaseUrl } from './server'
 import type { UseFetchOptions } from '#app'
 import { callWithNuxt } from '#app'
@@ -286,14 +287,14 @@ export const useDrupalCe = () => {
       return null
     }
 
-    // Handle string case by creating a component with wrapping div
+    // Handle string case by creating a component that renders HTML without wrappers
     if (typeof customElements === 'string') {
       return defineComponent({
         setup() {
-          return () => h('div', {
-            innerHTML: customElements,
-          })
-        },
+          return () => {
+            return createStaticVNode(customElements, 1)
+          }
+        }
       })
     }
 
@@ -302,22 +303,21 @@ export const useDrupalCe = () => {
       return null
     }
 
-    // Handle array case by creating a wrapper div component that renders all children
+    // Handle multiple elements without creating a wrapping div
     if (Array.isArray(customElements)) {
       return defineComponent({
         setup() {
-          return () => h('div', {},
-            customElements.map(element => {
-              const rendered = renderCustomElements(element)
-              return rendered ? h(rendered) : null
-            })
-          )
+          return () => customElements.map(element => {
+            const rendered = renderCustomElements(element)
+            return rendered ? h(rendered) : null
+          })
         }
       })
     }
 
     // Handle single custom element object
     const resolvedElement = resolveCustomElement(customElements.element)
+    customElements.element = undefined
     return resolvedElement ? h(resolvedElement, customElements) : null
   }
 
