@@ -67,6 +67,18 @@ describe('renderCustomElements', () => {
       }))
       expect(wrapper.html()).toEqual(htmlString)
       expect(wrapper.text()).toBe('Hello World')
+
+      // Ensure HTML is processed like v-html does it, such that there
+      // may be no hydration errors caused by bogus HTML. For example
+      // self-closing HTML elements trigger that.
+      const bogusHtmlString = "<input type=\"text\" id=\"edit-name\" name=\"name\" value=\"\" size=\"60\"  />"
+      const component = await mountSuspended(defineComponent({
+        setup() {
+          return { component: renderCustomElements(bogusHtmlString) }
+        },
+        template: '<component :is="component" />'
+      }))
+      expect(component.html()).toEqual("<input type=\"text\" id=\"edit-name\" name=\"name\" value=\"\" size=\"60\">")
     })
   })
 
