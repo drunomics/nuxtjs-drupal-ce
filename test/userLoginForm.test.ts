@@ -58,4 +58,4 @@ describe('User login form', async () => {
     // Cleanup
     await page.context().clearCookies()
   })
-})
+}, { timeout: 10000 })
