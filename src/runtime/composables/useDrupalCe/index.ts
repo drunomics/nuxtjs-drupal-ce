@@ -288,7 +288,12 @@ export const useDrupalCe = () => {
 
     // Handle string case by creating a component that renders HTML content
     if (typeof customElements === 'string') {
-      return h(resolveCustomElement('drupal-markup'), {content: customElements})
+      const component = resolveCustomElement('drupal-markup')
+      if (component) {
+        return h(component, {content: customElements})
+      }
+      // Else fallback to a simple wrapping div.
+      return h('div', customElements)
     }
 
     // Handle empty object case
