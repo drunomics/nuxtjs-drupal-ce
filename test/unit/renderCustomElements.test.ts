@@ -14,6 +14,7 @@ describe('renderCustomElements', () => {
     props: {
       foo: String
     },
+    inheritAttrs: false,
     template: '<section>Test Component: {{ foo }}</section>'
   })
 
@@ -22,6 +23,7 @@ describe('renderCustomElements', () => {
     props: {
       bar: String
     },
+    inheritAttrs: false,
     template: '<section>Another Component: {{ bar }}</section>'
   })
   const app = useNuxtApp()
@@ -65,20 +67,23 @@ describe('renderCustomElements', () => {
         },
         template: '<component :is="component" />'
       }))
-      expect(wrapper.html()).toEqual(htmlString)
+      expect(wrapper.html()).toContain(htmlString)
+      expect(wrapper.html()).toEqual('<div style="display: contents;">\n  ' + htmlString + '\n</div>')
       expect(wrapper.text()).toBe('Hello World')
 
-      // Ensure HTML is processed like v-html does it, such that there
-      // may be no hydration errors caused by bogus HTML. For example
-      // self-closing HTML elements trigger that.
-      const bogusHtmlString = '<div class="js-form-item form-item js-form-type-textfield form-item-name js-form-item-name">\n <label for="edit-name" class="form-item__label js-form-required form-required">Username</label>\n <input autocorrect="none" autocapitalize="none" spellcheck="false" autofocus="autofocus" autocomplete="username" data-drupal-selector="edit-name" type="text" id="edit-name" name="name" value="" size="60" maxlength="60" class="form-text required form-element form-element--type-text form-element--api-textfield" required="required" aria-required="true" />\n\n </div>\n<div class="js-form-item form-item js-form-type-password form-item-pass js-form-item-pass">\n <label for="edit-pass" class="form-item__label js-form-required form-required">Password</label>\n <input autocomplete="current-password" data-drupal-selector="edit-pass" type="password" id="edit-pass" name="pass" size="60" maxlength="128" class="form-text required form-element form-element--type-password form-element--api-password" required="required" aria-required="true" />\n\n </div>\n<input data-drupal-selector="form-6ngyrvfrmgfogyhp4piezpfq5nj09qszrlhrch4nvzi" type="hidden" name="form_build_id" value="form-6NGYrVfrmgfoGYHP4piEzpFq5Nj09QszRLhRCH4NvZI" />\n<input data-drupal-selector="edit-user-login-form" type="hidden" name="form_id" value="user_login_form" />\n<div data-drupal-selector="edit-actions" class="form-actions js-form-wrapper form-wrapper" id="edit-actions"><input class="button--primary button js-form-submit form-submit" data-drupal-selector="edit-submit" type="submit" id="edit-submit" name="op" value="Log in" />\n</div>\n';
+      // Ensure bogus html and html with multiple root nodes works.
+      const bogusHtmlString = '<div><input type="text" /><a></div><p>second element</p>';
       const component = await mountSuspended(defineComponent({
         setup() {
           return { component: renderCustomElements(bogusHtmlString) }
         },
         template: '<component :is="component" />'
       }))
-      expect(component.html()).toEqual(bogusHtmlString)
+      // The bogus html string has to be cleaned and the 2nd element kept.
+      expect(component.html()).toEqual('<div style="display: contents;">\n' +
+        '  <div><input type="text"><a></a></div>\n' +
+        '  <p>second element</p>\n' +
+        '</div>')
     })
   })
 
@@ -95,22 +100,35 @@ describe('renderCustomElements', () => {
       }))
       expect(wrapper.text()).toBe('Test Component: bar')
       expect(wrapper.html()).toEqual('<section>Test Component: bar</section>')
+    })
 
+    it('rendering known html tags is not supported', async () => {
+      // Note: This produces a [Vue warn] also.
+      const wrapper = await mountSuspended(defineComponent({
+        setup() {
+          return { component: renderCustomElements({
+              element: 'span',
+              title: 'test',
+              content: 'Text content'
+            })}
+        },
+        template: '<component :is="component" />'
+      }))
+      expect(wrapper.html()).toEqual('')
     })
   })
 
   describe('array handling', () => {
-    it('should render array of strings without a wrapper div', async () => {
+    it('should render array of markup strings', async () => {
       const wrapper = await mountSuspended(defineComponent({
         setup() {
-          return { component: renderCustomElements(['Text 1', '<p>Text 2</p>']) }
+          return { component: renderCustomElements(['Content 1', '<p>Text 2</p>']) }
         },
         template: '<component :is="component" />'
       }))
-      expect(wrapper.html()).not.toContain('<div>')
-      expect(wrapper.text()).toContain('Text 1')
-      expect(wrapper.text()).toContain('Text 2')
-      expect(wrapper.html()).toEqual("Text 1\n<p>Text 2</p>")
+      // Content will be wrapped in divs but should be there.
+      expect(wrapper.text()).toContain('Content 1')
+      expect(wrapper.html()).toContain('<p>Text 2</p>')
     })
 
     it('should render array of custom elements without a wrapper div', async () => {

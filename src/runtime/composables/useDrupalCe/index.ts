@@ -287,15 +287,24 @@ export const useDrupalCe = () => {
       return null
     }
 
-    // Handle string case by creating a component that renders HTML without wrappers
+    // Handle string case by creating a component that renders HTML content
     if (typeof customElements === 'string') {
       return defineComponent({
         setup() {
           return () => {
-            return createStaticVNode(customElements, 1)
+            // This is equivalent to using v-html directive, but works without template compiler
+            // We're directly setting the innerHTML property which is what v-html does internally
+            return h('div', {
+              innerHTML: customElements,
+              // Using display:contents makes this div virtually invisible in the layout
+              // This mitigates the impact of the wrapping div that we need to use here
+              // Note: Without a wrapping element, we could use createStaticVNode() instead,
+              // but that approach is limited to HTML with only a single root node
+              style: { display: 'contents' }
+            });
           }
         }
-      })
+      });
     }
 
     // Handle empty object case

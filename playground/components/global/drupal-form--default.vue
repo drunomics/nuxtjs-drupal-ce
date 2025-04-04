@@ -6,11 +6,9 @@
     :action="useRoute().fullPath"
     class="drupal-form"
   >
-    <div class="drupal-form-content">
-      <slot>
-        <component :is="useDrupalCe().renderCustomElements($attrs.content)" />
-      </slot>
-    </div>
+    <slot>
+      <component :is="useDrupalCe().renderCustomElements($attrs.content)" />
+    </slot>
   </form>
 </template>
 
