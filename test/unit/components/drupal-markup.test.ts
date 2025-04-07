@@ -21,7 +21,7 @@ describe('drupal-markup custom element', () => {
     })
     const wrapper = await mountSuspended(component)
     expect(wrapper.html()).toContain('<p>Some <b>formatted</b> content.</p>')
-    // drupal-markup should not add the wrapping div of the slot.
+    // drupal-markup should only have the wrapping-div for the slot.
     expect(wrapper.html()).toEqual(addWrappingDiv('<p>Some <b>formatted</b> content.</p>'))
   })
 
@@ -39,7 +39,8 @@ describe('drupal-markup custom element', () => {
     })
     const wrapper = await mountSuspended(TestComponent)
     expect(wrapper.html()).toContain('<p>Slotted <b>content</b></p>')
-    // drupal-markup should not add a wrapping element
+    // drupal-markup should not add a wrapping element when used
+    // via a vue slot.
     expect(wrapper.html()).toEqual('<p>Slotted <b>content</b></p>')
   })
 })
