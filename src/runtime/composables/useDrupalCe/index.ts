@@ -286,15 +286,14 @@ export const useDrupalCe = () => {
       return null
     }
 
-    // Handle string case by creating a component with wrapping div
+    // Handle string case by creating a component that renders HTML content
     if (typeof customElements === 'string') {
-      return defineComponent({
-        setup() {
-          return () => h('div', {
-            innerHTML: customElements,
-          })
-        },
-      })
+      const component = resolveCustomElement('drupal-markup')
+      if (component) {
+        return h(component, {content: customElements})
+      }
+      // Else fallback to a simple wrapping div.
+      return h('div', customElements)
     }
 
     // Handle empty object case
@@ -302,16 +301,14 @@ export const useDrupalCe = () => {
       return null
     }
 
-    // Handle array case by creating a wrapper div component that renders all children
+    // Handle multiple elements without creating a wrapping div
     if (Array.isArray(customElements)) {
       return defineComponent({
         setup() {
-          return () => h('div', {},
-            customElements.map(element => {
-              const rendered = renderCustomElements(element)
-              return rendered ? h(rendered) : null
-            })
-          )
+          return () => customElements.map(element => {
+            const rendered = renderCustomElements(element)
+            return rendered ? h(rendered) : null
+          })
         }
       })
     }
