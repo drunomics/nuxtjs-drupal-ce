@@ -14,7 +14,8 @@ describe('renderCustomElements', () => {
     props: {
       foo: String
     },
-    template: '<div>Test Component: {{ foo }}</div>'
+    inheritAttrs: false,
+    template: '<section>Test Component: {{ foo }}</section>'
   })
 
   const AnotherComponent = defineComponent({
@@ -22,7 +23,8 @@ describe('renderCustomElements', () => {
     props: {
       bar: String
     },
-    template: '<div>Another Component: {{ bar }}</div>'
+    inheritAttrs: false,
+    template: '<section>Another Component: {{ bar }}</section>'
   })
   const app = useNuxtApp()
   app.vueApp.component('TestComponent', TestComponent)
@@ -66,7 +68,22 @@ describe('renderCustomElements', () => {
         template: '<component :is="component" />'
       }))
       expect(wrapper.html()).toContain(htmlString)
+      expect(wrapper.html()).toEqual('<div style="display: contents;">\n  ' + htmlString + '\n</div>')
       expect(wrapper.text()).toBe('Hello World')
+
+      // Ensure bogus html and html with multiple root nodes works.
+      const bogusHtmlString = '<div><input type="text" /><a></div><p>second element</p>';
+      const component = await mountSuspended(defineComponent({
+        setup() {
+          return { component: renderCustomElements(bogusHtmlString) }
+        },
+        template: '<component :is="component" />'
+      }))
+      // The bogus html string has to be cleaned and the 2nd element kept.
+      expect(component.html()).toEqual('<div style="display: contents;">\n' +
+        '  <div><input type="text"><a></a></div>\n' +
+        '  <p>second element</p>\n' +
+        '</div>')
     })
   })
 
@@ -82,24 +99,39 @@ describe('renderCustomElements', () => {
         template: '<component :is="component" />'
       }))
       expect(wrapper.text()).toBe('Test Component: bar')
+      expect(wrapper.html()).toEqual('<section>Test Component: bar</section>')
+    })
+
+    it('rendering known html tags is not supported', async () => {
+      // Note: This produces a [Vue warn] also.
+      const wrapper = await mountSuspended(defineComponent({
+        setup() {
+          return { component: renderCustomElements({
+              element: 'span',
+              title: 'test',
+              content: 'Text content'
+            })}
+        },
+        template: '<component :is="component" />'
+      }))
+      expect(wrapper.html()).toEqual('')
     })
   })
 
   describe('array handling', () => {
-    it('should render array of strings in a wrapper div', async () => {
+    it('should render array of markup strings', async () => {
       const wrapper = await mountSuspended(defineComponent({
         setup() {
-          return { component: renderCustomElements(['Text 1', '<p>Text 2</p>']) }
+          return { component: renderCustomElements(['Content 1', '<p>Text 2</p>']) }
         },
         template: '<component :is="component" />'
       }))
-      expect(wrapper.html()).toContain('<div>')
-      expect(wrapper.text()).toContain('Text 1')
-      expect(wrapper.text()).toContain('Text 2')
+      // Content will be wrapped in divs but should be there.
+      expect(wrapper.text()).toContain('Content 1')
       expect(wrapper.html()).toContain('<p>Text 2</p>')
     })
 
-    it('should render array of custom elements in a wrapper div', async () => {
+    it('should render array of custom elements without a wrapper div', async () => {
       const wrapper = await mountSuspended(defineComponent({
         setup() {
           return { component: renderCustomElements([
@@ -109,9 +141,11 @@ describe('renderCustomElements', () => {
         },
         template: '<component :is="component" />'
       }))
-      expect(wrapper.html()).toContain('<div>')
+      expect(wrapper.html()).not.toContain('<div>')
       expect(wrapper.text()).toContain('Test Component: one')
       expect(wrapper.text()).toContain('Another Component: two')
+      expect(wrapper.html()).toEqual("<section>Test Component: one</section>\n" +
+        "<section>Another Component: two</section>")
     })
   })
 
