@@ -70,6 +70,10 @@ export default defineComponent({
     }
   },
 
+  // @todo: Remove once issue #332 is fixed.
+  // We manually inherit attrs below.
+  inheritAttrs: false,
+
   /**
    * @slot default - Content slot for custom elements in Slot mode
    */
@@ -84,7 +88,8 @@ export default defineComponent({
     // Get all props except 'tag', 'content', and 'element' to pass to the container
     const containerProps = { ...this.$attrs };
 
-    // Remove 'element' attribute to prevent it from being passed to the DOM
+    // Do not render the "element" prop passed by renderCustomElements()
+    // @todo: Remove once issue #332 is fixed.
     if ('element' in containerProps) {
       delete containerProps.element;
     }
@@ -102,7 +107,7 @@ export default defineComponent({
       children = [];
     }
 
-    // Render the container with the appropriate tag and children
+    // Render the container with the appropriate tag and children.
     return h(this.tag, containerProps, children);
   }
 });
