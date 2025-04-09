@@ -10,11 +10,9 @@
  * @example Slot Mode Usage:
  * ```vue
  * <DrupalCeContainer tag="div" class="foo">
- *   <template #default>
- *     <drupal-markup>Cell content before embed</drupal-markup>
- *     <drupal-media id="123">Some example embedded element.</drupal-media>
- *     <drupal-markup>Cell content after embed</drupal-markup>
- *   </template>
+ *   <drupal-markup>Cell content before embed</drupal-markup>
+ *   <drupal-media id="123">Some example embedded element.</drupal-media>
+ *   <drupal-markup>Cell content after embed</drupal-markup>
  * </DrupalCeContainer>
  * ```
  *
