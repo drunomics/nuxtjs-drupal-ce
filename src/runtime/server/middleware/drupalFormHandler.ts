@@ -6,7 +6,8 @@ export default defineEventHandler(async (event) => {
   const { ceApiEndpoint } = useRuntimeConfig().public.drupalCe
 
   if (event.node.req.method === 'POST') {
-    if (event.req.headers['x-form-processed']) {
+    const contentType = event.req.headers['content-type'] || ''
+    if (!contentType.includes('multipart/form-data') && !contentType.includes('application/x-www-form-urlencoded') || event.req.headers['x-form-processed']) {
       return
     }
 
