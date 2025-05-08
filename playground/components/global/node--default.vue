@@ -8,6 +8,7 @@
       <component :is="useDrupalCe().renderCustomElements($attrs.body)" />
     </slot>
     <div v-if="sections">
+      <h2>here</h2>
       <component :is="useDrupalCe().renderCustomElements(sections)" />
     </div>
   </div>
