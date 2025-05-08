@@ -6,10 +6,6 @@ export default defineEventHandler(() => ({
       frontpage: true,
       url: '/',
       label: 'Home'
-    },
-    {
-      url: '/node/layout-builder',
-      label: 'Layout Builder Test'
     }
   ],
   content: {
