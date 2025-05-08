@@ -22,6 +22,7 @@ defineProps<{
   title?: string;
   type?: string;
   created?: number | string;
-  sections?: object[];
+  // Layout-builder support.
+  sections?: object;
 }>()
 </script>
