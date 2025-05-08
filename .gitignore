@@ -1,27 +1,31 @@
-# Node dependencies
-node_modules
-
-# Nuxt dev/build outputs
-.output
-.data
-.nuxt
-.nitro
-.cache
-dist
-
-# Node dependencies
+# Dependencies
 node_modules
 
 # Logs
-logs
-*.log
+*.log*
 
-# Misc
-.DS_Store
-.fleet
-.idea
+# Temp directories
+.temp
+.tmp
+.cache
 
-# Local env files
+# Yarn
+**/.yarn/cache
+**/.yarn/*state*
+
+# Generated dirs
+dist
+.nuxt
+.output
+.gen
+
+# Env files
 .env
 .env.*
 !.env.example
+
+# Development
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+.idea
