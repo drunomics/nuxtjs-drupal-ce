@@ -37,11 +37,6 @@ export default defineEventHandler(() => ({
         url: '/node/layout-builder',
         label: 'View',
         active: true
-      },
-      {
-        url: '/node/layout-builder/layout',
-        label: 'Layout',
-        active: false
       }
     ]
   },
