@@ -1,3 +1,6 @@
+# Node dependencies
+node_modules
+
 # Nuxt dev/build outputs
 .output
 .data
