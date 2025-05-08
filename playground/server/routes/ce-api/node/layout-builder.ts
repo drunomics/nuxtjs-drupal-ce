@@ -13,7 +13,7 @@ export default defineEventHandler(() => ({
     }
   ],
   content: {
-    element: 'node',
+    element: 'node-layout-full',
     type: 'page',
     title: 'Layout Builder Test',
     created: '1734839102',
