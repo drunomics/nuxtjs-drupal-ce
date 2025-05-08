@@ -8,7 +8,7 @@ export default defineEventHandler(() => ({
       label: 'Home'
     }
 
-    
+  
   ],
   content: {
     element: 'node-layout-full',
