@@ -13,20 +13,26 @@ export default defineEventHandler(() => ({
     }
   ],
   content: {
-    element: 'drupal-layout',
-    layout: 'twocol',
-    settings: {
-      label: 'Two column layout',
-      column_widths: '50-50'
-    },
-    first: {
-      element: 'drupal-markup',
-      content: '<h2>First Column</h2><p>This is content in the first column of our layout builder test.</p>'
-    },
-    second: {
-      element: 'drupal-markup',
-      content: '<h2>Second Column</h2><p>This is content in the second column of our layout builder test.</p>'
-    }
+    element: 'node',
+    type: 'page',
+    title: 'Layout Builder Test',
+    created: '1734839102',
+    sections: [{
+      element: 'drupal-layout',
+      layout: 'twocol',
+      settings: {
+        label: 'Two column layout',
+        column_widths: '50-50'
+      },
+      first: {
+        element: 'drupal-markup',
+        content: '<h2>First Column</h2><p>This is content in the first column of our layout builder test.</p>'
+      },
+      second: {
+        element: 'drupal-markup',
+        content: '<h2>Second Column</h2><p>This is content in the second column of our layout builder test.</p>'
+      }
+    }],
   },
   content_format: 'json',
   local_tasks: {

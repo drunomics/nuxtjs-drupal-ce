@@ -7,6 +7,13 @@
     <slot name="body">
       <component :is="useDrupalCe().renderCustomElements($attrs.body)" />
     </slot>
+    <template v-if="sections">
+      <component
+        v-for="(section, index) in sections"
+        :key="index"
+        :is="useDrupalCe().renderCustomElements(section)"
+      />
+    </template>
   </div>
 </template>
 
@@ -19,7 +26,6 @@ defineProps<{
   title?: string;
   type?: string;
   created?: number | string;
-  // Layout-builder support.
-  sections?: object;
+  sections?: object[];
 }>()
 </script>
