@@ -7,13 +7,9 @@
     <slot name="body">
       <component :is="useDrupalCe().renderCustomElements($attrs.body)" />
     </slot>
-    <template v-if="sections">
-      <component
-        v-for="(section, index) in sections"
-        :key="index"
-        :is="useDrupalCe().renderCustomElements(section)"
-      />
-    </template>
+    <div v-if="sections">
+      <component :is="useDrupalCe().renderCustomElements(sections)" />
+    </div>
   </div>
 </template>
 
