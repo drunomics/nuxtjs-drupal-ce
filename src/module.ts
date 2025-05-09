@@ -20,6 +20,7 @@ export interface ModuleOptions {
   exposeAPIRouteRules?: boolean
   serverLogLevel?: boolean | 'info' | 'error'
   disableFormHandler?: boolean
+  enableCePreviewer?: boolean
 }
 
 export default defineNuxtModule<ModuleOptions>({
@@ -45,6 +46,7 @@ export default defineNuxtModule<ModuleOptions>({
     passThroughHeaders: ['cache-control', 'content-language', 'set-cookie', 'x-drupal-cache', 'x-drupal-dynamic-cache'],
     serverLogLevel: 'info',
     disableFormHandler: false,
+    enableCePreviewer: true,
   },
   setup(options, nuxt) {
     const nuxtOptions = nuxt.options as NuxtOptionsWithDrupalCe
@@ -102,17 +104,31 @@ export default defineNuxtModule<ModuleOptions>({
 
     // Handle the ce-preview.
     addTemplate({
-      filename: 'drupal-ce-preview/ce-preview-entry.ts',
-      src: resolve('./runtime/ce-preview-entry.ts'),
+      filename: 'drupal-ce-preview/custom-entry.ts',
+      src: resolve('./runtime/ce-preview/custom-entry.ts'),
       write: true
     })
     addTemplate({
-      filename: 'drupal-ce-preview/ce-preview-utils.ts',
-      src: resolve('./runtime/ce-preview-utils.ts'),
+      filename: 'drupal-ce-preview/utils.ts',
+      src: resolve('./runtime/ce-preview/utils.ts'),
       write: true
     })
 
-    // Hook into Nitro to add the entry file to public assets.
+    // Register a separate entry-point for render previews.
+    nuxt.hook('vite:extendConfig', (config, { isClient }) => {
+      if (isClient) {
+        if (!config.build) config.build = {};
+        if (!config.build.rollupOptions) config.build.rollupOptions = {};
+        if (!config.build.rollupOptions.input) config.build.rollupOptions.input = {};
+
+        if (typeof config.build.rollupOptions.input === 'object') {
+          config.build.rollupOptions.input['ce-preview-entry'] =
+            resolve(nuxt.options.buildDir, 'drupal-ce-preview/custom-entry.ts');
+        }
+      }
+    });
+
+    // Hook into Nitro to make sure the generated file is served.
     nuxt.hook('nitro:config', (nitroConfig) => {
       nitroConfig.publicAssets = nitroConfig.publicAssets || []
       nitroConfig.publicAssets.push({
@@ -120,6 +136,5 @@ export default defineNuxtModule<ModuleOptions>({
         baseURL: nuxt.options.app.buildAssetsDir.replace(/^\//, '')
       })
     })
-
   },
 })

@@ -1,4 +1,6 @@
 import type { NuxtApp } from 'nuxt/app'
+import { createApp, h } from 'vue'
+import { useDrupalCe } from '#imports'
 
 /**
  * Creates a preview of a component using DrupalCE renderCustomElements
@@ -18,7 +20,7 @@ export function previewComponent(
     throw new Error('Missing nuxtApp instance')
   }
 
-  // Use the composable directly with auto-import
+  // Use the imported composable
   const drupalCe = useDrupalCe()
 
   if (!drupalCe || !drupalCe.renderCustomElements) {
@@ -31,7 +33,7 @@ export function previewComponent(
     : target
 
   if (!mountTarget) {
-    throw new Error(`Target element not found: ${target}`)
+    throw new Error('Target element not found: target' + target)
   }
 
   // Create custom element object format for renderCustomElements
@@ -44,12 +46,10 @@ export function previewComponent(
   const component = drupalCe.renderCustomElements(customElement)
 
   if (!component) {
-    throw new Error(`Component "${componentName}" could not be rendered`)
+    throw new Error('Component ' + componentName + ' could not be rendered')
   }
 
   // Mount the component
-  const vueConstructor = nuxtApp.vueApp.constructor as any
-  const { createApp, h } = vueConstructor
   const app = createApp({
     render: () => h(component)
   })

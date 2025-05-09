@@ -1,3 +1,12 @@
+/**
+ * @file
+ * This is a custom version of the nuxt entry file. It's basically
+ * a version that skips mounting the app and only covers CSR.
+ *
+ * Instead of mounting the app, this API is exposed:
+ *  - onNuxtReady() callback
+ *  - previewComponent() to mount custom preview components
+ */
 import { createApp, App as VueApp } from 'vue'
 import type { NuxtApp } from 'nuxt/app'
 
@@ -11,20 +20,20 @@ import '#build/css'
 import plugins from '#build/plugins'
 import RootComponent from '#build/root-component.mjs'
 
-// Export preview component function directly
-export { previewComponent } from './ce-preview-utils'
+// Additionally provide previewComponent() helper from utils.
+export { previewComponent } from './utils'
 
 // Callback storage
 const _readyCallbacks: Array<(context: { nuxtApp: NuxtApp, vueApp: VueApp }) => void> = []
 
 /**
- * Initialize Nuxt but don't mount it
+ * Initialize Nuxt but don't mount it.
  */
 export async function initializeNuxt(): Promise<{ nuxtApp: NuxtApp, vueApp: VueApp }> {
   // Create the Vue app
   const vueApp = createApp(RootComponent)
 
-  // Create Nuxt app instance (without mounting)
+  // Create Nuxt app instance (without mounting).
   const nuxtApp = createNuxtApp({ vueApp })
 
   // Error handling
@@ -38,11 +47,9 @@ export async function initializeNuxt(): Promise<{ nuxtApp: NuxtApp, vueApp: VueA
   try {
     // Apply plugins (critical for component registration and lazy loading)
     await applyPlugins(nuxtApp, plugins)
-
-    // Call created hook
     await nuxtApp.hooks.callHook('app:created', vueApp)
 
-    // Call all ready callbacks
+    // Call all ready callbacks.
     const context = { nuxtApp, vueApp }
     _readyCallbacks.forEach(callback => callback(context))
     _readyCallbacks.length = 0
