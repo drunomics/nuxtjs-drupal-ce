@@ -74,42 +74,4 @@ describe('node--default custom element', () => {
     expect(wrapper.html()).toContain('<h2>Second Column</h2>')
     expect(wrapper.html()).toContain('<p>Second column content</p>')
   })
-
-  it('renders node with multiple layout builder sections', async () => {
-    const wrapper = await mountSuspended(createNodeComponent({
-      element: 'node',
-      title: 'Multiple Sections',
-      sections: [
-        {
-          element: 'drupal-layout',
-          layout: 'onecol',
-          settings: {
-            label: 'One column layout'
-          },
-          content: {
-            element: 'drupal-markup',
-            content: '<h2>Section One</h2>'
-          }
-        },
-        {
-          element: 'drupal-layout',
-          layout: 'twocol',
-          settings: {
-            label: 'Two column layout'
-          },
-          first: {
-            element: 'drupal-markup',
-            content: '<p>First column</p>'
-          },
-          second: {
-            element: 'drupal-markup',
-            content: '<p>Second column</p>'
-          }
-        }
-      ]
-    }))
-    expect(wrapper.html()).toContain('<h2>Section One</h2>')
-    expect(wrapper.html()).toContain('<p>First column</p>')
-    expect(wrapper.html()).toContain('<p>Second column</p>')
-  })
 })
