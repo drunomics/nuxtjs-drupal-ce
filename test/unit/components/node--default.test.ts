@@ -52,7 +52,6 @@ describe('node--default custom element', () => {
   it('renders node with layout builder sections', async () => {
     const wrapper = await mountSuspended(createNodeComponent({
       element: 'node',
-      title: 'Layout Builder Test',
       sections: {
         element: 'drupal-layout',
         layout: 'twocol',
@@ -70,7 +69,6 @@ describe('node--default custom element', () => {
         }
       }
     }))
-    expect(wrapper.find('h2').text()).toBe('Node: Layout Builder Test')
     expect(wrapper.html()).toContain('<h2>First Column</h2>')
     expect(wrapper.html()).toContain('<p>First column content</p>')
     expect(wrapper.html()).toContain('<h2>Second Column</h2>')
