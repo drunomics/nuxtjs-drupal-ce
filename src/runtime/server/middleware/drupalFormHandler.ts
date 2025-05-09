@@ -3,11 +3,28 @@ import { getDrupalBaseUrl } from '../../composables/useDrupalCe/server'
 import { useRuntimeConfig } from '#imports'
 
 export default defineEventHandler(async (event) => {
-  const { ceApiEndpoint } = useRuntimeConfig().public.drupalCe
+  const { ceApiEndpoint, bypassRoutes } = useRuntimeConfig().public.drupalCe
 
   if (event.node.req.method === 'POST') {
-    const contentType = event.req.headers['content-type'] || ''
-    if (contentType !== 'multipart/form-data' && contentType !== 'application/x-www-form-urlencoded' || event.node.req.headers['x-form-processed']) {
+    // Check if current route is in the bypassRoutes list.
+    if (bypassRoutes?.length) {
+      // Remove query parameters from the URL.
+      const currentPath = event.node.req.url?.split('?')[0] || '';
+      const shouldBypass = bypassRoutes.some(route => {
+        const routeFormats = [
+          route,
+          '/api/drupal-ce' + route,
+          ceApiEndpoint + route
+        ];
+        return routeFormats.some(format => format === currentPath);
+      });
+
+      if (shouldBypass) {
+        return;
+      }
+    }
+    const contentType = event.node.req.headers['content-type'] || ''
+    if (!contentType.includes('multipart/form-data') && !contentType.includes('application/x-www-form-urlencoded') || event.node.req.headers['x-form-processed']) {
       return
     }
 
