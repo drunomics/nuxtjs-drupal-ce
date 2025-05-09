@@ -20,6 +20,7 @@ export interface ModuleOptions {
   exposeAPIRouteRules?: boolean
   serverLogLevel?: boolean | 'info' | 'error'
   disableFormHandler?: boolean
+  bypassRoutes?: string[]
 }
 
 export default defineNuxtModule<ModuleOptions>({
@@ -99,5 +100,16 @@ export default defineNuxtModule<ModuleOptions>({
         handler: resolve(runtimeDir, 'server/api/menu'),
       })
     }
+
+    // Conditionally bypass form handler middleware for specific routes
+    nuxt.hook('nitro:config', (config) => {
+      config.routeRules = config.routeRules || {}
+
+      if (options.bypassRoutes?.length) {
+        options.bypassRoutes.forEach((route) => {
+          config.routeRules![route] = { appMiddleware: ['drupalFormHandler'] }
+        })
+      }
+    })
   },
 })

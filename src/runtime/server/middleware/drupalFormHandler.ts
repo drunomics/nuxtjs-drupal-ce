@@ -7,7 +7,7 @@ export default defineEventHandler(async (event) => {
 
   if (event.node.req.method === 'POST') {
     const contentType = event.req.headers['content-type'] || ''
-    if (!contentType.includes('multipart/form-data') && !contentType.includes('application/x-www-form-urlencoded') || event.req.headers['x-form-processed']) {
+    if (contentType !== 'multipart/form-data' && contentType !== 'application/x-www-form-urlencoded' || event.node.req.headers['x-form-processed']) {
       return
     }
 

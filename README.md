@@ -109,6 +109,8 @@ is added automatically to requests. Defaults to `false`.
 
 - `disableFormHandler`: If set to `true`, the form handler middleware will be disabled. Defaults to `false`.
 
+- `bypassRoutes`: An array of routes to bypass the form handler middleware. Defaults to `[]`.
+
 ## Overriding options with environment variables
 
 Runtime config values can be overridden with environment variables via `NUXT_PUBLIC_` prefix. Supported runtime overrides:
@@ -154,6 +156,38 @@ x node-custom-view.vue
 x node-custom-view--default.vue
 x node-custom--default.vue
 ✓ node--default.vue
+```
+
+## Form handler middleware
+
+The form handler middleware is used to process Drupal form submissions.
+
+There are cases where you may want to bypass this middleware for certain routes or disable it globally.
+
+### Route level
+
+To bypass the form handler middleware for certain routes, you can use the `bypassRoutes` option.
+
+`bypassRoutes`:
+```js
+export default defineNuxtConfig({
+  drupalCe: {
+    bypassRoutes: ['/form/contact'],
+  },
+})
+```
+
+### Global level
+
+To disable the form handler middleware globally, you can use the `disableFormHandler` option.
+
+`disableFormHandler`:
+```js
+export default defineNuxtConfig({
+  drupalCe: {
+    disableFormHandler: true,
+  },
+})
 ```
 
 ## Deprecated options
