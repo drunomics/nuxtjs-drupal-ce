@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Drupal CE Component Preview</title>
+  <style>
+    #preview-container {
+      border: 1px solid #ccc;
+      padding: 20px;
+      margin: 20px;
+    }
+  </style>
+</head>
+<body>
+<h1>Drupal CE Component Preview</h1>
+<div id="preview-container"></div>
+
+<!-- Nuxt Config -->
+<script>
+  window.__NUXT__ = {};
+  window.__NUXT__.config = {
+    public: {
+      drupalCe: {
+        drupalBaseUrl: "https://drupal-site.example",
+        ceApiEndpoint: "/ce-api",
+        menuEndpoint: "api/menu_items/$$$NAME$$$",
+        customErrorPages: false,
+        fetchOptions: {
+          credentials: "include"
+        },
+        fetchProxyHeaders: ["cookie"],
+        useLocalizedMenuEndpoint: true,
+        addRequestFormat: false,
+        serverApiProxy: true
+      }
+    },
+    app: {
+      baseURL: "/",
+      buildId: "dev",
+      buildAssetsDir: "/_nuxt/",
+      cdnURL: "http://localhost:3000"
+    }
+  };
+</script>
+
+<!-- Custom Entry with Preview Functions -->
+<script type="module">
+  // Import the utilities directly from custom entry
+  import { onNuxtReady, previewComponent } from '/_nuxt/ce-preview-entry.js'
+
+  // Register callback for when Nuxt is ready
+  onNuxtReady(({ nuxtApp }) => {
+    console.log('Nuxt is ready for component previews!')
+
+    // Preview a Drupal component
+    previewComponent(
+      nuxtApp,             // Nuxt app instance
+      'drupal-content',    // Component name
+      {                    // Props
+        type: 'node',
+        bundle: 'article',
+        uuid: '12345-67890'
+      },
+      '#preview-container' // Target element
+    )
+  })
+</script>
+
+<!-- Load the entry script -->
+<script type="module" src="/_nuxt/ce-preview-entry.js"></script>
+</body>
+</html>

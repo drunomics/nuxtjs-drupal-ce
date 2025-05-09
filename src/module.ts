@@ -1,5 +1,5 @@
 import { fileURLToPath } from 'node:url'
-import { defineNuxtModule, addServerPlugin, createResolver, addImportsDir, addServerHandler } from '@nuxt/kit'
+import { defineNuxtModule, addServerPlugin, createResolver, addImportsDir, addServerHandler, addTemplate } from '@nuxt/kit'
 import { defu } from 'defu'
 import type { NuxtOptionsWithDrupalCe } from './types'
 
@@ -99,5 +99,27 @@ export default defineNuxtModule<ModuleOptions>({
         handler: resolve(runtimeDir, 'server/api/menu'),
       })
     }
+
+    // Handle the ce-preview.
+    addTemplate({
+      filename: 'drupal-ce-preview/ce-preview-entry.ts',
+      src: resolve('./runtime/ce-preview-entry.ts'),
+      write: true
+    })
+    addTemplate({
+      filename: 'drupal-ce-preview/ce-preview-utils.ts',
+      src: resolve('./runtime/ce-preview-utils.ts'),
+      write: true
+    })
+
+    // Hook into Nitro to add the entry file to public assets.
+    nuxt.hook('nitro:config', (nitroConfig) => {
+      nitroConfig.publicAssets = nitroConfig.publicAssets || []
+      nitroConfig.publicAssets.push({
+        dir: resolve(nuxt.options.buildDir, 'drupal-ce-preview'),
+        baseURL: nuxt.options.app.buildAssetsDir.replace(/^\//, '')
+      })
+    })
+
   },
 })
