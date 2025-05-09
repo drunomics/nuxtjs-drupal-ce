@@ -48,4 +48,70 @@ describe('node--default custom element', () => {
     expect(wrapper.find('img').exists()).toBe(false)
     expect(wrapper.find('p').exists()).toBe(false)
   })
+
+  it('renders node with layout builder sections', async () => {
+    const wrapper = await mountSuspended(createNodeComponent({
+      element: 'node',
+      title: 'Layout Builder Test',
+      sections: {
+        element: 'drupal-layout',
+        layout: 'twocol',
+        settings: {
+          label: 'Two column layout',
+          column_widths: '50-50'
+        },
+        first: {
+          element: 'drupal-markup',
+          content: '<h2>First Column</h2><p>First column content</p>'
+        },
+        second: {
+          element: 'drupal-markup',
+          content: '<h2>Second Column</h2><p>Second column content</p>'
+        }
+      }
+    }))
+    expect(wrapper.find('h2').text()).toBe('Node: Layout Builder Test')
+    expect(wrapper.html()).toContain('<h2>First Column</h2>')
+    expect(wrapper.html()).toContain('<p>First column content</p>')
+    expect(wrapper.html()).toContain('<h2>Second Column</h2>')
+    expect(wrapper.html()).toContain('<p>Second column content</p>')
+  })
+
+  it('renders node with multiple layout builder sections', async () => {
+    const wrapper = await mountSuspended(createNodeComponent({
+      element: 'node',
+      title: 'Multiple Sections',
+      sections: [
+        {
+          element: 'drupal-layout',
+          layout: 'onecol',
+          settings: {
+            label: 'One column layout'
+          },
+          content: {
+            element: 'drupal-markup',
+            content: '<h2>Section One</h2>'
+          }
+        },
+        {
+          element: 'drupal-layout',
+          layout: 'twocol',
+          settings: {
+            label: 'Two column layout'
+          },
+          first: {
+            element: 'drupal-markup',
+            content: '<p>First column</p>'
+          },
+          second: {
+            element: 'drupal-markup',
+            content: '<p>Second column</p>'
+          }
+        }
+      ]
+    }))
+    expect(wrapper.html()).toContain('<h2>Section One</h2>')
+    expect(wrapper.html()).toContain('<p>First column</p>')
+    expect(wrapper.html()).toContain('<p>Second column</p>')
+  })
 })
