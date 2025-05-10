@@ -1,0 +1,49 @@
+export default defineNuxtPlugin(nuxtApp => {
+  const previews = useState('drupalCeComponentPreviews', () => [])
+
+  /**
+   * Creates a preview of a component and renders it to a target element
+   *
+   * @param {string} componentName - The name of the registered Vue component
+   * @param {Object} props - Props to pass to the component
+   * @param {string|Element} target - CSS selector or DOM element where the component will be rendered
+   * @returns {Object} An object with unmount method
+   */
+  function previewComponent(componentName, props, target) {
+    if (!nuxtApp.vueApp.component(componentName)) {
+      throw new Error(`Component "${componentName}" not found in Nuxt registry`);
+    }
+
+    const targetEl = typeof target === 'string'
+      ? document.querySelector(target)
+      : target
+
+    if (!targetEl) {
+      throw new Error(`Target element "${target}" not found in DOM`);
+    }
+
+    previews.value.push({
+      id: useId(),
+      target: targetEl,
+      content: {
+        element: componentName,
+        ...props
+      }
+    })
+
+    return {
+      unmount() {
+        previews.value = previews.value.filter(c => c.id !== id)
+      }
+    }
+  }
+
+  nuxtApp.provide('drupalCePreviewComponent', previewComponent)
+
+  onNuxtReady(() => {
+    const event = new CustomEvent('nuxt-drupal-ce:ready', {
+      detail: { nuxtApp }
+    })
+    window.dispatchEvent(event)
+  })
+})

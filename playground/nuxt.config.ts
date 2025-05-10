@@ -5,6 +5,7 @@ export default defineNuxtConfig({
   modules: [
     DrupalCe,
   ],
+  ssr: false,
   compatibilityDate: '2024-12-16',
   nitro: {
     compressPublicAssets: true,
