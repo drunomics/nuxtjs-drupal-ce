@@ -19,4 +19,7 @@ export default defineNuxtConfig({
     defaultLocale: 'en',
     detectBrowserLanguage: false,
   },
+  app: {
+    cdnURL: 'http://localhost:3000'
+  }
 })

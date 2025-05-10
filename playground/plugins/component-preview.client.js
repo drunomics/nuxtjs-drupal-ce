@@ -10,10 +10,6 @@ export default defineNuxtPlugin(nuxtApp => {
    * @returns {Object} An object with unmount method
    */
   function previewComponent(componentName, props, target) {
-    if (!nuxtApp.vueApp.component(componentName)) {
-      throw new Error(`Component "${componentName}" not found in Nuxt registry`);
-    }
-
     const targetEl = typeof target === 'string'
       ? document.querySelector(target)
       : target

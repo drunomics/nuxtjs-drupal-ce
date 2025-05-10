@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Nuxt Component Preview</title>
+</head>
+<body>
+<!-- Nuxt app container -->
+<div id="__nuxt" style="display:none;"></div>
+
+<!-- Preview target -->
+<div id="preview-target" style="border: 2px dashed #ccc; min-height: 200px; padding: 20px; margin: 20px;">
+  Component will appear here
+</div>
+
+<div id="preview-target-2" style="border: 2px dashed #ccc; min-height: 200px; padding: 20px; margin: 20px;">
+  Component will appear here
+</div>
+
+
+<div id="preview-target-3" style="border: 2px dashed #ccc; min-height: 200px; padding: 20px; margin: 20px;">
+  Component will appear here
+</div>
+
+<!-- Load Nuxt
+<script>window.__NUXT__={};window.__NUXT__.config={public:{},app:{baseURL:"/",buildId:"dev",buildAssetsDir:"/_nuxt/",cdnURL:"http://localhost:3000"}}</script> -->
+<script>window.__NUXT__={};window.__NUXT__.config={public:{drupalCe:{inPreviewMode:true, drupalBaseUrl:"http://127.0.0.1:3000",ceApiEndpoint:"/ce-api",menuEndpoint:"api/menu_items/$$$NAME$$$",customErrorPages:false,fetchOptions:{credentials:"include"},fetchProxyHeaders:["cookie"],useLocalizedMenuEndpoint:true,addRequestFormat:false,serverApiProxy:true,enableCePreviewer:true}},app:{baseURL:"/",buildId:"dev",buildAssetsDir:"/_nuxt/",cdnURL:""}}</script>
+<script type="module" src="http://localhost:3000/_nuxt/home/fago/projects/xb-dev/nuxtjs-drupal-ce/node_modules/nuxt/dist/app/entry.js"></script>
+
+<!-- Test script -->
+<script>
+  window.addEventListener('nuxt-drupal-ce:ready', (event) => {
+    const { nuxtApp } = event.detail
+
+    console.log('running test script')
+
+    nuxtApp.$drupalCePreviewComponent(
+      'drupal-markup',
+      {
+        content: `
+            <div class="custom-markup">
+              <h2>Rendered HTML Content</h2>
+              <p>This is <strong>HTML</strong> content rendered through the Nuxt component.</p>
+            </div>
+          `
+      },
+      '#preview-target'
+    )
+
+    nuxtApp.$drupalCePreviewComponent(
+      'node-article-full',
+      {
+        title: 'Test article',
+      },
+      '#preview-target-2'
+    )
+
+    nuxtApp.$drupalCePreviewComponent(
+      'node-article-full',
+      {
+        title: 'Test article 2',
+      },
+      '#preview-target-3'
+    )
+
+  })
+
+
+</script>
+</body>
+</html>
