@@ -60,7 +60,7 @@ export default defineNuxtModule<ModuleOptions>({
       options.serverApiProxy = false
     }
 
-    const { resolve } = createResolver(import.meta.url)
+    const {resolve} = createResolver(import.meta.url)
     const runtimeDir = fileURLToPath(new URL('./runtime', import.meta.url))
     nuxt.options.build.transpile.push(runtimeDir)
     if (options.serverLogLevel) {
@@ -73,7 +73,7 @@ export default defineNuxtModule<ModuleOptions>({
       })
     }
 
-    const publicOptions = { ...options }
+    const publicOptions = {...options}
     // Server options are not needed in the client bundle.
     delete publicOptions.serverLogLevel
     delete publicOptions.passThroughHeaders
@@ -101,40 +101,5 @@ export default defineNuxtModule<ModuleOptions>({
         handler: resolve(runtimeDir, 'server/api/menu'),
       })
     }
-
-    // Handle the ce-preview.
-    addTemplate({
-      filename: 'drupal-ce-preview/custom-entry.ts',
-      src: resolve('./runtime/ce-preview/custom-entry.ts'),
-      write: true
-    })
-    addTemplate({
-      filename: 'drupal-ce-preview/utils.ts',
-      src: resolve('./runtime/ce-preview/utils.ts'),
-      write: true
-    })
-
-    // Register a separate entry-point for render previews.
-    nuxt.hook('vite:extendConfig', (config, { isClient }) => {
-      if (isClient) {
-        if (!config.build) config.build = {};
-        if (!config.build.rollupOptions) config.build.rollupOptions = {};
-        if (!config.build.rollupOptions.input) config.build.rollupOptions.input = {};
-
-        if (typeof config.build.rollupOptions.input === 'object') {
-          config.build.rollupOptions.input['ce-preview-entry'] =
-            resolve(nuxt.options.buildDir, 'drupal-ce-preview/custom-entry.ts');
-        }
-      }
-    });
-
-    // Hook into Nitro to make sure the generated file is served.
-    nuxt.hook('nitro:config', (nitroConfig) => {
-      nitroConfig.publicAssets = nitroConfig.publicAssets || []
-      nitroConfig.publicAssets.push({
-        dir: resolve(nuxt.options.buildDir, 'drupal-ce-preview'),
-        baseURL: nuxt.options.app.buildAssetsDir.replace(/^\//, '')
-      })
-    })
-  },
+  }
 })
