@@ -27,7 +27,6 @@ export default defineEventHandler(async (event) => {
     }
     
     const contentType = event.node.req.headers['content-type'] || ''
-    console.log('contentType', contentType)
     if (!contentType.includes('multipart/form-data') && !contentType.includes('application/x-www-form-urlencoded') || event.node.req.headers['x-form-processed']) {
       return
     }
