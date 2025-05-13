@@ -19,8 +19,7 @@ export interface ModuleOptions {
   passThroughHeaders?: string[]
   exposeAPIRouteRules?: boolean
   serverLogLevel?: boolean | 'info' | 'error'
-  disableFormHandler?: boolean
-  bypassRoutes?: string[]
+  disableFormHandler?: boolean | string[]
 }
 
 export default defineNuxtModule<ModuleOptions>({
@@ -66,7 +65,9 @@ export default defineNuxtModule<ModuleOptions>({
       addServerPlugin(resolve(runtimeDir, 'server/plugins/errorLogger'))
     }
     addImportsDir(resolve(runtimeDir, 'composables/useDrupalCe'))
-    if (!options.disableFormHandler) {
+    
+    // Add form handler middleware if not disabled (via boolean)
+    if (!(options.disableFormHandler === true)) {
       addServerHandler({
         handler: resolve(runtimeDir, 'server/middleware/drupalFormHandler'),
       })
@@ -84,6 +85,7 @@ export default defineNuxtModule<ModuleOptions>({
     nuxt.options.runtimeConfig.drupalCe = defu(nuxt.options.runtimeConfig.drupalCe ?? {}, {
       serverLogLevel: options.serverLogLevel as string,
       passThroughHeaders: options.passThroughHeaders,
+      disableFormHandler: options.disableFormHandler,
     })
 
     if (options.serverApiProxy === true) {

@@ -109,8 +109,6 @@ is added automatically to requests. Defaults to `false`.
 
 - `disableFormHandler`: If set to `true`, the form handler middleware will be disabled. Defaults to `false`.
 
-- `bypassRoutes`: An array of routes to bypass the form handler middleware. Defaults to `[]`.
-
 ## Overriding options with environment variables
 
 Runtime config values can be overridden with environment variables via `NUXT_PUBLIC_` prefix. Supported runtime overrides:
@@ -166,22 +164,20 @@ There are cases where you may want to bypass this middleware for certain routes 
 
 ### Route level
 
-To bypass the form handler middleware for certain routes, you can use the `bypassRoutes` option.
+To bypass the form handler middleware for certain routes, you can use the `disableFormHandler` option with an array of routes:
 
-`bypassRoutes`:
 ```js
 export default defineNuxtConfig({
   drupalCe: {
-    bypassRoutes: ['/form/contact'],
+    disableFormHandler: ['/form/contact', '/form/feedback'],
   },
 })
 ```
 
 ### Global level
 
-To disable the form handler middleware globally, you can use the `disableFormHandler` option.
+To disable the form handler middleware globally, you can use the `disableFormHandler` option with `true`:
 
-`disableFormHandler`:
 ```js
 export default defineNuxtConfig({
   drupalCe: {
