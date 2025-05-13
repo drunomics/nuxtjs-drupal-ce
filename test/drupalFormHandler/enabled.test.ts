@@ -3,7 +3,7 @@ import { describe, it, expect } from 'vitest'
 import { setup, createPage } from '@nuxt/test-utils/e2e'
 import DrupalCe from '../../'
 
-describe('Drupal Form Handler enabled', async () => {
+describe('Drupal form handler enabled', async () => {
   await setup({
     rootDir: fileURLToPath(new URL('../../playground', import.meta.url)),
     nuxtConfig: {
@@ -18,7 +18,7 @@ describe('Drupal Form Handler enabled', async () => {
     port: 3103,
   })
 
-  it('successfully processes login form submission', async () => {
+  it('successfully processes login form submission with form handler enabled', async () => {
     const page = await createPage('/user/login')
   
     const name = page.locator('input[name="name"]')
@@ -35,7 +35,7 @@ describe('Drupal Form Handler enabled', async () => {
     await page.waitForURL('**/node/1', { timeout: 10000 })
   })
   
-  it('middleware skips processing due to wrong content type', async () => {
+  it('form handler middleware skips processing due to wrong content type', async () => {
     const page = await createPage('/user/login')
 
     // Set the content type to application/json to make middleware skip processing.

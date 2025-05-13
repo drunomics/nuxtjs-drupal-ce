@@ -3,7 +3,7 @@ import { describe, it, expect } from 'vitest'
 import { setup, createPage } from '@nuxt/test-utils/e2e'
 import DrupalCe from '../../'
 
-describe('Drupal Form Handler disabled', async () => {
+describe('Drupal form handler disabled', async () => {
   await setup({
     rootDir: fileURLToPath(new URL('../../playground', import.meta.url)),
     nuxtConfig: {
@@ -19,7 +19,7 @@ describe('Drupal Form Handler disabled', async () => {
     port: 3104,
   })
 
-  it('fails to process login form submission when disabled', async () => {
+  it('fails to process login form submission when form handler is disabled', async () => {
     const page = await createPage('/user/login')
 
     const name = page.locator('input[name="name"]')
