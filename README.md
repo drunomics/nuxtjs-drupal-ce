@@ -158,9 +158,9 @@ x node-custom--default.vue
 
 ## Form handler middleware
 
-The form handler middleware is used to process Drupal form submissions.
-
-There are cases where you may want to bypass this middleware for certain routes or disable it globally.
+The form handler middleware is used to process Drupal form submissions by forwarding form-POST
+requests to Drupal and rendering the response as usual. This option allows you to bypass this
+middleware for certain routes or to disable it globally.
 
 ### Route level
 
@@ -169,7 +169,7 @@ To bypass the form handler middleware for certain routes, you can use the `disab
 ```js
 export default defineNuxtConfig({
   drupalCe: {
-    disableFormHandler: ['/form/contact', '/form/feedback'],
+    disableFormHandler: ['/custom-form'],
   },
 })
 ```
