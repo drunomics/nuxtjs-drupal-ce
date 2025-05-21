@@ -1,6 +1,6 @@
 // @vitest-environment nuxt
-import { describe, it, expect, beforeEach } from 'vitest'
-import { registerEndpoint } from '@nuxt/test-utils/runtime'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { registerEndpoint, clearNuxtData } from '@nuxt/test-utils/runtime'
 import { useDrupalCe } from '../../src/runtime/composables/useDrupalCe'
 import { useNuxtApp } from '#imports'
 import { ref } from 'vue'
