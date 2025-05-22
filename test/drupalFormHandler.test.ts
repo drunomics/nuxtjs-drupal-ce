@@ -31,6 +31,8 @@ describe('Drupal form handler', async () => {
     await name.fill('admin')
     await submit.click()
 
+    await new Promise(resolve => setTimeout(resolve, 3000))
+
     expect(await page.content()).toContain('Form response received, submit was successful!')
   })
 
@@ -44,6 +46,8 @@ describe('Drupal form handler', async () => {
 
     await name.fill('admin')
     await submit.click()
+
+    await new Promise(resolve => setTimeout(resolve, 3000))
 
     // Without form handler, the form should not display form response.
     expect(await page.content()).not.toContain('Form response received, submit was successful!')
