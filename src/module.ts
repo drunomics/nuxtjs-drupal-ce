@@ -59,7 +59,7 @@ export default defineNuxtModule<ModuleOptions>({
     }
 
     const { resolve } = createResolver(import.meta.url)
-    const runtimeDir = fileURLToPath(new URL('./runtime', import.meta.url))
+    const runtimeDir = resolve('./runtime')
     nuxt.options.build.transpile.push(runtimeDir)
     if (options.serverLogLevel) {
       addServerPlugin(resolve(runtimeDir, 'server/plugins/errorLogger'))

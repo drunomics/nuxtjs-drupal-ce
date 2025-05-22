@@ -2,10 +2,11 @@ import { fileURLToPath } from 'node:url'
 import { describe, it, expect } from 'vitest'
 import { setup, createPage } from '@nuxt/test-utils/e2e'
 import DrupalCe from '../'
+import { join } from 'node:path'
 
 describe('Drupal form handler', async () => {
   await setup({
-    rootDir: fileURLToPath(new URL('../playground', import.meta.url)),
+    rootDir: join(fileURLToPath(import.meta.url), '../../playground'),
     nuxtConfig: {
       modules: [
         DrupalCe,

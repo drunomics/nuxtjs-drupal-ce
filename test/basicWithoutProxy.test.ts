@@ -2,10 +2,11 @@ import { fileURLToPath } from 'node:url'
 import { describe, it, expect } from 'vitest'
 import { setup, $fetch } from '@nuxt/test-utils'
 import DrupalCe from '..'
+import { join } from 'node:path'
 
 describe('Site works with serverApiProxy disabled', async () => {
   await setup({
-    rootDir: fileURLToPath(new URL('../playground', import.meta.url)),
+    rootDir: join(fileURLToPath(import.meta.url), '../../playground'),
     nuxtConfig: {
       modules: [
         DrupalCe,
