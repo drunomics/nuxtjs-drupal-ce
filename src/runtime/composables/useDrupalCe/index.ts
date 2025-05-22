@@ -126,7 +126,7 @@ export const useDrupalCe = () => {
       title: '',
     }))
     const serverResponse = useState('server-response', () => null)
-    useFetchOptions.key = `page-${path}`
+    useFetchOptions.key = `page-${path}${skipDrupalCeApiProxy ? '-direct' : '-proxy'}`
     let page = null
     const pageError = ref(null)
 

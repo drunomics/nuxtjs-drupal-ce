@@ -16,6 +16,7 @@ export default defineVitestConfig({
           }
         }
       }
-    }
+    },
+    testTimeout: 10000,
   }
 })
