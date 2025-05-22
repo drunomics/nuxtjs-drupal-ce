@@ -11,6 +11,7 @@ describe('Module redirects work', async () => {
   })
   it('redirect to /node/1 works', async () => {
     const html = await $fetch('/redirect')
+    await new Promise(resolve => setTimeout(resolve, 3000))
     expect(html).toContain('Node: Test page')
   })
 })
