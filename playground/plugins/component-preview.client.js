@@ -19,7 +19,6 @@ export default defineNuxtPlugin(nuxtApp => {
     }
 
     previews.value.push({
-      id: useId(),
       target: targetEl,
       content: {
         element: componentName,
@@ -29,7 +28,7 @@ export default defineNuxtPlugin(nuxtApp => {
 
     return {
       unmount() {
-        previews.value = previews.value.filter(c => c.id !== id)
+        previews.value = previews.value.filter(c => c.target !== targetEl)
       }
     }
   }
