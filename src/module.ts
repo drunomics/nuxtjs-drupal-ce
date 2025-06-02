@@ -101,5 +101,14 @@ export default defineNuxtModule<ModuleOptions>({
         handler: resolve(runtimeDir, 'server/api/menu'),
       })
     }
+
+    // Add router options for iframe compatibility.
+    const resolver = createResolver(import.meta.url)
+    nuxt.hook('pages:routerOptions', (options) => {
+      options.files.push({
+        path: resolver.resolve('./runtime/router.options'),
+        optional: true  // Only apply when pages are enabled.
+      })
+    })
   }
 })
