@@ -126,7 +126,9 @@ export const useDrupalCe = () => {
       title: '',
     }))
     const serverResponse = useState('server-response', () => null)
-    useFetchOptions.key = `page-${path}${skipDrupalCeApiProxy ? '-direct' : '-proxy'}`
+    // Remove trailing slash from path key as it might cause issues in SSG.
+    const sanitizedPathKey = path.endsWith('/') && path !== '/' ? path.slice(0, -1) : path
+    useFetchOptions.key = `page-${sanitizedPathKey}${skipDrupalCeApiProxy ? '-direct' : '-proxy'}`
     let page = null
     const pageError = ref(null)
 
