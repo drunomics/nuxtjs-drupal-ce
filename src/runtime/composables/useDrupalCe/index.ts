@@ -128,8 +128,11 @@ export const useDrupalCe = () => {
     const serverResponse = useState('server-response', () => null)
     // Remove trailing slash from path key as it might cause issues in SSG.
     const sanitizedPathKey = path.endsWith('/') && path !== '/' ? path.slice(0, -1) : path
-    const queryStringKey = useFetchOptions.query ? `?${Object.entries(useFetchOptions.query).map(([key, value]) => `${key}=${value}`).join('&')}` : ''
-    useFetchOptions.key = `page-${sanitizedPathKey}${queryStringKey}${skipDrupalCeApiProxy ? '-direct' : '-proxy'}`
+    const params =
+      Object.keys(useFetchOptions.query || {}).length > 0
+        ? `?${new URLSearchParams(unref(useFetchOptions.query)).toString()}`
+        : ''
+    useFetchOptions.key = `page-${sanitizedPathKey}${params}${skipDrupalCeApiProxy ? '-direct' : '-proxy'}`
     let page = null
     const pageError = ref(null)
 
