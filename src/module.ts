@@ -1,5 +1,4 @@
-import { fileURLToPath } from 'node:url'
-import { defineNuxtModule, addServerPlugin, createResolver, addImportsDir, addServerHandler, addTemplate } from '@nuxt/kit'
+import { defineNuxtModule, addServerPlugin, createResolver, addImportsDir, addServerHandler } from '@nuxt/kit'
 import { defu } from 'defu'
 import type { NuxtOptionsWithDrupalCe } from './types'
 
@@ -19,8 +18,8 @@ export interface ModuleOptions {
   passThroughHeaders?: string[]
   exposeAPIRouteRules?: boolean
   serverLogLevel?: boolean | 'info' | 'error'
-  disableFormHandler?: boolean
-  enableCePreviewer?: boolean
+  disableFormHandler?: boolean | string[]
+  enableComponentPreviews?: boolean
 }
 
 export default defineNuxtModule<ModuleOptions>({
@@ -46,7 +45,7 @@ export default defineNuxtModule<ModuleOptions>({
     passThroughHeaders: ['cache-control', 'content-language', 'set-cookie', 'x-drupal-cache', 'x-drupal-dynamic-cache'],
     serverLogLevel: 'info',
     disableFormHandler: false,
-    enableCePreviewer: true,
+    enableComponentPreviews: true,
   },
   setup(options, nuxt) {
     const nuxtOptions = nuxt.options as NuxtOptionsWithDrupalCe
@@ -60,14 +59,16 @@ export default defineNuxtModule<ModuleOptions>({
       options.serverApiProxy = false
     }
 
-    const {resolve} = createResolver(import.meta.url)
-    const runtimeDir = fileURLToPath(new URL('./runtime', import.meta.url))
+    const { resolve } = createResolver(import.meta.url)
+    const runtimeDir = resolve('./runtime')
     nuxt.options.build.transpile.push(runtimeDir)
     if (options.serverLogLevel) {
       addServerPlugin(resolve(runtimeDir, 'server/plugins/errorLogger'))
     }
     addImportsDir(resolve(runtimeDir, 'composables/useDrupalCe'))
-    if (!options.disableFormHandler) {
+
+    // Add form handler middleware if not disabled (via boolean)
+    if (!(options.disableFormHandler === true)) {
       addServerHandler({
         handler: resolve(runtimeDir, 'server/middleware/drupalFormHandler'),
       })
@@ -85,6 +86,7 @@ export default defineNuxtModule<ModuleOptions>({
     nuxt.options.runtimeConfig.drupalCe = defu(nuxt.options.runtimeConfig.drupalCe ?? {}, {
       serverLogLevel: options.serverLogLevel as string,
       passThroughHeaders: options.passThroughHeaders,
+      disableFormHandler: options.disableFormHandler,
     })
 
     if (options.serverApiProxy === true) {
@@ -102,13 +104,15 @@ export default defineNuxtModule<ModuleOptions>({
       })
     }
 
-    // Add router options for iframe compatibility.
-    const resolver = createResolver(import.meta.url)
-    nuxt.hook('pages:routerOptions', (options) => {
-      options.files.push({
-        path: resolver.resolve('./runtime/router.options'),
-        optional: true  // Only apply when pages are enabled.
+    if (options.enableComponentPreviews) {
+      // Add router options for iframe compatibility.
+      const resolver = createResolver(import.meta.url)
+      nuxt.hook('pages:routerOptions', (options) => {
+        options.files.push({
+          path: resolver.resolve('./runtime/router.options'),
+          optional: true  // Only apply when pages are enabled.
+        })
       })
-    })
+    }
   }
 })

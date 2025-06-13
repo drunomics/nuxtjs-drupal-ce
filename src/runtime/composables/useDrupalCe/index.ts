@@ -5,7 +5,7 @@ import type { Ref, ComputedRef, Component } from 'vue'
 import { getDrupalBaseUrl, getMenuBaseUrl } from './server'
 import type { UseFetchOptions } from '#app'
 import { callWithNuxt } from '#app'
-import { useRuntimeConfig, useState, useFetch, navigateTo, createError, h, resolveComponent, setResponseStatus, useNuxtApp, useRequestHeaders, ref, watch, useRequestEvent, computed, useHead, defineComponent } from '#imports'
+import { useRuntimeConfig, useState, useFetch, navigateTo, createError, h, resolveComponent, setResponseStatus, useNuxtApp, useRequestHeaders, ref, unref, watch, useRequestEvent, computed, useHead, defineComponent } from '#imports'
 
 export const useDrupalCe = () => {
   const config = useRuntimeConfig().public.drupalCe
@@ -126,7 +126,13 @@ export const useDrupalCe = () => {
       title: '',
     }))
     const serverResponse = useState('server-response', () => null)
-    useFetchOptions.key = `page-${path}`
+    // Remove trailing slash from path key as it might cause issues in SSG.
+    const sanitizedPathKey = path.endsWith('/') && path !== '/' ? path.slice(0, -1) : path
+    const params =
+      Object.keys(useFetchOptions.query || {}).length > 0
+        ? `?${new URLSearchParams(unref(useFetchOptions.query)).toString()}`
+        : ''
+    useFetchOptions.key = `page-${sanitizedPathKey}${params}${skipDrupalCeApiProxy ? '-direct' : '-proxy'}`
     let page = null
     const pageError = ref(null)
 
