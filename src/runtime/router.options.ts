@@ -1,14 +1,14 @@
 import type { RouterConfig } from '@nuxt/schema'
-import { createMemoryHistory, createWebHistory } from 'vue-router'
+import { createMemoryHistory } from 'vue-router'
 
-export default <RouterConfig> {
+export default <RouterConfig>{
+  // Only change history mode on client and in about:srcdoc iframe to avoid SSR issues
   history: (base) => {
-    // Use memory history for about:srcdoc iframes to prevent SecurityError.
-    if (process.client && window.location.href === 'about:srcdoc') {
+    if (import.meta.client && typeof window !== 'undefined' && window.location.href === 'about:srcdoc') {
+      // [Drupal CE] Detected about:srcdoc iframe - using memory history
       console.log('[Drupal CE] Detected about:srcdoc iframe - using memory history')
       return createMemoryHistory(base)
     }
-
-    return createWebHistory(base)
+    // Use Nuxt's default history otherwise (no return statement lets Nuxt handle it)
   }
 }
