@@ -290,7 +290,7 @@ export const useDrupalCe = () => {
     if (typeof customElements === 'string') {
       const component = resolveCustomElement('drupal-markup')
       if (component) {
-        return h(component, { content: customElements })
+        return h(component, {content: customElements})
       }
       // Else fallback to a simple wrapping div.
       return h('div', customElements)
@@ -350,12 +350,10 @@ export const useDrupalCe = () => {
       ...(parts.includes('title') && { title: page.value.title }),
       ...(parts.includes('meta') && { meta: page.value.metatags.meta }),
       ...(parts.includes('link') && { link: page.value.metatags.link }),
-      ...(parts.includes('jsonld') && {
-        script: [{
-          type: 'application/ld+json',
-          children: JSON.stringify(page.value.metatags.jsonld || [], null, ''),
-        }]
-      }),
+      ...(parts.includes('jsonld') && { script: [{
+        type: 'application/ld+json',
+        children: JSON.stringify(page.value.metatags.jsonld || [], null, ''),
+      }] }),
     })
   }
 

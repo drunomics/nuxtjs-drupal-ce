@@ -15,8 +15,8 @@
 
 <script setup lang="ts">
 defineSlots<{
-  body?: () => VNode
-  image?: () => VNode
+  body(): any
+  image(): any
 }>()
 
 defineProps<{
