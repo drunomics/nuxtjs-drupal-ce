@@ -3,7 +3,7 @@ import { describe, it, expect } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import { defineComponent } from 'vue'
 import { useDrupalCe } from '../../src/runtime/composables/useDrupalCe'
-import { useNuxtApp } from "#imports";
+import {useNuxtApp} from "#imports";
 
 describe('renderCustomElements', () => {
   const { renderCustomElements } = useDrupalCe()
@@ -89,12 +89,10 @@ describe('renderCustomElements', () => {
     it('should render a single custom element', async () => {
       const wrapper = await mountSuspended(defineComponent({
         setup() {
-          return {
-            component: renderCustomElements({
+          return { component: renderCustomElements({
               element: 'test-component',
               foo: 'bar'
-            })
-          }
+            })}
         },
         template: '<component :is="component" />'
       }))
@@ -106,13 +104,11 @@ describe('renderCustomElements', () => {
       // Note: This produces a [Vue warn] also.
       const wrapper = await mountSuspended(defineComponent({
         setup() {
-          return {
-            component: renderCustomElements({
+          return { component: renderCustomElements({
               element: 'span',
               title: 'test',
               content: 'Text content'
-            })
-          }
+            })}
         },
         template: '<component :is="component" />'
       }))
@@ -136,12 +132,10 @@ describe('renderCustomElements', () => {
     it('should render array of custom elements without a wrapper div', async () => {
       const wrapper = await mountSuspended(defineComponent({
         setup() {
-          return {
-            component: renderCustomElements([
+          return { component: renderCustomElements([
               { element: 'test-component', foo: 'one' },
               { element: 'another-component', bar: 'two' }
-            ])
-          }
+            ]) }
         },
         template: '<component :is="component" />'
       }))
@@ -157,7 +151,7 @@ describe('renderCustomElements', () => {
     it('should handle malformed element objects', async () => {
       const wrapper = await mountSuspended(defineComponent({
         setup() {
-          return { component: renderCustomElements({ element: 'test-component' }) }
+          return { component: renderCustomElements({ element: 'test-component' })}
         },
         template: '<component :is="component" />'
       }))
@@ -167,12 +161,10 @@ describe('renderCustomElements', () => {
     it('should handle nonexistent components', async () => {
       const wrapper = await mountSuspended(defineComponent({
         setup() {
-          return {
-            component: renderCustomElements({
+          return { component: renderCustomElements({
               element: 'nonexistent-component',
               foo: 'bar'
-            })
-          }
+            })}
         },
         template: '<component :is="component" />'
       }))

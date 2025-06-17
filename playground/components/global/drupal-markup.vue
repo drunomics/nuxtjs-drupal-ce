@@ -6,12 +6,12 @@
 
 <script setup lang="ts">
 defineProps<{
-  content: string
+  content?: string
 }>()
 
 // Using display:contents makes this div virtually invisible in the layout
 // This mitigates the impact of the wrapping div when rendering the content.
 defineSlots<{
-  default: () => VNode
+  default(): any
 }>()
 </script>

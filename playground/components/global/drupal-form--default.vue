@@ -17,11 +17,11 @@ defineProps<{
   formId: string
   attributes: object
   method: string,
-  content: string
+  content?: string
 }>()
 
 defineSlots<{
-  default: () => VNode
+  default(): any
 }>()
 </script>
 
