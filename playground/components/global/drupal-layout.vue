@@ -26,6 +26,10 @@ const { renderCustomElements } = useDrupalCe()
 defineProps<{
   layout: string;
   settings: object;
+  /**
+   * HTML content to render when no slot content is provided.
+   * Required if no default slot content is used.
+   */
   content?: object;
   first?: object;
   second?: object;

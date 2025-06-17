@@ -17,6 +17,10 @@ defineProps<{
   formId: string
   attributes: object
   method: string,
+  /**
+   * HTML content to render when no slot content is provided.
+   * Required if no default slot content is used.
+   */
   content?: string
 }>()
 
