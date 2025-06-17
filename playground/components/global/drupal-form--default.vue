@@ -7,7 +7,7 @@
     class="drupal-form"
   >
     <slot>
-      <component :is="useDrupalCe().renderCustomElements($attrs.content)" />
+      <component :is="useDrupalCe().renderCustomElements(content)" />
     </slot>
   </form>
 </template>
@@ -16,10 +16,12 @@
 defineProps<{
   formId: string
   attributes: object
-  method: string
+  method: string,
+  content: string
 }>()
+
 defineSlots<{
-  default()
+  default: () => VNode
 }>()
 </script>
 
