@@ -6,6 +6,7 @@ import { getDrupalBaseUrl, getMenuBaseUrl } from './server'
 import type { UseFetchOptions } from '#app'
 import { callWithNuxt } from '#app'
 import { useRuntimeConfig, useState, useFetch, navigateTo, createError, h, resolveComponent, setResponseStatus, useNuxtApp, useRequestHeaders, ref, unref, watch, useRequestEvent, computed, useHead, defineComponent } from '#imports'
+import type { CustomElementContent } from '../../../module'
 
 export const useDrupalCe = () => {
   const config = useRuntimeConfig().public.drupalCe
@@ -275,17 +276,13 @@ export const useDrupalCe = () => {
   /**
    * Renders Vue components from JSON-serialized custom element data.
    *
-   * @param customElements - Custom element data that can be:
-   *   - null/undefined (returns null, skipping render)
-   *   - string (rendered inside a wrapping div element)
-   *   - single custom element object with {element: string, ...props}
-   *   - array of strings or custom element objects (rendered inside a wrapping div element)
+   * @param customElements - Custom element data to render
    * @returns Component | null - A Vue component that can be used with <component :is="component" />.
    *          Returns null for skipped render, otherwise returns a Vue component
    *          (either a custom element component or a wrapping div component for strings/arrays).
    */
   const renderCustomElements = (
-    customElements: null | undefined | string | Record<string, any> | Array<string | object>,
+    customElements: CustomElementContent,
   ): Component | null => {
     // Handle null/undefined case
     if (customElements == null) {

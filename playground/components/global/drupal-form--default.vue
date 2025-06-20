@@ -13,15 +13,17 @@
 </template>
 
 <script setup lang="ts">
+import type { CustomElementContent } from 'nuxtjs-drupal-ce'
+
 defineProps<{
   formId: string
   attributes: object
   method: string,
   /**
-   * HTML content to render when no slot content is provided.
+   * Custom elements content to render.
    * Required if no default slot content is used.
    */
-  content?: string
+  content?: CustomElementContent
 }>()
 
 defineSlots<{

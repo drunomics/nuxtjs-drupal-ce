@@ -5,12 +5,14 @@
 </template>
 
 <script setup lang="ts">
+import type { CustomElementContent } from 'nuxtjs-drupal-ce'
+
 defineProps<{
   /**
-   * HTML content to render when no slot content is provided.
+   * Custom elements content to render.
    * Required if no default slot content is used.
    */
-  content?: string
+  content?: CustomElementContent
 }>()
 
 // Using display:contents makes this div virtually invisible in the layout

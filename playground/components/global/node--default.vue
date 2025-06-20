@@ -14,6 +14,8 @@
 </template>
 
 <script setup lang="ts">
+import type { CustomElementContent } from 'nuxtjs-drupal-ce'
+
 defineSlots<{
   body(): any
   image(): any
@@ -23,9 +25,12 @@ defineProps<{
   title?: string;
   type?: string;
   created?: number | string;
-  // Layout-builder support.
-  sections?: object;
-  image?: string;
-  body?: string;
+  /**
+   * Custom elements content to render.
+   * Required if no default slot content is used.
+   */
+  sections?: CustomElementContent; // Layout-builder support.
+  image?: CustomElementContent;
+  body?: CustomElementContent;
 }>()
 </script>

@@ -64,7 +64,7 @@ export default defineNuxtModule<ModuleOptions>({
       addServerPlugin(resolve(runtimeDir, 'server/plugins/errorLogger'))
     }
     addImportsDir(resolve(runtimeDir, 'composables/useDrupalCe'))
-    
+
     // Add form handler middleware if not disabled (via boolean)
     if (!(options.disableFormHandler === true)) {
       addServerHandler({
@@ -103,3 +103,5 @@ export default defineNuxtModule<ModuleOptions>({
     }
   },
 })
+
+export type { CustomElementContent } from './types'

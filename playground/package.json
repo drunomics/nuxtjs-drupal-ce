@@ -1,4 +1,7 @@
 {
   "private": true,
-  "name": "nuxtjs-drupal-ce-playground"
+  "name": "nuxtjs-drupal-ce-playground",
+  "dependencies": {
+    "nuxtjs-drupal-ce": "file:../"
+  }
 }
