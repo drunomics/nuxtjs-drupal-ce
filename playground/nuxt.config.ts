@@ -10,7 +10,7 @@ export default defineNuxtConfig({
     compressPublicAssets: true,
   },
   drupalCe: {
-    drupalBaseUrl: 'http://localhost:3000',
+    drupalBaseUrl: 'http://127.0.0.1:3000',
     ceApiEndpoint: '/ce-api',
   },
   i18n: {
