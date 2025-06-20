@@ -25,11 +25,8 @@ defineProps<{
   title?: string;
   type?: string;
   created?: number | string;
-  /**
-   * Custom elements content to render.
-   * Required if no default slot content is used.
-   */
-  sections?: CustomElementContent; // Layout-builder support.
+  // Layout-builder support.
+  sections?: CustomElementContent;
   image?: CustomElementContent;
   body?: CustomElementContent;
 }>()

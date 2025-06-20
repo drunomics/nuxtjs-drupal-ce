@@ -6,7 +6,7 @@ import { getDrupalBaseUrl, getMenuBaseUrl } from './server'
 import type { UseFetchOptions } from '#app'
 import { callWithNuxt } from '#app'
 import { useRuntimeConfig, useState, useFetch, navigateTo, createError, h, resolveComponent, setResponseStatus, useNuxtApp, useRequestHeaders, ref, unref, watch, useRequestEvent, computed, useHead, defineComponent } from '#imports'
-import type { CustomElementContent } from '../../../module'
+import type { CustomElementContent } from '../../../types'
 
 export const useDrupalCe = () => {
   const config = useRuntimeConfig().public.drupalCe

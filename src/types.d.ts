@@ -1,7 +1,16 @@
 import type { ModuleOptions } from './module'
 
 /**
- * JSON-serialized custom elements content to render.
+ * A single custom element object with element name and props
+ */
+export interface CustomElementContentObject {
+  element: string
+  [key: string]: any
+}
+
+/**
+ * JSON-serialized custom elements content to render when no slot content is provided.
+ * Required if no default slot content is used.
  *
  * Can be:
  * - null/undefined (returns null, skipping render)
@@ -13,8 +22,8 @@ export type CustomElementContent =
   | null
   | undefined
   | string
-  | Record<string, any>
-  | Array<string | Record<string, any>>
+  | CustomElementContentObject
+  | Array<string | CustomElementContentObject>
 
 // Define the type for the runtime-config,.
 // see https://nuxt.com/docs/guide/going-further/runtime-config#manually-typing-runtime-config

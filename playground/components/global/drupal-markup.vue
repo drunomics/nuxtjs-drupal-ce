@@ -8,10 +8,6 @@
 import type { CustomElementContent } from 'nuxtjs-drupal-ce'
 
 defineProps<{
-  /**
-   * Custom elements content to render.
-   * Required if no default slot content is used.
-   */
   content?: CustomElementContent
 }>()
 
