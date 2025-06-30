@@ -7,8 +7,6 @@
 </template>
   
 <script setup lang="ts">
-import type { CustomElementContent } from 'nuxtjs-drupal-ce'
-
 defineProps<{
   content?: CustomElementContent
 }>()

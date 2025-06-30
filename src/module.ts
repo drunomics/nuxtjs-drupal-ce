@@ -1,4 +1,4 @@
-import { defineNuxtModule, addServerPlugin, createResolver, addImportsDir, addServerHandler } from '@nuxt/kit'
+import { defineNuxtModule, addServerPlugin, createResolver, addImportsDir, addServerHandler, addImports } from '@nuxt/kit'
 import { defu } from 'defu'
 import type { NuxtOptionsWithDrupalCe } from './types'
 
@@ -101,7 +101,14 @@ export default defineNuxtModule<ModuleOptions>({
         handler: resolve(runtimeDir, 'server/api/menu'),
       })
     }
+
+    // Types to be auto-imported.
+    addImports([
+      {
+        name: 'CustomElementContent',
+        from: resolve('./types.d.ts'),
+        type: true
+      },
+    ])
   },
 })
-
-export type { CustomElementContent } from './types'

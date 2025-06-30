@@ -5,7 +5,6 @@
 </template>
 
 <script setup lang="ts">
-
 defineProps<{
   content?: CustomElementContent
 }>()

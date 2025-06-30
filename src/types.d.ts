@@ -9,14 +9,13 @@ export interface CustomElementContentObject {
 }
 
 /**
- * JSON-serialized custom elements content to render when no slot content is provided.
- * Required if no default slot content is used.
+ * JSON-serialized custom elements content for rendering.
  *
  * Can be:
  * - null/undefined (returns null, skipping render)
- * - string (rendered inside a wrapping div element)
+ * - string (treated as HTML)
  * - single custom element object with {element: string, ...props}
- * - array of strings or custom element objects (rendered inside a wrapping div element)
+ * - array of strings or custom element objects (treated as HTML)
  */
 export type CustomElementContent =
   | null
