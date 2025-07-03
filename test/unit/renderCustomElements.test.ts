@@ -14,7 +14,6 @@ describe('renderCustomElements', () => {
     props: {
       foo: String
     },
-    inheritAttrs: false,
     template: '<section>Test Component: {{ foo }}</section>'
   })
 
@@ -23,7 +22,6 @@ describe('renderCustomElements', () => {
     props: {
       bar: String
     },
-    inheritAttrs: false,
     template: '<section>Another Component: {{ bar }}</section>'
   })
   const app = useNuxtApp()

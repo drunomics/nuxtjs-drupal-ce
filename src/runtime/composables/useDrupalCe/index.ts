@@ -275,17 +275,14 @@ export const useDrupalCe = () => {
   /**
    * Renders Vue components from JSON-serialized custom element data.
    *
-   * @param customElements - Custom element data that can be:
-   *   - null/undefined (returns null, skipping render)
-   *   - string (rendered inside a wrapping div element)
-   *   - single custom element object with {element: string, ...props}
-   *   - array of strings or custom element objects (rendered inside a wrapping div element)
+   * @param customElements {CustomElementContent} - Custom element data to render.
+   *          See {@link https://github.com/drunomics/nuxtjs-drupal-ce/blob/2.x/src/types.d.ts} type definition for detailed structure documentation.
    * @returns Component | null - A Vue component that can be used with <component :is="component" />.
    *          Returns null for skipped render, otherwise returns a Vue component
    *          (either a custom element component or a wrapping div component for strings/arrays).
    */
   const renderCustomElements = (
-    customElements: null | undefined | string | Record<string, any> | Array<string | object>,
+    customElements: CustomElementContent,
   ): Component | null => {
     // Handle null/undefined case
     if (customElements == null) {
@@ -320,8 +317,9 @@ export const useDrupalCe = () => {
     }
 
     // Handle single custom element object
-    const resolvedElement = resolveCustomElement(customElements.element)
-    return resolvedElement ? h(resolvedElement, customElements) : null
+    const { element, ...props } = customElements
+    const resolvedElement = resolveCustomElement(element)
+    return resolvedElement ? h(resolvedElement, props) : null
   }
 
   /**
