@@ -276,6 +276,7 @@ export const useDrupalCe = () => {
    * Renders Vue components from JSON-serialized custom element data.
    *
    * @param customElements {CustomElementContent} - Custom element data to render.
+   *          See {@link CustomElementContent} type definition for detailed structure documentation.
    * @returns Component | null - A Vue component that can be used with <component :is="component" />.
    *          Returns null for skipped render, otherwise returns a Vue component
    *          (either a custom element component or a wrapping div component for strings/arrays).

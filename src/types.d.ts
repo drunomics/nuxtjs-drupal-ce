@@ -15,7 +15,7 @@ export interface CustomElementContentObject {
  * - null/undefined (returns null, skipping render)
  * - string (treated as HTML)
  * - single custom element object with {element: string, ...props}
- * - array of strings or custom element objects (treated as HTML)
+ * - array of strings (treated as HTML) or custom element objects
  */
 export type CustomElementContent =
   | null
