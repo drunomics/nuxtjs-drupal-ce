@@ -32,8 +32,8 @@
     "defu": "^6.1.4"
   },
   "devDependencies": {
-    "@nuxt/eslint": "^1.5.1",
-    "@nuxt/eslint-config": "^1.5.1",
+    "@nuxt/eslint": "^1.5.2",
+    "@nuxt/eslint-config": "^1.5.2",
     "@nuxt/kit": "^3.17.6",
     "@nuxt/module-builder": "^1.0.1",
     "@nuxt/schema": "^3.17.6",
