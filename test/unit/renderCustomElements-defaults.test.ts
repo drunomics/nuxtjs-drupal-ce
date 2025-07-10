@@ -56,6 +56,16 @@ describe('Custom Element Fallback Tests', () => {
     expect(wrapper.findComponent(NodeArticleDefault).exists()).toBe(true)
   })
 
+  it('falls back to node-article--default when component name consists of special characters', async () => {
+    const elementData = {
+      element: 'node-article-v2$넌😯',
+      content: 'Testing intermediate fallback with special characters'
+    }
+    const wrapper = await mountSuspended(createTestComponent(elementData))
+    expect(wrapper.html()).toContain('Testing intermediate fallback with special characters')
+    expect(wrapper.findComponent(NodeArticleDefault).exists()).toBe(true)
+  })
+
   it('falls back to node--default when no intermediate default found', async () => {
     const elementData = {
       element: 'node-special-custom',
