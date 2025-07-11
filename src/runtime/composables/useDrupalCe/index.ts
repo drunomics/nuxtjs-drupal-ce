@@ -257,7 +257,7 @@ export const useDrupalCe = () => {
     }
 
     // Progressively remove segments from the custom element name to find a matching default component.
-    const regex = /-?[^-]*$/
+    const regex = /-?[^-]+$/
     let componentName = element
     while (componentName) {
       // Try resolving by adding 'Default' suffix.
