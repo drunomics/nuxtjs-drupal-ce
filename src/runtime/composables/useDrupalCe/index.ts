@@ -257,7 +257,7 @@ export const useDrupalCe = () => {
     }
 
     // Progressively remove segments from the custom element name to find a matching default component.
-    const regex = /-?[a-z]+$/
+    const regex = /-?[^-]+$/
     let componentName = element
     while (componentName) {
       // Try resolving by adding 'Default' suffix.
@@ -265,7 +265,12 @@ export const useDrupalCe = () => {
       if (typeof fallbackComponent === 'object' && fallbackComponent.name) {
         return fallbackComponent
       }
-      componentName = componentName.replace(regex, '')
+      let newComponentName = componentName.replace(regex, '')
+      if (newComponentName === componentName) {
+        // No more segments to remove, break the loop.
+        break
+      }
+      componentName = newComponentName
     }
 
     // If not found, try with resolveComponent. This provides a warning if the component is not found.
