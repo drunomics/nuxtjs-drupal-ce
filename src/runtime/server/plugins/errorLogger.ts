@@ -7,6 +7,7 @@ export default defineNitroPlugin((nitro: any) => {
   if (serverLogLevel === 'error' || serverLogLevel === 'info') {
     nitro.hooks.hook('error', (error: any, { event }: any) => {
       if (!event) {
+        // Ignore errors that are unrelated to requests.
         return
       }
       const url = getRequestURL(event)
