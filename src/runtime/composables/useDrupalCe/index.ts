@@ -9,7 +9,7 @@ import { useRuntimeConfig, useState, useFetch, navigateTo, createError, h, resol
 
 export const useDrupalCe = () => {
   const config = useRuntimeConfig().public.drupalCe
-  const privateConfig = useRuntimeConfig().drupalCe
+  const privateConfig = import.meta.server && useRuntimeConfig().drupalCe
 
   /**
    * Processes the given fetchOptions to apply module defaults
