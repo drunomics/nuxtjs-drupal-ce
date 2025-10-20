@@ -324,7 +324,17 @@ export const useDrupalCe = () => {
     // Handle single custom element object
     const { element, ...props } = customElements
     const resolvedElement = resolveCustomElement(element)
-    return resolvedElement ? h(resolvedElement, props) : null
+
+    // Handle slots
+    const slots = {}
+    if (customElements?.slots && Object.keys(customElements?.slots)?.length) {
+      Object.entries(customElements?.slots).forEach(([key, element]) => {
+        const rendered = renderCustomElements(element)
+        slots[key] = rendered ? () => h(rendered) : null
+      })
+    }
+
+    return resolvedElement ? h(resolvedElement, { ...props, ...props.props }, slots) : null
   }
 
   /**
