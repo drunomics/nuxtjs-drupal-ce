@@ -360,7 +360,7 @@ export const useDrupalCe = () => {
       ...(parts.includes('link') && { link: page.value.metatags.link }),
       ...(parts.includes('jsonld') && { script: [{
         type: 'application/ld+json',
-        children: JSON.stringify(page.value.metatags.jsonld || [], null, ''),
+        innerHTML: JSON.stringify(page.value.metatags.jsonld || [], null, ''),
       }] }),
     })
   }
