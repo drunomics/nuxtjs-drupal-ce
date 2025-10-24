@@ -5,7 +5,7 @@ import { join } from 'node:path'
 
 describe('Module renders pages', async () => {
   await setup({
-    rootDir: join(fileURLToPath(import.meta.url), '../../playground'),
+    rootDir: join(fileURLToPath(import.meta.url), '../../../playground'),
     configFile: 'nuxt.config4test',
     port: 3001,
   })
