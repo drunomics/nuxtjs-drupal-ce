@@ -1,12 +1,12 @@
 import { fileURLToPath } from 'node:url'
 import { describe, it, expect } from 'vitest'
 import { setup, createPage } from '@nuxt/test-utils/e2e'
-import DrupalCe from '../'
+import DrupalCe from '../../'
 import { join } from 'node:path'
 
 describe('Drupal form handler', async () => {
   await setup({
-    rootDir: join(fileURLToPath(import.meta.url), '../../playground'),
+    rootDir: join(fileURLToPath(import.meta.url), '../../../playground'),
     nuxtConfig: {
       modules: [
         DrupalCe,
@@ -34,7 +34,7 @@ describe('Drupal form handler', async () => {
     await new Promise(resolve => setTimeout(resolve, 3000))
 
     expect(await page.content()).toContain('Form response received, submit was successful!')
-  })
+  }, 15000)
 
   it('test with form handler disabled', async () => {
     const page = await createPage('/form/custom2')
@@ -51,7 +51,7 @@ describe('Drupal form handler', async () => {
 
     // Without form handler, the form should not display form response.
     expect(await page.content()).not.toContain('Form response received, submit was successful!')
-  })
+  }, 15000)
 
   it('form handler is bypassed with not matching content-type header', async () => {
     const page = await createPage('/form/custom')
@@ -80,5 +80,5 @@ describe('Drupal form handler', async () => {
 
     // With the not matching content-type, the form handler should bypass processing.
     expect(await page.content()).not.toContain('Form response received, submit was successful!')
-  })
+  }, 15000)
 })
