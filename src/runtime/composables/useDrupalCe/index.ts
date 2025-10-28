@@ -78,7 +78,7 @@ export const useDrupalCe = () => {
     }
 
     return useFetch(path, {
-      ...fetchOptions,
+      ...processFetchOptions(fetchOptions, skipDrupalCeApiProxy),
       $fetch: $ceApi(fetchOptions, skipDrupalCeApiProxy),
     })
   }
