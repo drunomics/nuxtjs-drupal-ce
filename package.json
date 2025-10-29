@@ -32,8 +32,8 @@
     "defu": "^6.1.4"
   },
   "devDependencies": {
-    "@nuxt/eslint": "^1.9.0",
-    "@nuxt/eslint-config": "^1.9.0",
+    "@nuxt/eslint": "^1.10.0",
+    "@nuxt/eslint-config": "^1.10.0",
     "@nuxt/kit": "^4.2.0",
     "@nuxt/module-builder": "^1.0.2",
     "@nuxt/schema": "^4.2.0",
@@ -42,7 +42,7 @@
     "@playwright/test": "^1.56.1",
     "@vue/test-utils": "^2.4.6",
     "eslint": "^9.38.0",
-    "happy-dom": "^20.0.8",
+    "happy-dom": "^20.0.10",
     "nuxt": "^4.2.0",
     "playwright-core": "^1.56.1",
     "typescript": "^5.9.3",
