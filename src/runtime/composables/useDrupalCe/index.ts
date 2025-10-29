@@ -321,12 +321,23 @@ export const useDrupalCe = () => {
       })
     }
 
-    // Handle single custom element object
-    // Detect format: explicit format has 'props' or 'slots' keys
-    const hasExplicitFormat = 'props' in customElements || 'slots' in customElements
+    // Handle single custom element object based on configured format
+    if (config.customElementJsonFormat === 'explicit') {
+      // Verify format is explicit (has 'props' or 'slots' keys)
+      const hasExplicitFormat = 'props' in customElements || 'slots' in customElements
 
-    if (hasExplicitFormat) {
-      // Explicit format: {element, props?, slots?}
+      if (!hasExplicitFormat) {
+        // Format doesn't match expectation - warn and fall back to legacy
+        if (import.meta.dev) {
+          console.warn('[nuxtjs-drupal-ce] Legacy format detected but explicit format expected. Auto-switching to legacy. Consider migrating to explicit format: {element, props: {}, slots: {}}')
+        }
+        // Use legacy format handling
+        const { element, ...props } = customElements
+        const resolvedElement = resolveCustomElement(element)
+        return resolvedElement ? h(resolvedElement, props) : null
+      }
+
+      // Use explicit format: {element, props?, slots?}
       const { element, props = {}, slots = {} } = customElements as any
       const resolvedElement = resolveCustomElement(element)
 
@@ -344,12 +355,7 @@ export const useDrupalCe = () => {
       return h(resolvedElement, props, slotFunctions)
     }
     else {
-      // Legacy format: {element, ...props}
-      // Log warning in dev mode if config expects explicit format
-      if (import.meta.dev && config.customElementJsonFormat === 'explicit') {
-        console.warn('[nuxtjs-drupal-ce] Legacy format detected, auto-switching. Consider migrating to explicit format: {element, props: {}, slots: {}}')
-      }
-
+      // Config is 'legacy' - use legacy format handling
       const { element, ...props } = customElements
       const resolvedElement = resolveCustomElement(element)
       return resolvedElement ? h(resolvedElement, props) : null

@@ -19,6 +19,8 @@ defineProps<{
 defineSlots<{
   image?(): any
   body?(): any
+  // The sections slot is for Layout Builder support.
+  // When a node uses Layout Builder, the sections are rendered here.
   sections?(): any
 }>()
 </script>
