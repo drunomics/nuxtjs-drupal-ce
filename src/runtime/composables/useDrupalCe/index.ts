@@ -1,7 +1,7 @@
 import { defu } from 'defu'
 import { appendResponseHeader } from 'h3'
 import type { $Fetch, NitroFetchRequest } from 'nitropack'
-import type { Ref, ComputedRef, Component } from 'vue'
+import type { Ref, ComputedRef, Component, VNode } from 'vue'
 import { getDrupalBaseUrl, getMenuBaseUrl } from './server'
 import type { UseFetchOptions } from '#app'
 import { callWithNuxt } from '#app'
@@ -278,17 +278,27 @@ export const useDrupalCe = () => {
   }
 
   /**
-   * Renders Vue components from JSON-serialized custom element data.
+   * Converts custom element data to VNodes for use in slots and render functions.
+   *
+   * This is the main rendering function that contains all the logic for converting
+   * Drupal JSON data to Vue VNodes. It always returns VNode or VNode[] which are
+   * the proper return types for slots and render functions.
+   *
+   * Handles both explicit format {element, props, slots} and legacy format {element, ...props}.
    *
    * @param customElements {CustomElementContent} - Custom element data to render.
-   *          See {@link https://github.com/drunomics/nuxtjs-drupal-ce/blob/2.x/src/types.d.ts} type definition for detailed structure documentation.
-   * @returns Component | null - A Vue component that can be used with <component :is="component" />.
-   *          Returns null for skipped render, otherwise returns a Vue component
-   *          (either a custom element component or a wrapping div component for strings/arrays).
+   * @returns VNode | VNode[] | null
+   *          - VNode: For single elements and strings
+   *          - VNode[]: For arrays
+   *          - null: For empty/null input
+   *
+   * Usage:
+   * - In slot functions: return renderCustomElementsToVNodes(slotData)
+   * - In render functions: return renderCustomElementsToVNodes(data)
    */
-  const renderCustomElements = (
+  const renderCustomElementsToVNodes = (
     customElements: CustomElementContent,
-  ): Component | null => {
+  ): VNode | VNode[] | null => {
     // Handle null/undefined case
     if (customElements == null) {
       return null
@@ -309,16 +319,9 @@ export const useDrupalCe = () => {
       return null
     }
 
-    // Handle multiple elements without creating a wrapping div
+    // Handle multiple elements - return VNode[]
     if (Array.isArray(customElements)) {
-      return defineComponent({
-        setup() {
-          return () => customElements.map(element => {
-            const rendered = renderCustomElements(element)
-            return rendered ? h(rendered) : null
-          })
-        }
-      })
+      return customElements.map(element => renderCustomElementsToVNodes(element))
     }
 
     // Handle single custom element object based on configured format
@@ -350,9 +353,7 @@ export const useDrupalCe = () => {
       // Render slots recursively
       const slotFunctions: Record<string, () => any> = {}
       Object.entries(slots).forEach(([slotName, slotContent]) => {
-        const rendered = renderCustomElements(slotContent as CustomElementContent)
-        // Slot functions must return VNodes. h() handles both VNode and Component inputs.
-        slotFunctions[slotName] = rendered ? () => h(rendered) : () => null
+        slotFunctions[slotName] = () => renderCustomElementsToVNodes(slotContent as CustomElementContent)
       })
 
       return h(resolvedElement, props, slotFunctions)
@@ -363,6 +364,41 @@ export const useDrupalCe = () => {
       const resolvedElement = resolveCustomElement(element)
       return resolvedElement ? h(resolvedElement, props) : null
     }
+  }
+
+  /**
+   * Renders Vue components from JSON-serialized custom element data.
+   *
+   * Wrapper around renderCustomElementsToVNodes that makes the result compatible with
+   * <component :is> by wrapping VNode[] in a Component.
+   *
+   * @param customElements {CustomElementContent} - Custom element data to render.
+   *          See {@link https://github.com/drunomics/nuxtjs-drupal-ce/blob/2.x/src/types.d.ts} type definition for detailed structure documentation.
+   * @returns VNode | Component | null
+   *          - VNode: For single elements and strings
+   *          - Component: For arrays (wraps VNode[] in defineComponent for <component :is> compatibility)
+   *          - null: For empty/null input
+   *
+   * Usage:
+   * - In templates: <component :is="renderCustomElements(data)" />
+   * - For slots/render functions: Use renderCustomElementsToVNodes() instead
+   */
+  const renderCustomElements = (
+    customElements: CustomElementContent,
+  ): VNode | Component | null => {
+    const vnodes = renderCustomElementsToVNodes(customElements)
+
+    // If we got an array of VNodes, wrap in a Component for <component :is> compatibility
+    if (Array.isArray(vnodes)) {
+      return defineComponent({
+        setup() {
+          return () => vnodes
+        }
+      })
+    }
+
+    // Single VNode or null - return as-is
+    return vnodes
   }
 
   /**
@@ -421,6 +457,7 @@ export const useDrupalCe = () => {
     getMessages,
     getPage,
     renderCustomElements,
+    renderCustomElementsToVNodes,
     passThroughHeaders,
     getCeApiEndpoint,
     getDrupalBaseUrl,
