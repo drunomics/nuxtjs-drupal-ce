@@ -265,7 +265,7 @@ export const useDrupalCe = () => {
       if (typeof fallbackComponent === 'object' && fallbackComponent.name) {
         return fallbackComponent
       }
-      let newComponentName = componentName.replace(regex, '')
+      const newComponentName = componentName.replace(regex, '')
       if (newComponentName === componentName) {
         // No more segments to remove, break the loop.
         break
@@ -322,9 +322,38 @@ export const useDrupalCe = () => {
     }
 
     // Handle single custom element object
-    const { element, ...props } = customElements
-    const resolvedElement = resolveCustomElement(element)
-    return resolvedElement ? h(resolvedElement, props) : null
+    // Detect format: explicit format has 'props' or 'slots' keys
+    const hasExplicitFormat = 'props' in customElements || 'slots' in customElements
+
+    if (hasExplicitFormat) {
+      // Explicit format: {element, props?, slots?}
+      const { element, props = {}, slots = {} } = customElements as any
+      const resolvedElement = resolveCustomElement(element)
+
+      if (!resolvedElement) {
+        return null
+      }
+
+      // Render slots recursively
+      const slotFunctions: Record<string, () => any> = {}
+      Object.entries(slots).forEach(([slotName, slotContent]) => {
+        const rendered = renderCustomElements(slotContent as CustomElementContent)
+        slotFunctions[slotName] = rendered ? () => h(rendered) : () => null
+      })
+
+      return h(resolvedElement, props, slotFunctions)
+    }
+    else {
+      // Legacy format: {element, ...props}
+      // Log warning in dev mode if config expects explicit format
+      if (import.meta.dev && config.customElementJsonFormat === 'explicit') {
+        console.warn('[nuxtjs-drupal-ce] Legacy format detected, auto-switching. Consider migrating to explicit format: {element, props: {}, slots: {}}')
+      }
+
+      const { element, ...props } = customElements
+      const resolvedElement = resolveCustomElement(element)
+      return resolvedElement ? h(resolvedElement, props) : null
+    }
   }
 
   /**

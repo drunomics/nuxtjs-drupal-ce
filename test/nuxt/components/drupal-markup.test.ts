@@ -9,38 +9,163 @@ describe('drupal-markup custom element', () => {
   const { renderCustomElements } = useDrupalCe()
   const addWrappingDiv = (children: string): string => '<div style="display: contents;">\n  ' + children + '\n</div>'
 
-  it('renders markup content via custom element json', async () => {
-    const component = defineComponent({
-      setup() {
-        return { component: renderCustomElements({
-            element: 'drupal-markup',
-            content: '<p>Some <b>formatted</b> content.</p>'
-          }) }
-      },
-      template: '<component :is="component" />'
+  describe('content prop (legacy/backward compatibility)', () => {
+    it('renders markup content via content prop in legacy format', async () => {
+      const component = defineComponent({
+        setup() {
+          return {
+            component: renderCustomElements({
+              element: 'drupal-markup',
+              content: '<p>Some <b>formatted</b> content.</p>',
+            }),
+          }
+        },
+        template: '<component :is="component" />',
+      })
+      const wrapper = await mountSuspended(component)
+      expect(wrapper.html()).toContain('<p>Some <b>formatted</b> content.</p>')
+      expect(wrapper.html()).toEqual(addWrappingDiv('<p>Some <b>formatted</b> content.</p>'))
     })
-    const wrapper = await mountSuspended(component)
-    expect(wrapper.html()).toContain('<p>Some <b>formatted</b> content.</p>')
-    // drupal-markup should only have the wrapping-div for the slot.
-    expect(wrapper.html()).toEqual(addWrappingDiv('<p>Some <b>formatted</b> content.</p>'))
+
+    it('renders markup content via content prop attribute', async () => {
+      const TestComponent = defineComponent({
+        template: '<drupal-markup content="<p>Prop <b>content</b></p>"></drupal-markup>',
+      })
+      const wrapper = await mountSuspended(TestComponent)
+      expect(wrapper.html()).toEqual(addWrappingDiv('<p>Prop <b>content</b></p>'))
+    })
   })
 
-  it('renders markup content given via attribute ', async () => {
-    const TestComponent = defineComponent({
-      template: '<drupal-markup content="<p>Slotted <b>content</b></p>"></drupal-markup>'
+  describe('default slot (explicit format - preferred)', () => {
+    it('renders markup content via slot in explicit format', async () => {
+      const component = defineComponent({
+        setup() {
+          return {
+            component: renderCustomElements({
+              element: 'drupal-markup',
+              slots: {
+                default: '<p>Slot <b>content</b></p>',
+              },
+            }),
+          }
+        },
+        template: '<component :is="component" />',
+      })
+      const wrapper = await mountSuspended(component)
+      expect(wrapper.html()).toContain('<p>Slot <b>content</b></p>')
     })
-    const wrapper = await mountSuspended(TestComponent)
-    expect(wrapper.html()).toEqual(addWrappingDiv('<p>Slotted <b>content</b></p>'))
+
+    it('renders markup content via Vue template slot', async () => {
+      const TestComponent = defineComponent({
+        template: '<drupal-markup><p>Slotted <b>content</b></p></drupal-markup>',
+      })
+      const wrapper = await mountSuspended(TestComponent)
+      expect(wrapper.html()).toContain('<p>Slotted <b>content</b></p>')
+      // drupal-markup should not add a wrapping element when only slot is used
+      expect(wrapper.html()).toEqual('<p>Slotted <b>content</b></p>')
+    })
+
+    it('renders nested elements via slot', async () => {
+      const component = defineComponent({
+        setup() {
+          return {
+            component: renderCustomElements({
+              element: 'drupal-markup',
+              slots: {
+                default: {
+                  element: 'drupal-markup',
+                  slots: {
+                    default: '<em>Nested</em>',
+                  },
+                },
+              },
+            }),
+          }
+        },
+        template: '<component :is="component" />',
+      })
+      const wrapper = await mountSuspended(component)
+      expect(wrapper.html()).toContain('<em>Nested</em>')
+    })
   })
 
-  it('renders markup content via custom element markup ', async () => {
-    const TestComponent = defineComponent({
-      template: '<drupal-markup><p>Slotted <b>content</b></p></drupal-markup>'
+  describe('both slot and content prop', () => {
+    it('renders both slot and content prop (slot first, then prop)', async () => {
+      const TestComponent = defineComponent({
+        template: '<drupal-markup content="<p>Prop content</p>"><span>Slot content</span></drupal-markup>',
+      })
+      const wrapper = await mountSuspended(TestComponent)
+      const html = wrapper.html()
+      // Both should be present
+      expect(html).toContain('<span>Slot content</span>')
+      expect(html).toContain('<p>Prop content</p>')
+      // Slot should come before prop content
+      const slotIndex = html.indexOf('<span>Slot content</span>')
+      const propIndex = html.indexOf('<p>Prop content</p>')
+      expect(slotIndex).toBeLessThan(propIndex)
     })
-    const wrapper = await mountSuspended(TestComponent)
-    expect(wrapper.html()).toContain('<p>Slotted <b>content</b></p>')
-    // drupal-markup should not add a wrapping element when used
-    // via a vue slot.
-    expect(wrapper.html()).toEqual('<p>Slotted <b>content</b></p>')
+
+    it('renders both in explicit format with slot and content prop', async () => {
+      const component = defineComponent({
+        setup() {
+          return {
+            component: renderCustomElements({
+              element: 'drupal-markup',
+              props: {
+                content: '<p>Prop</p>',
+              },
+              slots: {
+                default: '<span>Slot</span>',
+              },
+            }),
+          }
+        },
+        template: '<component :is="component" />',
+      })
+      const wrapper = await mountSuspended(component)
+      const html = wrapper.html()
+      expect(html).toContain('<span>Slot</span>')
+      expect(html).toContain('<p>Prop</p>')
+      // Slot should come before prop
+      expect(html.indexOf('<span>Slot</span>')).toBeLessThan(html.indexOf('<p>Prop</p>'))
+    })
+  })
+
+  describe('empty/null content', () => {
+    it('renders nothing when no content or slot provided', async () => {
+      const TestComponent = defineComponent({
+        template: '<drupal-markup></drupal-markup>',
+      })
+      const wrapper = await mountSuspended(TestComponent)
+      // Should render empty or minimal HTML
+      expect(wrapper.html()).toBeTruthy()
+    })
+
+    it('renders only slot when content prop is undefined', async () => {
+      const component = defineComponent({
+        setup() {
+          return {
+            component: renderCustomElements({
+              element: 'drupal-markup',
+              slots: {
+                default: '<p>Only slot</p>',
+              },
+            }),
+          }
+        },
+        template: '<component :is="component" />',
+      })
+      const wrapper = await mountSuspended(component)
+      expect(wrapper.html()).toContain('<p>Only slot</p>')
+      expect(wrapper.html()).not.toContain('display: contents')
+    })
+
+    it('renders only content prop when slot is empty', async () => {
+      const TestComponent = defineComponent({
+        template: '<drupal-markup content="<p>Only prop</p>"></drupal-markup>',
+      })
+      const wrapper = await mountSuspended(TestComponent)
+      expect(wrapper.html()).toContain('<p>Only prop</p>')
+    })
   })
 })

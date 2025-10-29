@@ -11,6 +11,7 @@ export interface ModuleOptions {
   addRequestContentFormat?: string
   addRequestFormat: boolean
   customErrorPages: boolean
+  customElementJsonFormat: 'explicit' | 'legacy'
   fetchOptions: object
   fetchProxyHeaders: string[]
   useLocalizedMenuEndpoint: boolean
@@ -34,6 +35,7 @@ export default defineNuxtModule<ModuleOptions>({
     ceApiEndpoint: '/ce-api',
     menuEndpoint: 'api/menu_items/$$$NAME$$$',
     customErrorPages: false,
+    customElementJsonFormat: 'explicit',
     fetchOptions: {
       credentials: 'include',
     },

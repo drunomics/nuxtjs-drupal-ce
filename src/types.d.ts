@@ -1,12 +1,28 @@
 import type { ModuleOptions } from './module'
 
 /**
- * A single custom element object with element name and props
+ * Explicit format custom element with separated props and slots
  */
-export interface CustomElementContentObject {
+export interface CustomElementExplicitContent {
+  element: string
+  props?: Record<string, any>
+  slots?: Record<string, CustomElementContent>
+}
+
+/**
+ * Legacy format custom element with mixed props and slots at root level
+ */
+export interface CustomElementLegacyContent {
   element: string
   [key: string]: any
 }
+
+/**
+ * A single custom element object - supports both explicit and legacy formats
+ */
+export type CustomElementContentObject =
+  | CustomElementExplicitContent
+  | CustomElementLegacyContent
 
 /**
  * JSON-serialized custom elements content for rendering.
@@ -14,7 +30,8 @@ export interface CustomElementContentObject {
  * Can be:
  * - null/undefined (returns null, skipping render)
  * - string (treated as HTML)
- * - single custom element object with {element: string, ...props}
+ * - single custom element object in explicit format: {element: string, props?: {}, slots?: {}}
+ * - single custom element object in legacy format: {element: string, ...props}
  * - array of strings (treated as HTML) or custom element objects
  */
 export type CustomElementContent =
