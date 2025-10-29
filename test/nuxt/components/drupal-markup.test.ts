@@ -9,8 +9,8 @@ describe('drupal-markup custom element', () => {
   const { renderCustomElements } = useDrupalCe()
   const addWrappingDiv = (children: string): string => '<div style="display: contents;">\n  ' + children + '\n</div>'
 
-  describe('content prop (legacy/backward compatibility)', () => {
-    it('renders markup content via content prop in legacy format', async () => {
+  describe('content prop', () => {
+    it('renders markup content via content prop', async () => {
       const component = defineComponent({
         setup() {
           return {
@@ -36,8 +36,8 @@ describe('drupal-markup custom element', () => {
     })
   })
 
-  describe('default slot (explicit format - preferred)', () => {
-    it('renders markup content via slot in explicit format', async () => {
+  describe('default slot', () => {
+    it('renders markup content via default slot', async () => {
       const component = defineComponent({
         setup() {
           return {
@@ -105,7 +105,7 @@ describe('drupal-markup custom element', () => {
       expect(slotIndex).toBeLessThan(propIndex)
     })
 
-    it('renders both in explicit format with slot and content prop', async () => {
+    it('renders both with slot and content prop', async () => {
       const component = defineComponent({
         setup() {
           return {

@@ -14,7 +14,7 @@
  * When both are provided, slot is rendered first, then the content prop.
  */
 defineProps<{
-  content?: CustomElementContent
+  content?: string
 }>()
 
 // Using display:contents makes this div virtually invisible in the layout

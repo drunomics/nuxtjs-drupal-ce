@@ -323,13 +323,14 @@ export const useDrupalCe = () => {
 
     // Handle single custom element object based on configured format
     if (config.customElementJsonFormat === 'explicit') {
-      // Verify format is explicit (has 'props' or 'slots' keys)
-      const hasExplicitFormat = 'props' in customElements || 'slots' in customElements
+      // Verify format is explicit: check for keys that are NOT element/props/slots
+      const keys = Object.keys(customElements)
+      const hasInvalidKeys = keys.some(key => key !== 'element' && key !== 'props' && key !== 'slots')
 
-      if (!hasExplicitFormat) {
+      if (hasInvalidKeys) {
         // Format doesn't match expectation - warn and fall back to legacy
         if (import.meta.dev) {
-          console.warn('[nuxtjs-drupal-ce] Legacy format detected but explicit format expected. Auto-switching to legacy. Consider migrating to explicit format: {element, props: {}, slots: {}}')
+          console.warn('[nuxtjs-drupal-ce] Legacy format detected but explicit format expected. Auto-switching to legacy. Consider configuring customElementJsonFormat: "legacy" if your API uses the legacy format.')
         }
         // Use legacy format handling
         const { element, ...props } = customElements
@@ -338,7 +339,8 @@ export const useDrupalCe = () => {
       }
 
       // Use explicit format: {element, props?, slots?}
-      const { element, props = {}, slots = {} } = customElements as any
+      const explicitElement = customElements as CustomElementExplicitContent
+      const { element, props = {}, slots = {} } = explicitElement
       const resolvedElement = resolveCustomElement(element)
 
       if (!resolvedElement) {
@@ -349,6 +351,7 @@ export const useDrupalCe = () => {
       const slotFunctions: Record<string, () => any> = {}
       Object.entries(slots).forEach(([slotName, slotContent]) => {
         const rendered = renderCustomElements(slotContent as CustomElementContent)
+        // Slot functions must return VNodes. h() handles both VNode and Component inputs.
         slotFunctions[slotName] = rendered ? () => h(rendered) : () => null
       })
 

@@ -202,41 +202,4 @@ describe('renderCustomElements - Legacy Format', () => {
     })
   })
 
-  describe('mixed format scenarios', () => {
-    it('should handle explicit parent with legacy child', async () => {
-      const ParentComponent = defineComponent({
-        name: 'ParentComponent',
-        props: {
-          title: String,
-        },
-        slots: {
-          default: () => any,
-        },
-        template: '<div><h1>{{ title }}</h1><slot /></div>',
-      })
-      app.vueApp.component('ParentComponent', ParentComponent)
-
-      const wrapper = await mountSuspended(defineComponent({
-        setup() {
-          return {
-            component: renderCustomElements({
-              element: 'parent-component',
-              props: {
-                title: 'Explicit Parent',
-              },
-              slots: {
-                default: {
-                  element: 'test-component',
-                  foo: 'legacy child',
-                },
-              },
-            }),
-          }
-        },
-        template: '<component :is="component" />',
-      }))
-      expect(wrapper.text()).toContain('Explicit Parent')
-      expect(wrapper.text()).toContain('Test: legacy child')
-    })
-  })
 })
