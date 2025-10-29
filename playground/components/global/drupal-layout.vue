@@ -2,8 +2,8 @@
   <div
     class="layout-section"
   >
-    <div v-if="$slots.content">
-      <slot name="content" />
+    <div v-if="$slots.default">
+      <slot />
     </div>
     <div v-if="$slots.first">
       <slot name="first" />
@@ -27,7 +27,7 @@ defineProps<{
 }>()
 
 defineSlots<{
-  content?(): any
+  default?(): any
   first?(): any
   second?(): any
   third?(): any
