@@ -292,10 +292,21 @@ describe('renderCustomElements - Explicit Format', () => {
         },
         template: '<component :is="component" />',
       }))
-      expect(wrapper.text()).toContain('L1')
-      expect(wrapper.text()).toContain('L2')
-      expect(wrapper.text()).toContain('L3')
-      expect(wrapper.text()).toContain('Deep content')
+      const html = wrapper.html()
+      // Validate all levels are present
+      expect(html).toContain('<h2>L1</h2>')
+      expect(html).toContain('<h2>L2</h2>')
+      expect(html).toContain('<h2>L3</h2>')
+      expect(html).toContain('Deep content')
+
+      // Validate nesting structure: L1 contains L2, L2 contains L3
+      const l1Match = html.match(/<div class="slot-component"[^>]*>[\s\S]*?<h2>L1<\/h2>[\s\S]*?<\/div>/)
+      expect(l1Match).not.toBeNull()
+      expect(l1Match).toHaveLength(1)
+      const l1Content = l1Match![0]
+      expect(l1Content).toContain('<h2>L2</h2>')
+      expect(l1Content).toContain('<h2>L3</h2>')
+      expect(l1Content).toContain('Deep content')
     })
 
     it('should render nested slots with mixed content types', async () => {
@@ -448,7 +459,9 @@ describe('renderCustomElements - Explicit Format', () => {
         },
         template: '<component :is="component" />',
       }))
-      expect(wrapper.html()).toBeTruthy()
+      // Should render the component wrapper even with undefined slot
+      expect(wrapper.html()).toContain('<div class="slot-component">')
+      expect(wrapper.html()).toContain('</div>')
     })
 
     it('should handle empty string slot content', async () => {
@@ -465,7 +478,9 @@ describe('renderCustomElements - Explicit Format', () => {
         },
         template: '<component :is="component" />',
       }))
-      expect(wrapper.html()).toBeTruthy()
+      // Should render the component wrapper even with empty string slot
+      expect(wrapper.html()).toContain('<div class="slot-component">')
+      expect(wrapper.html()).toContain('</div>')
     })
   })
 })
