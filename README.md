@@ -249,16 +249,16 @@ The following options were support in 1.x but got dropped:
 
 ## Development
 
-1. Clone this repository.
-2. Install dependencies using `npm install`.
-3. Run `npm run dev:prepare` to generate type stubs.
-4. Use `npm run dev` to start [playground](./playground) in development mode.
-5. Update baseURL setting in Nuxt config with [Lupus Decoupled Drupal](https://www.drupal.org/project/lupus_decoupled) instance URL and append the API-prefix /ce-api, e.g. `https://8080-shaal-drupalpod-8m3z0ms7mb6.ws-eu67.gitpod.io/ce-api`
+1. Clone this repository
+2. Install dependencies: `npm install`
+3. Generate type stubs: `npm run dev:prepare`
+4. Start playground in dev mode: `npm run dev`
+5. Configure `drupalBaseUrl` in `playground/nuxt.config.ts` to point to your Drupal instance
 
 ### Run on StackBlitz
 
 1. [Launch it on StackBlitz](https://stackblitz.com/fork/github/drunomics/nuxtjs-drupal-ce/tree/2.x?startScript=dev:prepare,dev&file=playground/nuxt.config.ts)
-2. Update baseURL setting in Nuxt config with [Lupus Decoupled Drupal](https://www.drupal.org/project/lupus_decoupled) instance URL and append the API-prefix /ce-api, e.g. `https://8080-shaal-drupalpod-8m3z0ms7mb6.ws-eu67.gitpod.io/ce-api`
+2. Configure `drupalBaseUrl` in Nuxt config to point to your Drupal instance
 
 
 ## License
