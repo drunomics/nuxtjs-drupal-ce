@@ -91,6 +91,11 @@ rm -f app.vue && npx nuxt-drupal-ce-init
 - `addRequestFormat`: If set to `true`, the `_format=custom_elements` URL parameter
 is added automatically to requests. Defaults to `false`.
 
+- `customElementJsonFormat`: Specifies the JSON format for custom elements. Options:
+  - `'explicit'`: Suggested format with separated `props` and `slots` objects (default). Automatically falls back to legacy format if a different structure is detected.
+  - `'legacy'`: Legacy format with props and slots flattened at the same level. Explicitly configure this for improved compatibility with older backends.
+  Defaults to `'explicit'`.
+
 - `customErrorPages`: By default, error pages provided by Drupal (e.g. 403, 404 page) are shown,
   while keeping the right status code. By enabling customErrorPages, the regular Nuxt error
   pages are shown instead, such that the pages can be customized with Nuxt. Defaults to `false`.
@@ -124,6 +129,39 @@ Generally, custom elements are rendered as [dynamic components](https://nuxt.com
 The components should be placed in `~/components/global`, refer to the `/playground` directory for an example.
 For example, for the custom element `node-article-teaser` a global component `node-article-teaser.vue` would be
 picked up for rendering.
+
+### JSON Format Options
+
+The module supports two JSON formats for custom elements:
+
+**Explicit Format** (default, recommended):
+```json
+{
+  "element": "node-article-teaser",
+  "props": {
+    "title": "Article Title",
+    "nid": 123
+  },
+  "slots": {
+    "default": "Content goes here",
+    "sidebar": { "element": "drupal-block", "props": {...} }
+  }
+}
+```
+
+**Legacy Format** (for backward compatibility):
+```json
+{
+  "element": "node-article-teaser",
+  "title": "Article Title",
+  "nid": 123,
+  "default": "Content goes here"
+}
+```
+
+The explicit format clearly separates props from slots, making the structure more maintainable.
+
+**Compatibility Note**: The default `'explicit'` format automatically falls back to legacy format when it detects a different structure. However, for improved compatibility with older Drupal backends, it's recommended to explicitly configure `customElementJsonFormat: 'legacy'`.
 
 ### Naming recommendation
 
