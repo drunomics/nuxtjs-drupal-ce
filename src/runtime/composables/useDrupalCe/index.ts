@@ -458,12 +458,14 @@ export const useDrupalCe = () => {
     getPage,
     renderCustomElements,
     renderCustomElementsToVNodes,
+    resolveCustomElement,
     passThroughHeaders,
     getCeApiEndpoint,
     getDrupalBaseUrl,
     getMenuBaseUrl,
     getPageLayout,
     usePageHead,
+    
   }
 }
 
