@@ -5,7 +5,7 @@ import type { Ref, ComputedRef, Component, VNode } from 'vue'
 import { getDrupalBaseUrl, getMenuBaseUrl } from './server'
 import type { UseFetchOptions, AsyncData } from '#app'
 import { callWithNuxt } from '#app'
-import { useRuntimeConfig, useState, useFetch, navigateTo, createError, h, resolveComponent, setResponseStatus, useNuxtApp, useRequestHeaders, ref, unref, watch, useRequestEvent, computed, useHead, defineComponent } from '#imports'
+import { useRuntimeConfig, useState, useFetch, navigateTo, createError, h, resolveComponent, setResponseStatus, useNuxtApp, useRequestHeaders, ref, unref, watch, useRequestEvent, computed, useHead, defineComponent, toRef } from '#imports'
 import type { DrupalCePage, DrupalCeApiResponse } from '../../types'
 
 export const useDrupalCe = () => {
@@ -106,29 +106,9 @@ export const useDrupalCe = () => {
    */
   const fetchPage = async (path: string, useFetchOptions: UseFetchOptions<any> = {}, overrideErrorHandler?: (error?: any) => void, skipDrupalCeApiProxy: boolean = false): Promise<Ref<DrupalCePage>> => {
     const nuxtApp = useNuxtApp()
-
-    // Workaround for issue - useState is not available after async call (Nuxt instance unavailable)
-    // Initialize state with default values
-    const pageState = useState<DrupalCePage>('drupal-ce-page-data', () => ({
-      breadcrumbs: [],
-      content: {},
-      content_format: 'json',
-      local_tasks: {
-        primary: [],
-        secondary: [],
-      },
-      settings: {},
-      messages: [],
-      metatags: {
-        meta: [],
-        link: [],
-        jsonld: [],
-      },
-      page_layout: 'default',
-      title: '',
-      key: undefined,  // Unique identifier used by useFetch caching
-    }))
     const serverResponse = useState('server-response', () => null)
+    const currentPageKey = useState<string>('drupal-ce-current-page-key')
+
     // Remove trailing slash from path key as it might cause issues in SSG.
     const sanitizedPathKey = path.endsWith('/') && path !== '/' ? path.slice(0, -1) : path
     const params =
@@ -137,32 +117,80 @@ export const useDrupalCe = () => {
         : ''
     useFetchOptions.key = `page-${sanitizedPathKey}${params}${skipDrupalCeApiProxy ? '-direct' : '-proxy'}`
 
+    // Check if page data is provided by server response (e.g. form submission via POST)
+    // This is only available during SSR
     if (import.meta.server) {
       serverResponse.value = useRequestEvent(nuxtApp).context.drupalCeCustomPageResponse
     }
 
-    // Check if the page data is already provided, e.g. by a form response.
-    let page: DrupalCeApiResponse | null = null
-    let error = null
-
+    // Handle serverResponse path: manually populate cache and skip API call
     if (serverResponse.value) {
+      let page = serverResponse.value._data
+      let error = serverResponse.value.error
+
       if (serverResponse.value._data) {
-        page = serverResponse.value._data
         passThroughHeaders(nuxtApp, serverResponse.value.headers)
       }
-      else if (serverResponse.value.error) {
-        error = serverResponse.value.error
+
+      // Clear serverResponse immediately on server (data will be in cache for hydration)
+      serverResponse.value = null
+
+      if (page?.messages) {
+        pushMessagesToState(page.messages)
       }
-      // Clear the server response state after it was sent to the client.
-      if (import.meta.client) {
-        serverResponse.value = null
+
+      if (page?.redirect) {
+        await callWithNuxt(nuxtApp, navigateTo, [
+          page.redirect.url,
+          { external: page.redirect.external, redirectCode: page.redirect.statusCode, replace: true },
+        ])
+        // Redirect aborts rendering, return empty page (will never be accessed)
+        return getPage()
       }
+
+      if (error) {
+        const errorData = error.data
+
+        // Validate that error response has complete page structure
+        const isValidPageStructure = errorData &&
+          typeof errorData.title === 'string' &&
+          typeof errorData.content === 'object' &&
+          typeof errorData.metatags === 'object'
+
+        if (!isValidPageStructure || config.customErrorPages) {
+          (overrideErrorHandler || pageErrorHandler)({ value: error }, { config, nuxtApp })
+        }
+        else {
+          // Backend returned a complete custom error page
+          nuxtApp.payload.data[useFetchOptions.key] = {
+            ...errorData,
+            key: useFetchOptions.key,
+          }
+
+          if (import.meta.server) {
+            callWithNuxt(nuxtApp, setResponseStatus, [error.statusCode])
+          }
+        }
+      }
+      else if (page) {
+        // Store page data in cache
+        nuxtApp.payload.data[useFetchOptions.key] = {
+          ...page,
+          key: useFetchOptions.key,
+        }
+      }
+
+      // Store the current page key
+      currentPageKey.value = useFetchOptions.key
+
+      // Return ref linked to cache entry
+      return toRef(nuxtApp.payload.data, useFetchOptions.key)
     }
-    else {
-      const result = await useCeApi(path, useFetchOptions, true, skipDrupalCeApiProxy)
-      page = result.data.value
-      error = result.error.value
-    }
+
+    // Normal path: fetch from API using useCeApi
+    const result = await useCeApi(path, useFetchOptions, true, skipDrupalCeApiProxy)
+    let page = result.data.value
+    let error = result.error.value
 
     if (page?.messages) {
       pushMessagesToState(page.messages)
@@ -173,7 +201,7 @@ export const useDrupalCe = () => {
         page.redirect.url,
         { external: page.redirect.external, redirectCode: page.redirect.statusCode, replace: true },
       ])
-      return pageState
+      return result.data
     }
 
     if (error) {
@@ -194,8 +222,8 @@ export const useDrupalCe = () => {
       }
       else {
         // Backend returned a complete custom error page and customErrorPages is disabled
-        // Update shared state and render the backend's error page
-        pageState.value = {
+        // Add key to the data
+        result.data.value = {
           ...errorData,
           key: useFetchOptions.key,
         }
@@ -207,15 +235,19 @@ export const useDrupalCe = () => {
       }
     }
     else if (page) {
-      // Be sure to assign the actual data, not the ref.
-      pageState.value = {
+      // For successful pages, add key to the data
+      result.data.value = {
         ...page,
         key: useFetchOptions.key,
       }
     }
 
-    // Always return pageState, so fetchPage() and getPage() use the same ref.
-    return pageState
+    // Store the current page key so getPage() can look up this data in the useFetch cache
+    // This allows layout components (breadcrumbs, etc.) to access the current page data
+    currentPageKey.value = useFetchOptions.key
+
+    // Return the useFetch data ref directly - each component gets its own ref based on key
+    return result.data
   }
 
   /**
@@ -275,19 +307,35 @@ export const useDrupalCe = () => {
   const getMessages = (): Ref => useState('drupal-ce-messages', () => [])
 
   /**
-   * Use page data
+   * Get the current page data ref.
+   * Returns the useFetch cached data for the current page.
+   * Layout components (breadcrumbs, page title, social share, etc.) can use this to access page data from the current route.
    */
-  const getPage = (): Ref<DrupalCePage> => useState<DrupalCePage>('drupal-ce-page-data', () => ({
-    breadcrumbs: [],
-    content: {},
-    content_format: 'json',
-    local_tasks: { primary: [], secondary: [] },
-    settings: {},
-    messages: [],
-    metatags: { meta: [], link: [], jsonld: [] },
-    page_layout: 'default',
-    title: '',
-  }))
+  const getPage = (): Ref<DrupalCePage> => {
+    const currentPageKey = useState<string>('drupal-ce-current-page-key', () => '')
+
+    // Return computed ref that looks up the current page key in the reactive Nuxt payload
+    // This properly tracks reactivity since nuxtApp.payload.data is reactive
+    return computed(() => {
+      const nuxtApp = useNuxtApp()
+      const key = currentPageKey.value
+      if (key && nuxtApp.payload.data[key]) {
+        return nuxtApp.payload.data[key]
+      }
+      // Return empty page data if no page has been fetched yet
+      return {
+        breadcrumbs: [],
+        content: {},
+        content_format: 'json',
+        local_tasks: { primary: [], secondary: [] },
+        settings: {},
+        messages: [],
+        metatags: { meta: [], link: [], jsonld: [] },
+        page_layout: 'default',
+        title: '',
+      }
+    })
+  }
 
   /**
    * Resolve a custom element into a Vue component
