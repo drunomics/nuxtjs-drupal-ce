@@ -175,11 +175,32 @@ export const useDrupalCe = () => {
     }
 
     if (error) {
-      overrideErrorHandler ? overrideErrorHandler({ value: error }) : pageErrorHandler({ value: error }, { config, nuxtApp })
-      if (error.data) {
+      const errorData = error.data
+
+      // Validate that error response has complete page structure
+      // Backend MUST return a complete page structure for custom error pages
+      const isValidPageStructure = errorData &&
+        typeof errorData.title === 'string' &&
+        typeof errorData.content === 'object' &&
+        typeof errorData.metatags === 'object'
+
+      // When customErrorPages is enabled, always throw to let custom error handler process it
+      // Otherwise, only throw if backend didn't return a complete error page
+      if (!isValidPageStructure || config.customErrorPages) {
+        // Fatal error or custom error pages enabled - delegate to error handler
+        (overrideErrorHandler || pageErrorHandler)({ value: error }, { config, nuxtApp })
+      }
+      else {
+        // Backend returned a complete custom error page and customErrorPages is disabled
+        // Update shared state and render the backend's error page
         pageState.value = {
-          ...error.data,
+          ...errorData,
           key: useFetchOptions.key,
+        }
+
+        // Set response status for SSR
+        if (import.meta.server) {
+          callWithNuxt(nuxtApp, setResponseStatus, [error.statusCode])
         }
       }
     }
@@ -505,25 +526,34 @@ const menuErrorHandler = (error: Record<string, any>) => {
 
 const pageErrorHandler = (error: Record<string, any>, context?: Record<string, any>) => {
   const errorData = error.value.data
-  if (error.value && (!errorData?.content || context?.config.customErrorPages)) {
-    // At the moment, Nuxt API proxy does not provide a nice error when the backend is not reachable. Handle it better.
-    // See https://github.com/nuxt/nuxt/issues/22645
-    if (error.value.statusCode === 500 && errorData?.message === 'fetch failed' && !errorData.statusMessage) {
-      throw createError({
-        statusCode: 503,
-        statusMessage: 'Unable to reach backend.',
-        data: errorData,
-        fatal: true,
-      })
-    }
+
+  // Make sure the error is logged to console also.
+  console.error('[nuxtjs-drupal-ce] Page fetch error:', {
+    statusCode: error.value.statusCode,
+    statusMessage: error.value.message,
+    ...(import.meta.dev && {
+      data: errorData,
+      cause: error.value.cause,
+      stack: error.value.stack,
+    })
+  })
+
+  // At the moment, Nuxt API proxy does not provide a nice error when the backend is not reachable. Handle it better.
+  // See https://github.com/nuxt/nuxt/issues/22645
+  if (error.value.statusCode === 500 && errorData?.message === 'fetch failed' && !errorData.statusMessage) {
     throw createError({
-      statusCode: error.value.statusCode,
-      statusMessage: error.value?.message,
-      data: error.value.data,
+      statusCode: 503,
+      statusMessage: 'Unable to reach backend.',
+      data: import.meta.dev ? errorData : undefined,
+      cause: import.meta.dev ? error.value.cause : undefined,
       fatal: true,
     })
   }
-  if (context) {
-    callWithNuxt(context.nuxtApp, setResponseStatus, [error.value.statusCode])
-  }
+  throw createError({
+    statusCode: error.value.statusCode,
+    statusMessage: error.value?.message,
+    data: import.meta.dev ? error.value.data : undefined,
+    cause: import.meta.dev ? error.value.cause : undefined,
+    fatal: true,
+  })
 }
