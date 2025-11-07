@@ -219,6 +219,10 @@ export const useDrupalCe = () => {
         page.redirect.url,
         { external: page.redirect.external, redirectCode: page.redirect.statusCode, replace: true },
       ])
+      // Replace incomplete redirect response with empty page structure
+      // This prevents errors when components try to access page.metatags.meta etc.
+      result.data.value = createEmptyPage()
+      currentPageKey.value = useFetchOptions.key
       return result.data
     }
 
