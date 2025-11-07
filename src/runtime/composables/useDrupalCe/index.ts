@@ -121,7 +121,6 @@ export const useDrupalCe = () => {
    */
   const fetchPage = async (path: string, useFetchOptions: UseFetchOptions<any> = {}, overrideErrorHandler?: (error?: any) => void, skipDrupalCeApiProxy: boolean = false): Promise<Ref<DrupalCePage>> => {
     const nuxtApp = useNuxtApp()
-    const serverResponse = useState('server-response', () => null)
     const currentPageKey = useState<string>('drupal-ce-current-page-key')
 
     // Remove trailing slash from path key as it might cause issues in SSG.
@@ -132,28 +131,25 @@ export const useDrupalCe = () => {
         : ''
     useFetchOptions.key = `page-${sanitizedPathKey}${params}${skipDrupalCeApiProxy ? '-direct' : '-proxy'}`
 
-    // Check if page data is provided by server response (e.g. form submission via POST)
+    // Check if page data is provided by custom page response (e.g. form submission via POST)
     // This is only available during SSR
-    if (import.meta.server) {
-      serverResponse.value = useRequestEvent(nuxtApp).context.drupalCeCustomPageResponse
-    }
+    const customPageResponse = import.meta.server
+      ? useRequestEvent(nuxtApp).context.drupalCeCustomPageResponse
+      : null
 
-    // Get page data and result ref - either from serverResponse or API
+    // Get page data and result ref - either from customPageResponse or API
     let page: any
     let error: any
     let dataRef: Ref<DrupalCePage>
 
-    if (serverResponse.value) {
-      // ServerResponse path: skip API call, use provided data
-      page = serverResponse.value._data
-      error = serverResponse.value.error
+    if (customPageResponse) {
+      // Custom response path: skip API call, use provided data
+      page = customPageResponse._data
+      error = customPageResponse.error
 
-      if (serverResponse.value._data) {
-        passThroughHeaders(nuxtApp, serverResponse.value.headers)
+      if (customPageResponse._data) {
+        passThroughHeaders(nuxtApp, customPageResponse.headers)
       }
-
-      // Clear serverResponse immediately on server (data will be in cache for hydration)
-      serverResponse.value = null
 
       // Create ref that will be linked to cache after processing
       dataRef = toRef(nuxtApp.payload.data, useFetchOptions.key)
