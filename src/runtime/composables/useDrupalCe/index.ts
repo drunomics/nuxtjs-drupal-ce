@@ -117,8 +117,10 @@ export const useDrupalCe = () => {
    * @param skipProxy Whether proxy is being skipped
    */
   const computePageKey = (pathWithQuery: string, skipProxy: boolean = false): string => {
+    // Remove trailing slash from path as it might cause issues in SSG (except for homepage)
+    const sanitized = pathWithQuery.replace(/\/(\?|$)/, '$1')
     const proxyMode = skipProxy ? '-direct' : '-proxy'
-    return `page-${pathWithQuery}${proxyMode}`
+    return `page-${sanitized}${proxyMode}`
   }
 
   /**
