@@ -134,21 +134,22 @@ export const useDrupalCe = () => {
         ? `?${new URLSearchParams(unref(useFetchOptions.query)).toString()}`
         : ''
     useFetchOptions.key = `page-${sanitizedPathKey}${params}${skipDrupalCeApiProxy ? '-direct' : '-proxy'}`
-    let page = null
-    const pageError = ref(null)
 
     if (import.meta.server) {
       serverResponse.value = useRequestEvent(nuxtApp).context.drupalCeCustomPageResponse
     }
 
     // Check if the page data is already provided, e.g. by a form response.
+    let page = null
+    let error = null
+
     if (serverResponse.value) {
       if (serverResponse.value._data) {
-        page = ref(serverResponse.value._data)
+        page = serverResponse.value._data
         passThroughHeaders(nuxtApp, serverResponse.value.headers)
       }
       else if (serverResponse.value.error) {
-        pageError.value = serverResponse.value.error
+        error = serverResponse.value.error
       }
       // Clear the server response state after it was sent to the client.
       if (import.meta.client) {
@@ -156,36 +157,57 @@ export const useDrupalCe = () => {
       }
     }
     else {
-      const { data, error } = await useCeApi(path, useFetchOptions, true, skipDrupalCeApiProxy)
-      page = data
-      pageError.value = error.value
+      const result = await useCeApi(path, useFetchOptions, true, skipDrupalCeApiProxy)
+      page = result.data.value
+      error = result.error.value
     }
 
-    if (page.value?.messages) {
-      pushMessagesToState(page.value.messages)
+    if (page?.messages) {
+      pushMessagesToState(page.messages)
     }
 
-    if (page?.value?.redirect) {
+    if (page?.redirect) {
       await callWithNuxt(nuxtApp, navigateTo, [
-        page.value.redirect.url,
-        { external: page.value.redirect.external, redirectCode: page.value.redirect.statusCode, replace: true },
+        page.redirect.url,
+        { external: page.redirect.external, redirectCode: page.redirect.statusCode, replace: true },
       ])
       return pageState
     }
 
-    if (pageError.value) {
-      overrideErrorHandler ? overrideErrorHandler(pageError) : pageErrorHandler(pageError, { config, nuxtApp })
-      if (pageError.value?.data) {
+    if (error) {
+      const errorData = error.data
+
+      // Validate that error response has complete page structure
+      // Backend MUST return a complete page structure for custom error pages
+      const isValidPageStructure = errorData &&
+        typeof errorData.title === 'string' &&
+        typeof errorData.content === 'object' &&
+        typeof errorData.metatags === 'object'
+
+      // When customErrorPages is enabled, always throw to let custom error handler process it
+      // Otherwise, only throw if backend didn't return a complete error page
+      if (!isValidPageStructure || config.customErrorPages) {
+        // Fatal error or custom error pages enabled - delegate to error handler
+        (overrideErrorHandler || pageErrorHandler)({ value: error }, { config, nuxtApp })
+      }
+      else {
+        // Backend returned a complete custom error page and customErrorPages is disabled
+        // Update shared state and render the backend's error page
         pageState.value = {
-          ...pageError.value.data,
+          ...errorData,
           key: useFetchOptions.key,
+        }
+
+        // Set response status for SSR
+        if (import.meta.server) {
+          callWithNuxt(nuxtApp, setResponseStatus, [error.statusCode])
         }
       }
     }
-    else if (page?.value) {
+    else if (page) {
       // Be sure to assign the actual data, not the ref.
       pageState.value = {
-        ...page.value,
+        ...page,
         key: useFetchOptions.key,
       }
     }
@@ -504,25 +526,34 @@ const menuErrorHandler = (error: Record<string, any>) => {
 
 const pageErrorHandler = (error: Record<string, any>, context?: Record<string, any>) => {
   const errorData = error.value.data
-  if (error.value && (!errorData?.content || context?.config.customErrorPages)) {
-    // At the moment, Nuxt API proxy does not provide a nice error when the backend is not reachable. Handle it better.
-    // See https://github.com/nuxt/nuxt/issues/22645
-    if (error.value.statusCode === 500 && errorData?.message === 'fetch failed' && !errorData.statusMessage) {
-      throw createError({
-        statusCode: 503,
-        statusMessage: 'Unable to reach backend.',
-        data: errorData,
-        fatal: true,
-      })
-    }
+
+  // Make sure the error is logged to console also.
+  console.error('[nuxtjs-drupal-ce] Page fetch error:', {
+    statusCode: error.value.statusCode,
+    statusMessage: error.value.message,
+    ...(import.meta.dev && {
+      data: errorData,
+      cause: error.value.cause,
+      stack: error.value.stack,
+    })
+  })
+
+  // At the moment, Nuxt API proxy does not provide a nice error when the backend is not reachable. Handle it better.
+  // See https://github.com/nuxt/nuxt/issues/22645
+  if (error.value.statusCode === 500 && errorData?.message === 'fetch failed' && !errorData.statusMessage) {
     throw createError({
-      statusCode: error.value.statusCode,
-      statusMessage: error.value?.message,
-      data: error.value.data,
+      statusCode: 503,
+      statusMessage: 'Unable to reach backend.',
+      data: import.meta.dev ? errorData : undefined,
+      cause: import.meta.dev ? error.value.cause : undefined,
       fatal: true,
     })
   }
-  if (context) {
-    callWithNuxt(context.nuxtApp, setResponseStatus, [error.value.statusCode])
-  }
+  throw createError({
+    statusCode: error.value.statusCode,
+    statusMessage: error.value?.message,
+    data: import.meta.dev ? error.value.data : undefined,
+    cause: import.meta.dev ? error.value.cause : undefined,
+    fatal: true,
+  })
 }
