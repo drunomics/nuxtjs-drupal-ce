@@ -285,10 +285,15 @@ export const useDrupalCe = () => {
         watcherInitialized.value = true
         try {
           const route = useRoute()
-          watch(() => [route.path, route.query] as const, ([path, query]) => {
-            // Compute key with default proxy setting - fetchPage() will override if needed
-            currentPageKey.value = computePageKey(path, query as Record<string, any>, false)
-          }, { immediate: true })
+          const router = useRouter()
+
+          // Update key on initial load
+          currentPageKey.value = computePageKey(route.path, route.query as Record<string, any>, false)
+
+          // Use router.afterEach to ensure navigation is fully complete before updating
+          router.afterEach((to) => {
+            currentPageKey.value = computePageKey(to.path, to.query as Record<string, any>, false)
+          })
         }
         catch (e) {
           // Silently skip if not in proper Nuxt context (e.g., unit tests)
