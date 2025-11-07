@@ -68,6 +68,7 @@ export const useDrupalCe = () => {
    * @param fetchOptions UseFetchOptions<any>
    * @param doPassThroughHeaders Whether to pass through headers from Drupal to the client
    * @param skipDrupalCeApiProxy Force skip the Drupal CE API proxy. Defaults to false.
+   * @returns AsyncData<DrupalCeApiResponse> - The API response can be either a page object or a redirect object
    */
   const useCeApi = (path: string | Ref<string>, fetchOptions: UseFetchOptions<any> = {}, doPassThroughHeaders?: boolean, skipDrupalCeApiProxy: boolean = false) => {
     const nuxtApp = useNuxtApp()
@@ -78,7 +79,7 @@ export const useDrupalCe = () => {
       }
     }
 
-    return useFetch(path, {
+    return useFetch<DrupalCeApiResponse>(path, {
       ...processFetchOptions(fetchOptions, skipDrupalCeApiProxy),
       $fetch: $ceApi(fetchOptions, skipDrupalCeApiProxy),
     })
