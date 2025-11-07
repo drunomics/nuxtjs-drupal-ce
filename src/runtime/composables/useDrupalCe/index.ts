@@ -137,47 +137,42 @@ export const useDrupalCe = () => {
       ? useRequestEvent(nuxtApp).context.drupalCeCustomPageResponse
       : null
 
-    // Get page data and result ref - either from customPageResponse or API
-    let page: any
+    // Get page ref and error - either from customPageResponse or API
+    let pageRef: Ref<DrupalCePage>
     let error: any
-    let dataRef: Ref<DrupalCePage>
 
     if (customPageResponse) {
       // Custom response path: skip API call, use provided data
-      page = customPageResponse._data
+      pageRef = toRef(nuxtApp.payload.data, useFetchOptions.key)
+      pageRef.value = customPageResponse._data
       error = customPageResponse.error
 
       if (customPageResponse._data) {
         passThroughHeaders(nuxtApp, customPageResponse.headers)
       }
-
-      // Create ref that will be linked to cache after processing
-      dataRef = toRef(nuxtApp.payload.data, useFetchOptions.key)
     }
     else {
       // Normal path: fetch from API
       const result = await useCeApi(path, useFetchOptions, true, skipDrupalCeApiProxy)
-      page = result.data.value
+      pageRef = result.data
       error = result.error.value
-      dataRef = result.data
     }
 
-    if (page?.messages) {
-      pushMessagesToState(page.messages)
+    // Process messages
+    if (pageRef.value?.messages) {
+      pushMessagesToState(pageRef.value.messages)
     }
 
-    if (page?.redirect) {
+    // Handle redirect
+    if (pageRef.value?.redirect) {
       await callWithNuxt(nuxtApp, navigateTo, [
-        page.redirect.url,
-        { external: page.redirect.external, redirectCode: page.redirect.statusCode, replace: true },
+        pageRef.value.redirect.url,
+        { external: pageRef.value.redirect.external, redirectCode: pageRef.value.redirect.statusCode, replace: true },
       ])
-      // Redirect aborts rendering - replace with empty page structure
-      dataRef.value = createEmptyPage()
-      currentPageKey.value = useFetchOptions.key
-      return dataRef
+      pageRef.value = createEmptyPage()
     }
-
-    if (error) {
+    // Handle error
+    else if (error) {
       const errorData = error.data
 
       // Validate that error response has complete page structure
@@ -188,31 +183,29 @@ export const useDrupalCe = () => {
 
       if (!isValidPageStructure || config.customErrorPages) {
         (overrideErrorHandler || pageErrorHandler)({ value: error }, { config, nuxtApp })
+        pageRef.value = createEmptyPage()
       }
       else {
         // Backend returned a complete custom error page
-        dataRef.value = {
-          ...errorData,
-          key: useFetchOptions.key,
-        }
+        pageRef.value = errorData
 
         if (import.meta.server) {
           callWithNuxt(nuxtApp, setResponseStatus, [error.statusCode])
         }
       }
     }
-    else if (page) {
-      // Store successful page data
-      dataRef.value = {
-        ...page,
-        key: useFetchOptions.key,
-      }
+    // Handle missing page
+    else if (!pageRef.value) {
+      pageRef.value = createEmptyPage()
     }
+
+    // Add key to page
+    pageRef.value.key = useFetchOptions.key
 
     // Store the current page key for getPage() lookup
     currentPageKey.value = useFetchOptions.key
 
-    return dataRef
+    return pageRef
   }
 
   /**
