@@ -181,17 +181,22 @@ export const useDrupalCe = () => {
       const errorData = error.data
 
       // Validate that error response has complete page structure
+      // Backend MUST return a complete page structure for custom error pages
       const isValidPageStructure = errorData &&
         typeof errorData.title === 'string' &&
         typeof errorData.content === 'object' &&
         typeof errorData.metatags === 'object'
 
+      // When customErrorPages is enabled, always throw to let custom error handler process it
+      // Otherwise, only throw if backend didn't return a complete error page
       if (!isValidPageStructure || config.customErrorPages) {
+        // Fatal error or custom error pages enabled - delegate to error handler
         (overrideErrorHandler || pageErrorHandler)({ value: error }, { config, nuxtApp })
         pageRef.value = createEmptyPage()
       }
       else {
-        // Backend returned a complete custom error page
+        // Backend returned a complete custom error page and customErrorPages is disabled
+        // Update shared state and render the backend's error page
         pageRef.value = errorData
 
         if (import.meta.server) {
