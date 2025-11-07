@@ -1,15 +1,16 @@
 import { defu } from 'defu'
 import { appendResponseHeader } from 'h3'
 import type { $Fetch, NitroFetchRequest } from 'nitropack'
-import type { Ref, ComputedRef, Component } from 'vue'
+import type { Ref, ComputedRef, Component, VNode } from 'vue'
 import { getDrupalBaseUrl, getMenuBaseUrl } from './server'
-import type { UseFetchOptions } from '#app'
+import type { UseFetchOptions, AsyncData } from '#app'
 import { callWithNuxt } from '#app'
-import { useRuntimeConfig, useState, useFetch, navigateTo, createError, h, resolveComponent, setResponseStatus, useNuxtApp, useRequestHeaders, ref, watch, useRequestEvent, computed, useHead, defineComponent } from '#imports'
+import { useRuntimeConfig, useState, useFetch, navigateTo, createError, h, resolveComponent, setResponseStatus, useNuxtApp, useRequestHeaders, ref, unref, watch, useRequestEvent, computed, useHead, defineComponent } from '#imports'
+import type { DrupalCePage, DrupalCeApiResponse } from '../../types'
 
 export const useDrupalCe = () => {
   const config = useRuntimeConfig().public.drupalCe
-  const privateConfig = useRuntimeConfig().drupalCe
+  const privateConfig = import.meta.server && useRuntimeConfig().drupalCe
 
   /**
    * Processes the given fetchOptions to apply module defaults
@@ -67,8 +68,9 @@ export const useDrupalCe = () => {
    * @param fetchOptions UseFetchOptions<any>
    * @param doPassThroughHeaders Whether to pass through headers from Drupal to the client
    * @param skipDrupalCeApiProxy Force skip the Drupal CE API proxy. Defaults to false.
+   * @returns AsyncData<DrupalCeApiResponse> - The API response can be either a page object or a redirect object
    */
-  const useCeApi = (path: string | Ref<string>, fetchOptions: UseFetchOptions<any> = {}, doPassThroughHeaders?: boolean, skipDrupalCeApiProxy: boolean = false): Promise<any> => {
+  const useCeApi = (path: string | Ref<string>, fetchOptions: UseFetchOptions<any> = {}, doPassThroughHeaders?: boolean, skipDrupalCeApiProxy: boolean = false): AsyncData<DrupalCeApiResponse, any> => {
     const nuxtApp = useNuxtApp()
     fetchOptions.onResponse = (context) => {
       if (doPassThroughHeaders && import.meta.server && privateConfig?.passThroughHeaders) {
@@ -77,8 +79,8 @@ export const useDrupalCe = () => {
       }
     }
 
-    return useFetch(path, {
-      ...fetchOptions,
+    return useFetch<DrupalCeApiResponse>(path, {
+      ...processFetchOptions(fetchOptions, skipDrupalCeApiProxy),
       $fetch: $ceApi(fetchOptions, skipDrupalCeApiProxy),
     })
   }
@@ -102,12 +104,12 @@ export const useDrupalCe = () => {
    * @param skipDrupalCeApiProxy Force skip the Drupal CE API proxy. Defaults to false.
    *                             The proxy might still be skipped if serverApiProxy is set to false globally.
    */
-  const fetchPage = async (path: string, useFetchOptions: UseFetchOptions<any> = {}, overrideErrorHandler?: (error?: any) => void, skipDrupalCeApiProxy: boolean = false) => {
+  const fetchPage = async (path: string, useFetchOptions: UseFetchOptions<any> = {}, overrideErrorHandler?: (error?: any) => void, skipDrupalCeApiProxy: boolean = false): Promise<Ref<DrupalCePage>> => {
     const nuxtApp = useNuxtApp()
 
     // Workaround for issue - useState is not available after async call (Nuxt instance unavailable)
     // Initialize state with default values
-    const pageState = useState('drupal-ce-page-data', () => ({
+    const pageState = useState<DrupalCePage>('drupal-ce-page-data', () => ({
       breadcrumbs: [],
       content: {},
       content_format: 'json',
@@ -124,24 +126,32 @@ export const useDrupalCe = () => {
       },
       page_layout: 'default',
       title: '',
+      key: undefined,  // Unique identifier used by useFetch caching
     }))
     const serverResponse = useState('server-response', () => null)
-    useFetchOptions.key = `page-${path}`
-    let page = null
-    const pageError = ref(null)
+    // Remove trailing slash from path key as it might cause issues in SSG.
+    const sanitizedPathKey = path.endsWith('/') && path !== '/' ? path.slice(0, -1) : path
+    const params =
+      Object.keys(useFetchOptions.query || {}).length > 0
+        ? `?${new URLSearchParams(unref(useFetchOptions.query)).toString()}`
+        : ''
+    useFetchOptions.key = `page-${sanitizedPathKey}${params}${skipDrupalCeApiProxy ? '-direct' : '-proxy'}`
 
     if (import.meta.server) {
       serverResponse.value = useRequestEvent(nuxtApp).context.drupalCeCustomPageResponse
     }
 
     // Check if the page data is already provided, e.g. by a form response.
+    let page: DrupalCeApiResponse | null = null
+    let error = null
+
     if (serverResponse.value) {
       if (serverResponse.value._data) {
-        page = ref(serverResponse.value._data)
+        page = serverResponse.value._data
         passThroughHeaders(nuxtApp, serverResponse.value.headers)
       }
       else if (serverResponse.value.error) {
-        pageError.value = serverResponse.value.error
+        error = serverResponse.value.error
       }
       // Clear the server response state after it was sent to the client.
       if (import.meta.client) {
@@ -149,30 +159,63 @@ export const useDrupalCe = () => {
       }
     }
     else {
-      const { data, error } = await useCeApi(path, useFetchOptions, true, skipDrupalCeApiProxy)
-      page = data
-      pageError.value = error.value
+      const result = await useCeApi(path, useFetchOptions, true, skipDrupalCeApiProxy)
+      page = result.data.value
+      error = result.error.value
     }
 
-    if (page.value?.messages) {
-      pushMessagesToState(page.value.messages)
+    if (page?.messages) {
+      pushMessagesToState(page.messages)
     }
 
-    if (page?.value?.redirect) {
+    if (page?.redirect) {
       await callWithNuxt(nuxtApp, navigateTo, [
-        page.value.redirect.url,
-        { external: page.value.redirect.external, redirectCode: page.value.redirect.statusCode, replace: true },
+        page.redirect.url,
+        { external: page.redirect.external, redirectCode: page.redirect.statusCode, replace: true },
       ])
       return pageState
     }
 
-    if (pageError.value) {
-      overrideErrorHandler ? overrideErrorHandler(pageError) : pageErrorHandler(pageError, { config, nuxtApp })
-      page.value = pageError.value?.data
+    if (error) {
+      const errorData = error.data
+
+      // Validate that error response has complete page structure
+      // Backend MUST return a complete page structure for custom error pages
+      const isValidPageStructure = errorData &&
+        typeof errorData.title === 'string' &&
+        typeof errorData.content === 'object' &&
+        typeof errorData.metatags === 'object'
+
+      // When customErrorPages is enabled, always throw to let custom error handler process it
+      // Otherwise, only throw if backend didn't return a complete error page
+      if (!isValidPageStructure || config.customErrorPages) {
+        // Fatal error or custom error pages enabled - delegate to error handler
+        (overrideErrorHandler || pageErrorHandler)({ value: error }, { config, nuxtApp })
+      }
+      else {
+        // Backend returned a complete custom error page and customErrorPages is disabled
+        // Update shared state and render the backend's error page
+        pageState.value = {
+          ...errorData,
+          key: useFetchOptions.key,
+        }
+
+        // Set response status for SSR
+        if (import.meta.server) {
+          callWithNuxt(nuxtApp, setResponseStatus, [error.statusCode])
+        }
+      }
+    }
+    else if (page) {
+      // Be sure to assign the actual data, not the ref.
+      pageState.value = {
+        ...page,
+        key: useFetchOptions.key,
+      }
     }
 
-    pageState.value = page
-    return page
+    // Always return pageState, so fetchPage() and getPage() use the same ref.
+    return pageState
   }
 
   /**
@@ -234,7 +277,17 @@ export const useDrupalCe = () => {
   /**
    * Use page data
    */
-  const getPage = (): Ref => useState('drupal-ce-page-data', () => ({}))
+  const getPage = (): Ref<DrupalCePage> => useState<DrupalCePage>('drupal-ce-page-data', () => ({
+    breadcrumbs: [],
+    content: {},
+    content_format: 'json',
+    local_tasks: { primary: [], secondary: [] },
+    settings: {},
+    messages: [],
+    metatags: { meta: [], link: [], jsonld: [] },
+    page_layout: 'default',
+    title: '',
+  }))
 
   /**
    * Resolve a custom element into a Vue component
@@ -251,7 +304,7 @@ export const useDrupalCe = () => {
     }
 
     // Progressively remove segments from the custom element name to find a matching default component.
-    const regex = /-?[a-z]+$/
+    const regex = /-?[^-]+$/
     let componentName = element
     while (componentName) {
       // Try resolving by adding 'Default' suffix.
@@ -259,7 +312,12 @@ export const useDrupalCe = () => {
       if (typeof fallbackComponent === 'object' && fallbackComponent.name) {
         return fallbackComponent
       }
-      componentName = componentName.replace(regex, '')
+      const newComponentName = componentName.replace(regex, '')
+      if (newComponentName === componentName) {
+        // No more segments to remove, break the loop.
+        break
+      }
+      componentName = newComponentName
     }
 
     // If not found, try with resolveComponent. This provides a warning if the component is not found.
@@ -267,20 +325,27 @@ export const useDrupalCe = () => {
   }
 
   /**
-   * Renders Vue components from JSON-serialized custom element data.
+   * Converts custom element data to VNodes for use in slots and render functions.
    *
-   * @param customElements - Custom element data that can be:
-   *   - null/undefined (returns null, skipping render)
-   *   - string (rendered inside a wrapping div element)
-   *   - single custom element object with {element: string, ...props}
-   *   - array of strings or custom element objects (rendered inside a wrapping div element)
-   * @returns Component | null - A Vue component that can be used with <component :is="component" />.
-   *          Returns null for skipped render, otherwise returns a Vue component
-   *          (either a custom element component or a wrapping div component for strings/arrays).
+   * This is the main rendering function that contains all the logic for converting
+   * Drupal JSON data to Vue VNodes. It always returns VNode or VNode[] which are
+   * the proper return types for slots and render functions.
+   *
+   * Handles both explicit format {element, props, slots} and legacy format {element, ...props}.
+   *
+   * @param customElements {CustomElementContent} - Custom element data to render.
+   * @returns VNode | VNode[] | null
+   *          - VNode: For single elements and strings
+   *          - VNode[]: For arrays
+   *          - null: For empty/null input
+   *
+   * Usage:
+   * - In slot functions: return renderCustomElementsToVNodes(slotData)
+   * - In render functions: return renderCustomElementsToVNodes(data)
    */
-  const renderCustomElements = (
-    customElements: null | undefined | string | Record<string, any> | Array<string | object>,
-  ): Component | null => {
+  const renderCustomElementsToVNodes = (
+    customElements: CustomElementContent,
+  ): VNode | VNode[] | null => {
     // Handle null/undefined case
     if (customElements == null) {
       return null
@@ -301,21 +366,86 @@ export const useDrupalCe = () => {
       return null
     }
 
-    // Handle multiple elements without creating a wrapping div
+    // Handle multiple elements - return VNode[]
     if (Array.isArray(customElements)) {
+      return customElements.map(element => renderCustomElementsToVNodes(element))
+    }
+
+    // Handle single custom element object based on configured format
+    if (config.customElementJsonFormat === 'explicit') {
+      // Verify format is explicit: check for keys that are NOT element/props/slots
+      const keys = Object.keys(customElements)
+      const hasInvalidKeys = keys.some(key => key !== 'element' && key !== 'props' && key !== 'slots')
+
+      if (hasInvalidKeys) {
+        // Format doesn't match expectation - warn and fall back to legacy
+        if (import.meta.dev) {
+          console.warn('[nuxtjs-drupal-ce] Legacy format detected but explicit format expected. Auto-switching to legacy. Consider configuring customElementJsonFormat: "legacy" if your API uses the legacy format.')
+        }
+        // Use legacy format handling
+        const { element, ...props } = customElements
+        const resolvedElement = resolveCustomElement(element)
+        return resolvedElement ? h(resolvedElement, props) : null
+      }
+
+      // Use explicit format: {element, props?, slots?}
+      const explicitElement = customElements as CustomElementExplicitContent
+      const { element, props = {}, slots = {} } = explicitElement
+      const resolvedElement = resolveCustomElement(element)
+
+      if (!resolvedElement) {
+        return null
+      }
+
+      // Render slots recursively
+      const slotFunctions: Record<string, () => any> = {}
+      Object.entries(slots).forEach(([slotName, slotContent]) => {
+        slotFunctions[slotName] = () => renderCustomElementsToVNodes(slotContent as CustomElementContent)
+      })
+
+      return h(resolvedElement, props, slotFunctions)
+    }
+    else {
+      // Config is 'legacy' - use legacy format handling
+      const { element, ...props } = customElements
+      const resolvedElement = resolveCustomElement(element)
+      return resolvedElement ? h(resolvedElement, props) : null
+    }
+  }
+
+  /**
+   * Renders Vue components from JSON-serialized custom element data.
+   *
+   * Wrapper around renderCustomElementsToVNodes that makes the result compatible with
+   * <component :is> by wrapping VNode[] in a Component.
+   *
+   * @param customElements {CustomElementContent} - Custom element data to render.
+   *          See {@link https://github.com/drunomics/nuxtjs-drupal-ce/blob/2.x/src/types.d.ts} type definition for detailed structure documentation.
+   * @returns VNode | Component | null
+   *          - VNode: For single elements and strings
+   *          - Component: For arrays (wraps VNode[] in defineComponent for <component :is> compatibility)
+   *          - null: For empty/null input
+   *
+   * Usage:
+   * - In templates: <component :is="renderCustomElements(data)" />
+   * - For slots/render functions: Use renderCustomElementsToVNodes() instead
+   */
+  const renderCustomElements = (
+    customElements: CustomElementContent,
+  ): VNode | Component | null => {
+    const vnodes = renderCustomElementsToVNodes(customElements)
+
+    // If we got an array of VNodes, wrap in a Component for <component :is> compatibility
+    if (Array.isArray(vnodes)) {
       return defineComponent({
         setup() {
-          return () => customElements.map(element => {
-            const rendered = renderCustomElements(element)
-            return rendered ? h(rendered) : null
-          })
+          return () => vnodes
         }
       })
     }
 
-    // Handle single custom element object
-    const resolvedElement = resolveCustomElement(customElements.element)
-    return resolvedElement ? h(resolvedElement, customElements) : null
+    // Single VNode or null - return as-is
+    return vnodes
   }
 
   /**
@@ -351,7 +481,7 @@ export const useDrupalCe = () => {
       ...(parts.includes('link') && { link: page.value.metatags.link }),
       ...(parts.includes('jsonld') && { script: [{
         type: 'application/ld+json',
-        children: JSON.stringify(page.value.metatags.jsonld || [], null, ''),
+        innerHTML: JSON.stringify(page.value.metatags.jsonld || [], null, ''),
       }] }),
     })
   }
@@ -374,12 +504,15 @@ export const useDrupalCe = () => {
     getMessages,
     getPage,
     renderCustomElements,
+    renderCustomElementsToVNodes,
+    resolveCustomElement,
     passThroughHeaders,
     getCeApiEndpoint,
     getDrupalBaseUrl,
     getMenuBaseUrl,
     getPageLayout,
     usePageHead,
+    
   }
 }
 
@@ -403,27 +536,36 @@ const menuErrorHandler = (error: Record<string, any>) => {
   })
 }
 
-const pageErrorHandler = (error: Record<string, any>, context?: Record<string, any>) => {
+const pageErrorHandler = (error: Record<string, any>, _context?: Record<string, any>) => {
   const errorData = error.value.data
-  if (error.value && (!errorData?.content || context?.config.customErrorPages)) {
-    // At the moment, Nuxt API proxy does not provide a nice error when the backend is not reachable. Handle it better.
-    // See https://github.com/nuxt/nuxt/issues/22645
-    if (error.value.statusCode === 500 && errorData?.message === 'fetch failed' && !errorData.statusMessage) {
-      throw createError({
-        statusCode: 503,
-        statusMessage: 'Unable to reach backend.',
-        data: errorData,
-        fatal: true,
-      })
-    }
+
+  // Make sure the error is logged to console also.
+  console.error('[nuxtjs-drupal-ce] Page fetch error:', {
+    statusCode: error.value.statusCode,
+    statusMessage: error.value.message,
+    ...(import.meta.dev && {
+      data: errorData,
+      cause: error.value.cause,
+      stack: error.value.stack,
+    })
+  })
+
+  // At the moment, Nuxt API proxy does not provide a nice error when the backend is not reachable. Handle it better.
+  // See https://github.com/nuxt/nuxt/issues/22645
+  if (error.value.statusCode === 500 && errorData?.message === 'fetch failed' && !errorData.statusMessage) {
     throw createError({
-      statusCode: error.value.statusCode,
-      statusMessage: error.value?.message,
-      data: error.value.data,
+      statusCode: 503,
+      statusMessage: 'Unable to reach backend.',
+      data: import.meta.dev ? errorData : undefined,
+      cause: import.meta.dev ? error.value.cause : undefined,
       fatal: true,
     })
   }
-  if (context) {
-    callWithNuxt(context.nuxtApp, setResponseStatus, [error.value.statusCode])
-  }
+  throw createError({
+    statusCode: error.value.statusCode,
+    statusMessage: error.value?.message,
+    data: import.meta.dev ? error.value.data : undefined,
+    cause: import.meta.dev ? error.value.cause : undefined,
+    fatal: true,
+  })
 }

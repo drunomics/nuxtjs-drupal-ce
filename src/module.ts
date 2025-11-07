@@ -1,5 +1,4 @@
-import { fileURLToPath } from 'node:url'
-import { defineNuxtModule, addServerPlugin, createResolver, addImportsDir, addServerHandler } from '@nuxt/kit'
+import { defineNuxtModule, addServerPlugin, createResolver, addImportsDir, addServerHandler, addImports } from '@nuxt/kit'
 import { defu } from 'defu'
 import type { NuxtOptionsWithDrupalCe } from './types'
 
@@ -12,6 +11,7 @@ export interface ModuleOptions {
   addRequestContentFormat?: string
   addRequestFormat: boolean
   customErrorPages: boolean
+  customElementJsonFormat: 'explicit' | 'legacy'
   fetchOptions: object
   fetchProxyHeaders: string[]
   useLocalizedMenuEndpoint: boolean
@@ -19,7 +19,7 @@ export interface ModuleOptions {
   passThroughHeaders?: string[]
   exposeAPIRouteRules?: boolean
   serverLogLevel?: boolean | 'info' | 'error'
-  disableFormHandler?: boolean
+  disableFormHandler?: boolean | string[]
 }
 
 export default defineNuxtModule<ModuleOptions>({
@@ -35,6 +35,7 @@ export default defineNuxtModule<ModuleOptions>({
     ceApiEndpoint: '/ce-api',
     menuEndpoint: 'api/menu_items/$$$NAME$$$',
     customErrorPages: false,
+    customElementJsonFormat: 'explicit',
     fetchOptions: {
       credentials: 'include',
     },
@@ -59,13 +60,15 @@ export default defineNuxtModule<ModuleOptions>({
     }
 
     const { resolve } = createResolver(import.meta.url)
-    const runtimeDir = fileURLToPath(new URL('./runtime', import.meta.url))
+    const runtimeDir = resolve('./runtime')
     nuxt.options.build.transpile.push(runtimeDir)
     if (options.serverLogLevel) {
       addServerPlugin(resolve(runtimeDir, 'server/plugins/errorLogger'))
     }
     addImportsDir(resolve(runtimeDir, 'composables/useDrupalCe'))
-    if (!options.disableFormHandler) {
+
+    // Add form handler middleware if not disabled (via boolean)
+    if (!(options.disableFormHandler === true)) {
       addServerHandler({
         handler: resolve(runtimeDir, 'server/middleware/drupalFormHandler'),
       })
@@ -83,6 +86,7 @@ export default defineNuxtModule<ModuleOptions>({
     nuxt.options.runtimeConfig.drupalCe = defu(nuxt.options.runtimeConfig.drupalCe ?? {}, {
       serverLogLevel: options.serverLogLevel as string,
       passThroughHeaders: options.passThroughHeaders,
+      disableFormHandler: options.disableFormHandler,
     })
 
     if (options.serverApiProxy === true) {
@@ -99,5 +103,14 @@ export default defineNuxtModule<ModuleOptions>({
         handler: resolve(runtimeDir, 'server/api/menu'),
       })
     }
+
+    // Types to be auto-imported.
+    addImports([
+      {
+        name: 'CustomElementContent',
+        from: resolve('./types.d.ts'),
+        type: true
+      },
+    ])
   },
 })

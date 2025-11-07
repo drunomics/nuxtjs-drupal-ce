@@ -3,7 +3,6 @@
 [![npm version][npm-version-src]][npm-version-href]
 [![npm downloads][npm-downloads-src]][npm-downloads-href]
 [![ci](https://github.com/drunomics/nuxtjs-drupal-ce/actions/workflows/ci.yml/badge.svg?branch=2.x)](https://github.com/drunomics/nuxtjs-drupal-ce/actions/workflows/ci.yml)
-[![codecov][codecov-src]][codecov-href]
 [![License][license-src]][license-href]
 
 > Connects Nuxt v3 with Drupal via the [Lupus Custom Elements Renderer](https://www.drupal.org/project/lupus_ce_renderer) 
@@ -92,6 +91,11 @@ rm -f app.vue && npx nuxt-drupal-ce-init
 - `addRequestFormat`: If set to `true`, the `_format=custom_elements` URL parameter
 is added automatically to requests. Defaults to `false`.
 
+- `customElementJsonFormat`: Specifies the JSON format for custom elements. Options:
+  - `'explicit'`: Suggested format with separated `props` and `slots` objects (default). Automatically falls back to legacy format if a different structure is detected.
+  - `'legacy'`: Legacy format with props and slots flattened at the same level. Explicitly configure this for improved compatibility with older backends.
+  Defaults to `'explicit'`.
+
 - `customErrorPages`: By default, error pages provided by Drupal (e.g. 403, 404 page) are shown,
   while keeping the right status code. By enabling customErrorPages, the regular Nuxt error
   pages are shown instead, such that the pages can be customized with Nuxt. Defaults to `false`.
@@ -126,6 +130,39 @@ The components should be placed in `~/components/global`, refer to the `/playgro
 For example, for the custom element `node-article-teaser` a global component `node-article-teaser.vue` would be
 picked up for rendering.
 
+### JSON Format Options
+
+The module supports two JSON formats for custom elements:
+
+**Explicit Format** (default, recommended):
+```json
+{
+  "element": "node-article-teaser",
+  "props": {
+    "title": "Article Title",
+    "nid": 123
+  },
+  "slots": {
+    "default": "Content goes here",
+    "sidebar": { "element": "drupal-block", "props": {...} }
+  }
+}
+```
+
+**Legacy Format** (for backward compatibility):
+```json
+{
+  "element": "node-article-teaser",
+  "title": "Article Title",
+  "nid": 123,
+  "default": "Content goes here"
+}
+```
+
+The explicit format clearly separates props from slots, making the structure more maintainable.
+
+**Compatibility Note**: The default `'explicit'` format automatically falls back to legacy format when it detects a different structure. However, for improved compatibility with older Drupal backends, it's recommended to explicitly configure `customElementJsonFormat: 'legacy'`.
+
 ### Naming recommendation
 
 We recommend to name the components lowercase using kebap-case, such that there is a clear 1:1 mapping between
@@ -154,6 +191,36 @@ x node-custom-view.vue
 x node-custom-view--default.vue
 x node-custom--default.vue
 ✓ node--default.vue
+```
+
+## Form handler middleware
+
+The form handler middleware is used to process Drupal form submissions by forwarding form-POST
+requests to Drupal and rendering the response as usual. This option allows you to bypass this
+middleware for certain routes or to disable it globally.
+
+### Route level
+
+To bypass the form handler middleware for certain routes, you can use the `disableFormHandler` option with an array of routes:
+
+```js
+export default defineNuxtConfig({
+  drupalCe: {
+    disableFormHandler: ['/custom-form'],
+  },
+})
+```
+
+### Global level
+
+To disable the form handler middleware globally, you can use the `disableFormHandler` option with `true`:
+
+```js
+export default defineNuxtConfig({
+  drupalCe: {
+    disableFormHandler: true,
+  },
+})
 ```
 
 ## Deprecated options
@@ -220,16 +287,16 @@ The following options were support in 1.x but got dropped:
 
 ## Development
 
-1. Clone this repository.
-2. Install dependencies using `npm install`.
-3. Run `npm run dev:prepare` to generate type stubs.
-4. Use `npm run dev` to start [playground](./playground) in development mode.
-5. Update baseURL setting in Nuxt config with [Lupus Decoupled Drupal](https://www.drupal.org/project/lupus_decoupled) instance URL and append the API-prefix /ce-api, e.g. `https://8080-shaal-drupalpod-8m3z0ms7mb6.ws-eu67.gitpod.io/ce-api`
+1. Clone this repository
+2. Install dependencies: `npm install`
+3. Generate type stubs: `npm run dev:prepare`
+4. Start playground in dev mode: `npm run dev`
+5. Configure `drupalBaseUrl` in `playground/nuxt.config.ts` to point to your Drupal instance
 
 ### Run on StackBlitz
 
 1. [Launch it on StackBlitz](https://stackblitz.com/fork/github/drunomics/nuxtjs-drupal-ce/tree/2.x?startScript=dev:prepare,dev&file=playground/nuxt.config.ts)
-2. Update baseURL setting in Nuxt config with [Lupus Decoupled Drupal](https://www.drupal.org/project/lupus_decoupled) instance URL and append the API-prefix /ce-api, e.g. `https://8080-shaal-drupalpod-8m3z0ms7mb6.ws-eu67.gitpod.io/ce-api`
+2. Configure `drupalBaseUrl` in Nuxt config to point to your Drupal instance
 
 
 ## License

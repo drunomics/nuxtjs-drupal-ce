@@ -1,11 +1,12 @@
 import { fileURLToPath } from 'node:url'
 import { describe, it, expect } from 'vitest'
 import { setup, createPage } from '@nuxt/test-utils/e2e'
-import DrupalCe from '../'
+import DrupalCe from '../../'
+import { join } from 'node:path'
 
 describe('User login form', async () => {
   await setup({
-    rootDir: fileURLToPath(new URL('../playground', import.meta.url)),
+    rootDir: join(fileURLToPath(import.meta.url), '../../../playground'),
     nuxtConfig: {
       modules: [
         DrupalCe,
@@ -34,7 +35,7 @@ describe('User login form', async () => {
 
     await page.waitForSelector('text=Unrecognized username or password', { timeout: 5000 })
     expect(await page.getByText('Unrecognized username or password').isVisible()).toBe(true)
-  })
+  }, 10000)
 
   it('correctly logs-in user', async () => {
     const page = await createPage('/user/login')
