@@ -13,6 +13,21 @@ export const useDrupalCe = () => {
   const privateConfig = import.meta.server && useRuntimeConfig().drupalCe
 
   /**
+   * Returns an empty page structure with default values
+   */
+  const createEmptyPage = (): DrupalCePage => ({
+    breadcrumbs: [],
+    content: {},
+    content_format: 'json',
+    local_tasks: { primary: [], secondary: [] },
+    settings: {},
+    messages: [],
+    metatags: { meta: [], link: [], jsonld: [] },
+    page_layout: 'default',
+    title: '',
+  })
+
+  /**
    * Processes the given fetchOptions to apply module defaults
    * @param fetchOptions Optional Nuxt useFetch options
    * @param skipDrupalCeApiProxy Force skip the Drupal CE API proxy. Defaults to false.
@@ -144,8 +159,11 @@ export const useDrupalCe = () => {
           page.redirect.url,
           { external: page.redirect.external, redirectCode: page.redirect.statusCode, replace: true },
         ])
-        // Redirect aborts rendering, return empty page (will never be accessed)
-        return getPage()
+        // Redirect aborts rendering, but store empty page in cache and return ref to it
+        // This matches the structure of the normal path
+        nuxtApp.payload.data[useFetchOptions.key] = createEmptyPage()
+        currentPageKey.value = useFetchOptions.key
+        return toRef(nuxtApp.payload.data, useFetchOptions.key)
       }
 
       if (error) {
@@ -323,17 +341,7 @@ export const useDrupalCe = () => {
         return nuxtApp.payload.data[key]
       }
       // Return empty page data if no page has been fetched yet
-      return {
-        breadcrumbs: [],
-        content: {},
-        content_format: 'json',
-        local_tasks: { primary: [], secondary: [] },
-        settings: {},
-        messages: [],
-        metatags: { meta: [], link: [], jsonld: [] },
-        page_layout: 'default',
-        title: '',
-      }
+      return createEmptyPage()
     })
   }
 
