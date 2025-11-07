@@ -16,9 +16,6 @@ const layout = getPageLayout(page)
 usePageHead(page)
 
 definePageMeta({
-  key: (route) => {
-    const params = new URLSearchParams(route.query as Record<string, any>).toString()
-    return params ? `${route.path}?${params}` : route.path
-  },
+  key: (route) => route.path,
 })
 </script>
