@@ -112,14 +112,13 @@ export const useDrupalCe = () => {
   }
 
   /**
-   * Helper to compute the page cache key
+   * Helper to compute page cache key
+   * @param pathWithQuery Path including query params (e.g., '/blog?page=2')
+   * @param skipProxy Whether proxy is being skipped
    */
-  const computePageKey = (path: string, query: Record<string, any> = {}, skipDrupalCeApiProxy: boolean = false): string => {
-    const sanitizedPathKey = path.endsWith('/') && path !== '/' ? path.slice(0, -1) : path
-    const params = Object.keys(query).length > 0
-      ? `?${new URLSearchParams(unref(query) as Record<string, string>).toString()}`
-      : ''
-    return `page-${sanitizedPathKey}${params}${skipDrupalCeApiProxy ? '-direct' : '-proxy'}`
+  const computePageKey = (pathWithQuery: string, skipProxy: boolean = false): string => {
+    const proxyMode = skipProxy ? '-direct' : '-proxy'
+    return `page-${pathWithQuery}${proxyMode}`
   }
 
   /**
@@ -134,7 +133,14 @@ export const useDrupalCe = () => {
     const nuxtApp = useNuxtApp()
     const currentPageKey = useState<string>('drupal-ce-current-page-key')
 
-    useFetchOptions.key = computePageKey(path, useFetchOptions.query || {}, skipDrupalCeApiProxy)
+    // Build cache key from path + query (without hash, consistent with page component key)
+    const query = useFetchOptions.query || {}
+    const queryString = Object.keys(query).length > 0
+      ? `?${new URLSearchParams(unref(query) as Record<string, string>).toString()}`
+      : ''
+    // Use same proxy logic as processFetchOptions
+    const skipProxy = !(config.serverApiProxy && !skipDrupalCeApiProxy)
+    useFetchOptions.key = computePageKey(`${path}${queryString}`, skipProxy)
 
     // Check if page data is provided by custom page response (e.g. form submission via POST)
     // This is only available during SSR
@@ -292,12 +298,15 @@ export const useDrupalCe = () => {
           const route = useRoute()
           const router = useRouter()
 
-          // Update key on initial load
-          currentPageKey.value = computePageKey(route.path, route.query as Record<string, any>, false)
+          // Determine proxy mode based on config (same logic as fetchPage)
+          const skipProxy = !config.serverApiProxy
+
+          // Update key on initial load (use fullPath without hash, like page component key)
+          currentPageKey.value = computePageKey(route.fullPath.split('#')[0], skipProxy)
 
           // Use router.afterEach to ensure navigation is fully complete before updating
           router.afterEach((to) => {
-            currentPageKey.value = computePageKey(to.path, to.query as Record<string, any>, false)
+            currentPageKey.value = computePageKey(to.fullPath.split('#')[0], skipProxy)
           })
         }
         catch (e) {

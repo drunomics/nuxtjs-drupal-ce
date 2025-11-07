@@ -16,6 +16,10 @@ const layout = getPageLayout(page)
 usePageHead(page)
 
 definePageMeta({
-  key: (route) => route.path,
+  // Use fullPath minus hash for cache key to ensure:
+  // - Different query params (e.g., ?page=2) create separate cache entries
+  // - Hash fragments (e.g., #gallery--slide--1) don't affect caching
+  // - Components can watch route.hash for transient UI state
+  key: (route) => route.fullPath.split('#')[0],
 })
 </script>
