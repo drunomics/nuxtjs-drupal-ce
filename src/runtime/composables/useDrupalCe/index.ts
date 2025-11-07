@@ -134,21 +134,22 @@ export const useDrupalCe = () => {
         ? `?${new URLSearchParams(unref(useFetchOptions.query)).toString()}`
         : ''
     useFetchOptions.key = `page-${sanitizedPathKey}${params}${skipDrupalCeApiProxy ? '-direct' : '-proxy'}`
-    let page = null
-    const pageError = ref(null)
 
     if (import.meta.server) {
       serverResponse.value = useRequestEvent(nuxtApp).context.drupalCeCustomPageResponse
     }
 
     // Check if the page data is already provided, e.g. by a form response.
+    let page = null
+    let error = null
+
     if (serverResponse.value) {
       if (serverResponse.value._data) {
-        page = ref(serverResponse.value._data)
+        page = serverResponse.value._data
         passThroughHeaders(nuxtApp, serverResponse.value.headers)
       }
       else if (serverResponse.value.error) {
-        pageError.value = serverResponse.value.error
+        error = serverResponse.value.error
       }
       // Clear the server response state after it was sent to the client.
       if (import.meta.client) {
@@ -156,36 +157,36 @@ export const useDrupalCe = () => {
       }
     }
     else {
-      const { data, error } = await useCeApi(path, useFetchOptions, true, skipDrupalCeApiProxy)
-      page = data
-      pageError.value = error.value
+      const result = await useCeApi(path, useFetchOptions, true, skipDrupalCeApiProxy)
+      page = result.data.value
+      error = result.error.value
     }
 
-    if (page.value?.messages) {
-      pushMessagesToState(page.value.messages)
+    if (page?.messages) {
+      pushMessagesToState(page.messages)
     }
 
-    if (page?.value?.redirect) {
+    if (page?.redirect) {
       await callWithNuxt(nuxtApp, navigateTo, [
-        page.value.redirect.url,
-        { external: page.value.redirect.external, redirectCode: page.value.redirect.statusCode, replace: true },
+        page.redirect.url,
+        { external: page.redirect.external, redirectCode: page.redirect.statusCode, replace: true },
       ])
       return pageState
     }
 
-    if (pageError.value) {
-      overrideErrorHandler ? overrideErrorHandler(pageError) : pageErrorHandler(pageError, { config, nuxtApp })
-      if (pageError.value?.data) {
+    if (error) {
+      overrideErrorHandler ? overrideErrorHandler({ value: error }) : pageErrorHandler({ value: error }, { config, nuxtApp })
+      if (error.data) {
         pageState.value = {
-          ...pageError.value.data,
+          ...error.data,
           key: useFetchOptions.key,
         }
       }
     }
-    else if (page?.value) {
+    else if (page) {
       // Be sure to assign the actual data, not the ref.
       pageState.value = {
-        ...page.value,
+        ...page,
         key: useFetchOptions.key,
       }
     }
