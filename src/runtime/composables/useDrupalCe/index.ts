@@ -3,9 +3,10 @@ import { appendResponseHeader } from 'h3'
 import type { $Fetch, NitroFetchRequest } from 'nitropack'
 import type { Ref, ComputedRef, Component, VNode } from 'vue'
 import { getDrupalBaseUrl, getMenuBaseUrl } from './server'
-import type { UseFetchOptions } from '#app'
+import type { UseFetchOptions, AsyncData } from '#app'
 import { callWithNuxt } from '#app'
 import { useRuntimeConfig, useState, useFetch, navigateTo, createError, h, resolveComponent, setResponseStatus, useNuxtApp, useRequestHeaders, ref, unref, watch, useRequestEvent, computed, useHead, defineComponent } from '#imports'
+import type { DrupalCePage, DrupalCeApiResponse } from '../../types'
 
 export const useDrupalCe = () => {
   const config = useRuntimeConfig().public.drupalCe
@@ -67,8 +68,9 @@ export const useDrupalCe = () => {
    * @param fetchOptions UseFetchOptions<any>
    * @param doPassThroughHeaders Whether to pass through headers from Drupal to the client
    * @param skipDrupalCeApiProxy Force skip the Drupal CE API proxy. Defaults to false.
+   * @returns AsyncData<DrupalCeApiResponse> - The API response can be either a page object or a redirect object
    */
-  const useCeApi = (path: string | Ref<string>, fetchOptions: UseFetchOptions<any> = {}, doPassThroughHeaders?: boolean, skipDrupalCeApiProxy: boolean = false): Promise<any> => {
+  const useCeApi = (path: string | Ref<string>, fetchOptions: UseFetchOptions<any> = {}, doPassThroughHeaders?: boolean, skipDrupalCeApiProxy: boolean = false): AsyncData<DrupalCeApiResponse, any> => {
     const nuxtApp = useNuxtApp()
     fetchOptions.onResponse = (context) => {
       if (doPassThroughHeaders && import.meta.server && privateConfig?.passThroughHeaders) {
@@ -77,7 +79,7 @@ export const useDrupalCe = () => {
       }
     }
 
-    return useFetch(path, {
+    return useFetch<DrupalCeApiResponse>(path, {
       ...processFetchOptions(fetchOptions, skipDrupalCeApiProxy),
       $fetch: $ceApi(fetchOptions, skipDrupalCeApiProxy),
     })
@@ -102,12 +104,12 @@ export const useDrupalCe = () => {
    * @param skipDrupalCeApiProxy Force skip the Drupal CE API proxy. Defaults to false.
    *                             The proxy might still be skipped if serverApiProxy is set to false globally.
    */
-  const fetchPage = async (path: string, useFetchOptions: UseFetchOptions<any> = {}, overrideErrorHandler?: (error?: any) => void, skipDrupalCeApiProxy: boolean = false) => {
+  const fetchPage = async (path: string, useFetchOptions: UseFetchOptions<any> = {}, overrideErrorHandler?: (error?: any) => void, skipDrupalCeApiProxy: boolean = false): Promise<Ref<DrupalCePage>> => {
     const nuxtApp = useNuxtApp()
 
     // Workaround for issue - useState is not available after async call (Nuxt instance unavailable)
     // Initialize state with default values
-    const pageState = useState('drupal-ce-page-data', () => ({
+    const pageState = useState<DrupalCePage>('drupal-ce-page-data', () => ({
       breadcrumbs: [],
       content: {},
       content_format: 'json',
@@ -140,7 +142,7 @@ export const useDrupalCe = () => {
     }
 
     // Check if the page data is already provided, e.g. by a form response.
-    let page = null
+    let page: DrupalCeApiResponse | null = null
     let error = null
 
     if (serverResponse.value) {
@@ -275,7 +277,17 @@ export const useDrupalCe = () => {
   /**
    * Use page data
    */
-  const getPage = (): Ref => useState('drupal-ce-page-data', () => ({}))
+  const getPage = (): Ref<DrupalCePage> => useState<DrupalCePage>('drupal-ce-page-data', () => ({
+    breadcrumbs: [],
+    content: {},
+    content_format: 'json',
+    local_tasks: { primary: [], secondary: [] },
+    settings: {},
+    messages: [],
+    metatags: { meta: [], link: [], jsonld: [] },
+    page_layout: 'default',
+    title: '',
+  }))
 
   /**
    * Resolve a custom element into a Vue component
@@ -524,7 +536,7 @@ const menuErrorHandler = (error: Record<string, any>) => {
   })
 }
 
-const pageErrorHandler = (error: Record<string, any>, context?: Record<string, any>) => {
+const pageErrorHandler = (error: Record<string, any>, _context?: Record<string, any>) => {
   const errorData = error.value.data
 
   // Make sure the error is logged to console also.

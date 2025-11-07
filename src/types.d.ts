@@ -41,6 +41,57 @@ export type CustomElementContent =
   | CustomElementContentObject
   | Array<string | CustomElementContentObject>
 
+/**
+ * Metatags structure
+ */
+export interface DrupalCeMetatags {
+  meta: Array<Record<string, any>>
+  link: Array<Record<string, any>>
+  jsonld: Array<any>
+}
+
+/**
+ * Local tasks (tabs) structure
+ */
+export interface DrupalCeLocalTasks {
+  primary: Array<any>
+  secondary: Array<any>
+}
+
+/**
+ * Redirect response from the API (causes navigation, never stored in page state)
+ */
+export interface DrupalCeRedirectResponse {
+  redirect: {
+    url: string
+    external: boolean
+    statusCode: number
+  }
+}
+
+/**
+ * Page response object returned by fetchPage() and getPage()
+ * This is the actual page data stored in state after fetching
+ */
+export interface DrupalCePage {
+  breadcrumbs: Array<any>
+  content: CustomElementContent | Record<string, any>
+  content_format: string
+  local_tasks: DrupalCeLocalTasks
+  settings: Record<string, any>
+  messages: Array<any>
+  metatags: DrupalCeMetatags
+  page_layout: string
+  title: string
+  key?: string  // Unique identifier used by useFetch caching
+}
+
+/**
+ * API response can be either a page or a redirect
+ * Used internally when fetching from the API
+ */
+export type DrupalCeApiResponse = DrupalCePage | DrupalCeRedirectResponse
+
 // Define the type for the runtime-config,.
 // see https://nuxt.com/docs/guide/going-further/runtime-config#manually-typing-runtime-config
 declare module '@nuxt/schema' {
