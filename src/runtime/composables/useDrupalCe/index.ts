@@ -124,6 +124,7 @@ export const useDrupalCe = () => {
       },
       page_layout: 'default',
       title: '',
+      key: '',  // useFetch cache key metadata
     }))
     const serverResponse = useState('server-response', () => null)
     // Remove trailing slash from path key as it might cause issues in SSG.
@@ -174,11 +175,26 @@ export const useDrupalCe = () => {
 
     if (pageError.value) {
       overrideErrorHandler ? overrideErrorHandler(pageError) : pageErrorHandler(pageError, { config, nuxtApp })
-      page.value = pageError.value?.data
+      // Fix: Assign error data with key (only if we have data)
+      if (pageError.value?.data) {
+        pageState.value = {
+          ...pageError.value.data,
+          key: useFetchOptions.key,
+        }
+      }
+    }
+    else if (page?.value) {
+      // Success - update shared state with fetched data
+      // Fix: Assign the actual data from page.value, not the ref
+      pageState.value = {
+        ...page.value,
+        key: useFetchOptions.key,
+      }
     }
 
-    pageState.value = page
-    return page
+    // Fix: ALWAYS return the shared state ref
+    // This ensures fetchPage() and getPage() return the SAME ref
+    return pageState
   }
 
   /**
