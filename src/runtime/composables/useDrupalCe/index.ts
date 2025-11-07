@@ -112,6 +112,17 @@ export const useDrupalCe = () => {
   }
 
   /**
+   * Helper to compute the page cache key
+   */
+  const computePageKey = (path: string, query: Record<string, any> = {}, skipDrupalCeApiProxy: boolean = false): string => {
+    const sanitizedPathKey = path.endsWith('/') && path !== '/' ? path.slice(0, -1) : path
+    const params = Object.keys(query).length > 0
+      ? `?${new URLSearchParams(unref(query) as Record<string, string>).toString()}`
+      : ''
+    return `page-${sanitizedPathKey}${params}${skipDrupalCeApiProxy ? '-direct' : '-proxy'}`
+  }
+
+  /**
    * Fetches page data from Drupal, handles redirects, errors and messages
    * @param path Path of the Drupal page to fetch
    * @param useFetchOptions Optional Nuxt useFetch options
@@ -123,13 +134,7 @@ export const useDrupalCe = () => {
     const nuxtApp = useNuxtApp()
     const currentPageKey = useState<string>('drupal-ce-current-page-key')
 
-    // Remove trailing slash from path key as it might cause issues in SSG.
-    const sanitizedPathKey = path.endsWith('/') && path !== '/' ? path.slice(0, -1) : path
-    const params =
-      Object.keys(useFetchOptions.query || {}).length > 0
-        ? `?${new URLSearchParams(unref(useFetchOptions.query)).toString()}`
-        : ''
-    useFetchOptions.key = `page-${sanitizedPathKey}${params}${skipDrupalCeApiProxy ? '-direct' : '-proxy'}`
+    useFetchOptions.key = computePageKey(path, useFetchOptions.query || {}, skipDrupalCeApiProxy)
 
     // Check if page data is provided by custom page response (e.g. form submission via POST)
     // This is only available during SSR
@@ -271,6 +276,25 @@ export const useDrupalCe = () => {
    */
   const getPage = (): Ref<DrupalCePage> => {
     const currentPageKey = useState<string>('drupal-ce-current-page-key', () => '')
+
+    // Set up route watcher to keep currentPageKey in sync (for KeepAlive scenarios)
+    if (import.meta.client) {
+      const watcherInitialized = useState<boolean>('drupal-ce-watcher-init', () => false)
+
+      if (!watcherInitialized.value) {
+        watcherInitialized.value = true
+        try {
+          const route = useRoute()
+          watch(() => [route.path, route.query] as const, ([path, query]) => {
+            // Compute key with default proxy setting - fetchPage() will override if needed
+            currentPageKey.value = computePageKey(path, query as Record<string, any>, false)
+          }, { immediate: true })
+        }
+        catch (e) {
+          // Silently skip if not in proper Nuxt context (e.g., unit tests)
+        }
+      }
+    }
 
     // Return computed ref that looks up the current page key in the reactive Nuxt payload
     // This properly tracks reactivity since nuxtApp.payload.data is reactive
