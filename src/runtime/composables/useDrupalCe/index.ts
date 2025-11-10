@@ -245,7 +245,9 @@ export const useDrupalCe = () => {
       }
       else {
         // Backend returned a complete custom error page and customErrorPages is disabled
-        // Update shared state and render the backend's error page
+        // For error responses, useFetch doesn't cache data properly in the payload
+        // We need to manually link pageRef to the cache and copy error.data so it persists through SSR hydration
+        pageRef = toRef(nuxtApp.payload.data, useFetchOptions.key as string)
         pageRef.value = errorData
 
         if (import.meta.server) {
