@@ -113,14 +113,49 @@ export const useDrupalCe = () => {
 
   /**
    * Helper to compute page cache key
+   *
+   * Uses a special '__ssr__' cache key during SSR to handle CDN query parameter filtering.
+   * CDNs typically strip tracking parameters (utm_*, fbclid, etc.) from their cache keys:
+   *
+   * 1. CDN caches: /blog?page=1 (strips utm_source=newsletter)
+   * 2. User visits: /blog?page=1&utm_source=newsletter
+   * 3. CDN serves cached HTML from step 1
+   * 4. Client sees full URL with utm_source in browser
+   *
+   * Without the __ssr__ key, this would cause:
+   * - SSR: Cache key for /blog?page=1
+   * - Client: Cache key for /blog?page=1&utm_source=newsletter
+   * - Different keys → re-fetch during hydration → DOM manipulation → errors
+   *
+   * The __ssr__ key solves this by:
+   * - SSR always uses '__ssr__' key (only one page rendered per request)
+   * - Client moves __ssr__ cache to proper key on first access
+   * - After move, all subsequent calls use normal keys
+   *
    * @param pathWithQuery Path including query params (e.g., '/blog?page=2')
    * @param skipProxy Whether proxy is being skipped
+   * @param nuxtApp Nuxt app instance (needed to move __ssr__ cache on client)
    */
-  const computePageKey = (pathWithQuery: string, skipProxy: boolean = false): string => {
+  const computePageKey = (pathWithQuery: string, skipProxy: boolean, nuxtApp: any): string => {
+    // During SSR, always use the special __ssr__ key since only one page is rendered per request
+    if (import.meta.server) {
+      return '__ssr__'
+    }
+
+    // On client-side, calculate the proper cache key with full path and query parameters
     // Remove trailing slash from path as it might cause issues in SSG (except for homepage)
     const sanitized = pathWithQuery.replace(/\/(\?|$)/, '$1')
     const proxyMode = skipProxy ? '-direct' : '-proxy'
-    return `page-${sanitized}${proxyMode}`
+    const properKey = `page-${sanitized}${proxyMode}`
+
+    // During initial hydration, if __ssr__ cache exists, move it to the proper key
+    // This ensures the SSR data is available under the correct key for this URL
+    if (nuxtApp.payload.data['__ssr__']) {
+      nuxtApp.payload.data[properKey] = nuxtApp.payload.data['__ssr__']
+      delete nuxtApp.payload.data['__ssr__']
+    }
+
+    return properKey
   }
 
   /**
@@ -142,7 +177,7 @@ export const useDrupalCe = () => {
       : ''
     // Use same proxy logic as processFetchOptions
     const skipProxy = !(config.serverApiProxy && !skipDrupalCeApiProxy)
-    useFetchOptions.key = computePageKey(`${path}${queryString}`, skipProxy)
+    useFetchOptions.key = computePageKey(`${path}${queryString}`, skipProxy, nuxtApp)
 
     // Check if page data is provided by custom page response (e.g. form submission via POST)
     // This is only available during SSR
@@ -299,16 +334,17 @@ export const useDrupalCe = () => {
         try {
           const route = useRoute()
           const router = useRouter()
+          const nuxtApp = useNuxtApp()
 
           // Determine proxy mode based on config (same logic as fetchPage)
           const skipProxy = !config.serverApiProxy
 
           // Update key on initial load (use fullPath without hash, like page component key)
-          currentPageKey.value = computePageKey(route.fullPath.split('#')[0], skipProxy)
+          currentPageKey.value = computePageKey(route.fullPath.split('#')[0], skipProxy, nuxtApp)
 
           // Use router.afterEach to ensure navigation is fully complete before updating
           router.afterEach((to) => {
-            currentPageKey.value = computePageKey(to.fullPath.split('#')[0], skipProxy)
+            currentPageKey.value = computePageKey(to.fullPath.split('#')[0], skipProxy, nuxtApp)
           })
         }
         catch (e) {
