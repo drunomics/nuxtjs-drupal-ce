@@ -5,7 +5,7 @@ import type { Ref, ComputedRef, Component, VNode } from 'vue'
 import { getDrupalBaseUrl, getMenuBaseUrl } from './server'
 import type { UseFetchOptions, AsyncData } from '#app'
 import { callWithNuxt } from '#app'
-import { useRuntimeConfig, useState, useFetch, navigateTo, createError, h, resolveComponent, setResponseStatus, useNuxtApp, useRequestHeaders, ref, unref, watch, useRequestEvent, computed, useHead, defineComponent, toRef } from '#imports'
+import { useRuntimeConfig, useState, useFetch, navigateTo, createError, h, resolveComponent, setResponseStatus, useNuxtApp, useRequestHeaders, ref, unref, watch, useRequestEvent, computed, useHead, defineComponent, toRef, useRoute, useRouter } from '#imports'
 import type { DrupalCePage, DrupalCeApiResponse } from '../../types'
 
 export const useDrupalCe = () => {
@@ -142,7 +142,9 @@ export const useDrupalCe = () => {
     }
 
     // Get path with query params from current route (without hash)
-    const pathWithQuery = useRoute().fullPath.split('#')[0]
+    // During hydration, use nuxtApp's router which is always available
+    const route = nuxtApp.$router?.currentRoute?.value || useRoute()
+    const pathWithQuery = route.fullPath.split('#')[0]
 
     // On client-side, calculate the proper cache key with full path and query parameters
     // Remove trailing slash from path as it might cause issues in SSG (except for homepage)
