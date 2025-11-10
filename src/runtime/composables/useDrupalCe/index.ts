@@ -5,7 +5,7 @@ import type { Ref, ComputedRef, Component, VNode } from 'vue'
 import { getDrupalBaseUrl, getMenuBaseUrl } from './server'
 import type { UseFetchOptions, AsyncData } from '#app'
 import { callWithNuxt } from '#app'
-import { useRuntimeConfig, useState, useFetch, navigateTo, createError, h, resolveComponent, setResponseStatus, useNuxtApp, useRequestHeaders, ref, unref, watch, useRequestEvent, computed, useHead, defineComponent, toRef } from '#imports'
+import { useRuntimeConfig, useState, useFetch, navigateTo, createError, h, resolveComponent, setResponseStatus, useNuxtApp, useRequestHeaders, ref, unref, watch, useRequestEvent, computed, useHead, defineComponent, toRef, useRoute, useRouter } from '#imports'
 import type { DrupalCePage, DrupalCeApiResponse } from '../../types'
 
 export const useDrupalCe = () => {
@@ -112,20 +112,64 @@ export const useDrupalCe = () => {
   }
 
   /**
-   * Helper to compute the page cache key
+   * Helper to compute page cache key
+   *
+   * Uses a special '__ssr__' cache key during SSR to handle CDN query parameter filtering.
+   * CDNs typically strip tracking parameters (utm_*, fbclid, etc.) from their cache keys:
+   *
+   * 1. CDN caches: /blog?page=1 (strips utm_source=newsletter)
+   * 2. User visits: /blog?page=1&utm_source=newsletter
+   * 3. CDN serves cached HTML from step 1
+   * 4. Client sees full URL with utm_source in browser
+   *
+   * Without the __ssr__ key, this would cause:
+   * - SSR: Cache key for /blog?page=1
+   * - Client: Cache key for /blog?page=1&utm_source=newsletter
+   * - Different keys → re-fetch during hydration → DOM manipulation → errors
+   *
+   * The __ssr__ key solves this by:
+   * - SSR always uses '__ssr__' key (only one page rendered per request)
+   * - Client moves __ssr__ cache to proper key on first access
+   * - After move, all subsequent calls use normal keys
+   *
+   * @param skipProxy Whether proxy is being skipped
+   * @param nuxtApp Nuxt app instance (needed to move __ssr__ cache on client)
    */
-  const computePageKey = (path: string, query: Record<string, any> = {}, skipDrupalCeApiProxy: boolean = false): string => {
-    const sanitizedPathKey = path.endsWith('/') && path !== '/' ? path.slice(0, -1) : path
-    const params = Object.keys(query).length > 0
-      ? `?${new URLSearchParams(unref(query) as Record<string, string>).toString()}`
-      : ''
-    return `page-${sanitizedPathKey}${params}${skipDrupalCeApiProxy ? '-direct' : '-proxy'}`
+  const computePageKey = (skipProxy: boolean, nuxtApp: any): string => {
+    // During SSR, always use the special __ssr__ key since only one page is rendered per request
+    if (import.meta.server) {
+      return '__ssr__'
+    }
+
+    // Get path with query params from current route (without hash)
+    // During hydration, use nuxtApp's router which is always available
+    const route = nuxtApp.$router?.currentRoute?.value || useRoute()
+    const pathWithQuery = route.fullPath.split('#')[0]
+
+    // On client-side, calculate the proper cache key with full path and query parameters
+    // Remove trailing slash from path as it might cause issues in SSG (except for homepage)
+    const sanitized = pathWithQuery.replace(/\/(\?|$)/, '$1')
+    const proxyMode = skipProxy ? '-direct' : '-proxy'
+    const properKey = `page-${sanitized}${proxyMode}`
+
+    // During initial hydration, if __ssr__ cache exists, move it to the proper key
+    // This ensures the SSR data is available under the correct key for this URL
+    if (nuxtApp.payload.data['__ssr__']) {
+      nuxtApp.payload.data[properKey] = nuxtApp.payload.data['__ssr__']
+      delete nuxtApp.payload.data['__ssr__']
+    }
+
+    return properKey
   }
 
   /**
    * Fetches page data from Drupal, handles redirects, errors and messages
+   *
+   * By default, the cache key is generated from the current route's fullPath (without hash).
+   * This can be customized by providing useFetchOptions.key.
+   *
    * @param path Path of the Drupal page to fetch
-   * @param useFetchOptions Optional Nuxt useFetch options
+   * @param useFetchOptions Optional Nuxt useFetch options. Can include custom cache key via 'key' property.
    * @param overrideErrorHandler Optional error handler
    * @param skipDrupalCeApiProxy Force skip the Drupal CE API proxy. Defaults to false.
    *                             The proxy might still be skipped if serverApiProxy is set to false globally.
@@ -134,7 +178,12 @@ export const useDrupalCe = () => {
     const nuxtApp = useNuxtApp()
     const currentPageKey = useState<string>('drupal-ce-current-page-key')
 
-    useFetchOptions.key = computePageKey(path, useFetchOptions.query || {}, skipDrupalCeApiProxy)
+    // Build cache key from current route's fullPath (without hash) if not already provided
+    // Callers can optionally provide a custom key via useFetchOptions.key
+    const skipProxy = !(config.serverApiProxy && !skipDrupalCeApiProxy)
+    if (!useFetchOptions.key) {
+      useFetchOptions.key = computePageKey(skipProxy, nuxtApp)
+    }
 
     // Check if page data is provided by custom page response (e.g. form submission via POST)
     // This is only available during SSR
@@ -278,26 +327,35 @@ export const useDrupalCe = () => {
    * Get the current page data ref.
    * Returns the useFetch cached data for the current page.
    * Layout components (breadcrumbs, page title, social share, etc.) can use this to access page data from the current route.
+   *
+   * By default, the cache key is generated from the current route's fullPath (without hash).
+   * This can be customized by providing a custom key.
+   *
+   * @param customKey Optional custom cache key. If not provided, uses current route's cache key.
    */
-  const getPage = (): Ref<DrupalCePage> => {
+  const getPage = (customKey?: string): Ref<DrupalCePage> => {
     const currentPageKey = useState<string>('drupal-ce-current-page-key', () => '')
 
     // Set up route watcher to keep currentPageKey in sync (for KeepAlive scenarios)
-    if (import.meta.client) {
+    // Only needed when using default key (not custom key)
+    if (!customKey && import.meta.client) {
       const watcherInitialized = useState<boolean>('drupal-ce-watcher-init', () => false)
 
       if (!watcherInitialized.value) {
         watcherInitialized.value = true
         try {
-          const route = useRoute()
           const router = useRouter()
+          const nuxtApp = useNuxtApp()
+
+          // Determine proxy mode based on config (same logic as fetchPage)
+          const skipProxy = !config.serverApiProxy
 
           // Update key on initial load
-          currentPageKey.value = computePageKey(route.path, route.query as Record<string, any>, false)
+          currentPageKey.value = computePageKey(skipProxy, nuxtApp)
 
           // Use router.afterEach to ensure navigation is fully complete before updating
-          router.afterEach((to) => {
-            currentPageKey.value = computePageKey(to.path, to.query as Record<string, any>, false)
+          router.afterEach(() => {
+            currentPageKey.value = computePageKey(skipProxy, nuxtApp)
           })
         }
         catch (e) {
@@ -306,11 +364,11 @@ export const useDrupalCe = () => {
       }
     }
 
-    // Return computed ref that looks up the current page key in the reactive Nuxt payload
-    // This properly tracks reactivity since nuxtApp.payload.data is reactive
+    // Return computed ref that looks up the page data in the reactive Nuxt payload
+    // Uses custom key if provided, otherwise uses current route's key
     return computed(() => {
       const nuxtApp = useNuxtApp()
-      const key = currentPageKey.value
+      const key = customKey || currentPageKey.value
       if (key && nuxtApp.payload.data[key]) {
         return nuxtApp.payload.data[key]
       }
