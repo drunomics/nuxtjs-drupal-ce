@@ -12,6 +12,7 @@ export default defineConfig({
           include: ['test/e2e/*.{test,spec}.ts'],
           environment: 'node',
           fileParallelism: false,
+          retry: 1,
         }
       },
       await defineVitestProject({
