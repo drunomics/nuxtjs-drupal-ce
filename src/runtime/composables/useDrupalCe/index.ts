@@ -336,6 +336,7 @@ export const useDrupalCe = () => {
    * @param customKey Optional custom cache key. If not provided, uses current route's cache key.
    */
   const getPage = (customKey?: string): Ref<DrupalCePage> => {
+    const nuxtApp = useNuxtApp()
     const currentPageKey = useState<string>('drupal-ce-current-page-key', () => '')
 
     // Set up route watcher to keep currentPageKey in sync (for KeepAlive scenarios)
@@ -347,7 +348,6 @@ export const useDrupalCe = () => {
         watcherInitialized.value = true
         try {
           const router = useRouter()
-          const nuxtApp = useNuxtApp()
 
           // Determine proxy mode based on config (same logic as fetchPage)
           const skipProxy = !config.serverApiProxy
@@ -360,7 +360,7 @@ export const useDrupalCe = () => {
             currentPageKey.value = computePageKey(skipProxy, nuxtApp)
           })
         }
-        catch (e) {
+        catch {
           // Silently skip if not in proper Nuxt context (e.g., unit tests)
         }
       }
@@ -369,7 +369,6 @@ export const useDrupalCe = () => {
     // Return computed ref that looks up the page data in the reactive Nuxt payload
     // Uses custom key if provided, otherwise uses current route's key
     return computed(() => {
-      const nuxtApp = useNuxtApp()
       const key = customKey || currentPageKey.value
       if (key && nuxtApp.payload.data[key]) {
         return nuxtApp.payload.data[key]
