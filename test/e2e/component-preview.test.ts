@@ -10,8 +10,16 @@ describe('Component Preview Integration', async () => {
     port: 3002,
   })
 
-  it('loads nuxt-component-preview module', async () => {
-    const html = await $fetch('/')
-    expect(html).toContain('Welcome')
+  it('generates component index', async () => {
+    const json = await $fetch('/nuxt-component-preview/component-index.json')
+    expect(json).toBeDefined()
+    expect(json.components).toBeDefined()
+    expect(Array.isArray(json.components)).toBe(true)
+  })
+
+  it('excludes drupal-* prefixed components by default', async () => {
+    const json = await $fetch('/nuxt-component-preview/component-index.json')
+    const drupalComponents = json.components.filter((c: any) => c.name.startsWith('Drupal'))
+    expect(drupalComponents).toHaveLength(0)
   })
 })
