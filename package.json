@@ -31,7 +31,8 @@
     "lint-fix": "eslint . --fix"
   },
   "dependencies": {
-    "defu": "^6.1.4"
+    "defu": "^6.1.4",
+    "nuxt-component-preview": "^1.0.0-beta.1"
   },
   "devDependencies": {
     "@nuxt/eslint": "^1.10.0",

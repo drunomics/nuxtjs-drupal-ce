@@ -1,3 +1,4 @@
+
 # nuxtjs-drupal-ce - Nuxt Drupal Custom Elements Connector
 
 [![npm version][npm-version-src]][npm-version-href]
@@ -64,7 +65,7 @@ rm -f app.vue && npx nuxt-drupal-ce-init
 * Supports display of Drupal messages in the frontend.
 * Provides unstyled skeleton components for getting started quickly.
 * Supports fetching and display of Drupal menus via the [Rest menu items](https://www.drupal.org/project/rest_menu_items) module.
-
+* Integrates with nuxt-component-preview and autoconfigures it 
 
 ## Options
 
@@ -112,6 +113,8 @@ is added automatically to requests. Defaults to `false`.
   - 'error': Log only errors.
 
 - `disableFormHandler`: If set to `true`, the form handler middleware will be disabled. Defaults to `false`.
+
+- `enableComponentPreview`: Enable component preview for Drupal Canvas integration. Automatically configures CORS based on `drupalBaseUrl`. Defaults to `true`.
 
 ## Overriding options with environment variables
 
@@ -191,6 +194,34 @@ x node-custom-view.vue
 x node-custom-view--default.vue
 x node-custom--default.vue
 ✓ node--default.vue
+```
+
+## Component Preview Integration
+
+Built-in support for [nuxt-component-preview](https://github.com/drunomics/nuxt-component-preview) enables fully-rendered component previews in Drupal and easy Drupal Canvas integration. It works automatically with your `drupalBaseUrl` - CORS is configured automatically.
+
+Visit `/nuxt-component-preview/component-index.json` to see your components.
+
+**Configuration**: Configure nuxt-component-preview at root level:
+```js
+export default defineNuxtConfig({
+  drupalCe: {
+    drupalBaseUrl: 'https://drupal.example.com'
+  },
+  componentPreview: {
+    // See https://github.com/drunomics/nuxt-component-preview#configuration
+    componentIndex: { status: 'experimental' }
+  }
+})
+```
+
+See [nuxt-component-preview documentation](https://github.com/drunomics/nuxt-component-preview) for details.
+
+**Opt-out:** Disable the feature:
+```js
+drupalCe: {
+  enableComponentPreview: false
+}
 ```
 
 ## Form handler middleware

@@ -8,5 +8,6 @@ export default defineNuxtConfig({
   drupalCe: {
     drupalBaseUrl: 'http://127.0.0.1:3001',
     ceApiEndpoint: '/ce-api',
+    enableComponentPreview: false,
   },
 })
