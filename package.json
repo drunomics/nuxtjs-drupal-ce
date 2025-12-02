@@ -1,6 +1,6 @@
 {
   "name": "nuxtjs-drupal-ce",
-  "version": "2.5.0-rc.6",
+  "version": "2.5.0-rc.7",
   "license": "MIT",
   "bin": {
     "nuxt-drupal-ce-init": "bin/nuxt-drupal-ce-init.cjs"
