@@ -17,7 +17,8 @@
     "playground/components",
     "playground/pages",
     "playground/app.vue",
-    "playground/layouts"
+    "playground/layouts",
+    "playground/tsconfig.json"
   ],
   "scripts": {
     "prepack": "nuxt-module-build build",
