@@ -25,7 +25,6 @@ function setupCors(nuxt: any, corsOrigin: string) {
     nuxt.options.vite.server = nuxt.options.vite.server || {}
     nuxt.options.vite.server.cors = defu(nuxt.options.vite.server.cors, {
       origin: [corsOrigin],
-      credentials: true,
     })
   }
 
@@ -34,8 +33,7 @@ function setupCors(nuxt: any, corsOrigin: string) {
 
   const corsHeaders = {
     'Access-Control-Allow-Origin': corsOrigin,
-    'Access-Control-Allow-Methods': 'GET, OPTIONS',
-    'Access-Control-Allow-Credentials': 'true',
+    'Access-Control-Allow-Methods': 'GET',
   }
 
   nuxt.options.nitro.routeRules['/_nuxt/**'] = defu(
@@ -150,6 +148,8 @@ export default defineNuxtModule<ModuleOptions>({
         setupCors(nuxt, corsOrigin)
 
         if (nuxt.options.dev) {
+          // Disable appManifest in dev mode as recommended by nuxt-component-preview
+          // See https://github.com/drunomics/nuxt-component-preview#cross-domain-configuration
           nuxt.options.experimental = nuxt.options.experimental || {}
           nuxt.options.experimental.appManifest = false
           console.info('[nuxtjs-drupal-ce] Component preview enabled with CORS origin:', corsOrigin)

@@ -114,7 +114,7 @@ is added automatically to requests. Defaults to `false`.
 
 - `disableFormHandler`: If set to `true`, the form handler middleware will be disabled. Defaults to `false`.
 
-- `enableComponentPreview`: Enable component preview for Drupal Canvas integration. Automatically configures CORS based on `drupalBaseUrl`. Defaults to `true`.
+- `enableComponentPreview`: Enable component preview for Drupal Canvas integration. Automatically configures CORS based on `drupalBaseUrl`. Set to `false` to disable. Defaults to `true`.
 
 ## Overriding options with environment variables
 
