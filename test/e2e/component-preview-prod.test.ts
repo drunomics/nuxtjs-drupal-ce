@@ -1,6 +1,6 @@
 import { fileURLToPath } from 'node:url'
 import { describe, it, expect } from 'vitest'
-import { setup } from '@nuxt/test-utils/e2e'
+import { setup, $fetch } from '@nuxt/test-utils/e2e'
 import { join } from 'node:path'
 
 describe('Component Preview Production Mode', async () => {
@@ -12,10 +12,17 @@ describe('Component Preview Production Mode', async () => {
     port: 3015,
   })
 
-  it('builds successfully with component preview enabled', async () => {
-    // Just verify the setup completes and server starts
-    // CORS configuration happens at build time and is applied to route rules
-    expect(true).toBe(true)
+  it('generates component index in production', async () => {
+    const json = await $fetch('/nuxt-component-preview/component-index.json')
+    expect(json).toBeDefined()
+    expect(json.components).toBeDefined()
+    expect(Array.isArray(json.components)).toBe(true)
+  })
+
+  it('excludes drupal-* components by default', async () => {
+    const json = await $fetch('/nuxt-component-preview/component-index.json')
+    const drupalComponents = json.components.filter((c: any) => c.id.startsWith('Drupal'))
+    expect(drupalComponents).toHaveLength(0)
   })
 })
 
