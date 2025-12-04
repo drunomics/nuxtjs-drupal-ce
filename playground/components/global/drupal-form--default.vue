@@ -6,9 +6,7 @@
     :action="useRoute().fullPath"
     class="drupal-form"
   >
-    <slot>
-      <component :is="useDrupalCe().renderCustomElements(content)" />
-    </slot>
+    <slot />
   </form>
 </template>
 
@@ -17,7 +15,6 @@ defineProps<{
   formId: string
   attributes: object
   method: string,
-  content?: CustomElementContent
 }>()
 
 defineSlots<{
