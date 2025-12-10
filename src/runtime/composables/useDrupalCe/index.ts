@@ -12,6 +12,11 @@ export const useDrupalCe = () => {
   const config = useRuntimeConfig().public.drupalCe
   const privateConfig = import.meta.server && useRuntimeConfig().drupalCe
 
+  // Stores the most recently valid, complete page.
+  // Used by getPage() to avoid UI flicker when the new payload
+  // key is not yet available during route navigation.
+  const lastValidPage = useState('drupal-ce-last-valid-page', () => null)
+
   /**
    * Returns an empty page structure with default values
    */
@@ -266,6 +271,9 @@ export const useDrupalCe = () => {
     // Store the current page key for getPage() lookup
     currentPageKey.value = useFetchOptions.key
 
+    // Persist the full valid page to avoid UI flicker on next navigation
+    lastValidPage.value = pageRef.value
+
     return pageRef
   }
 
@@ -335,46 +343,30 @@ export const useDrupalCe = () => {
    *
    * @param customKey Optional custom cache key. If not provided, uses current route's cache key.
    */
-  const getPage = (customKey?: string): Ref<DrupalCePage> => {
+  const getPage = (customKey?: string): Ref<DrupalCePage | null> => {
     const nuxtApp = useNuxtApp()
-    const currentPageKey = useState<string>('drupal-ce-current-page-key', () => '')
 
-    // Set up route watcher to keep currentPageKey in sync (for KeepAlive scenarios)
-    // Only needed when using default key (not custom key)
-    if (!customKey && import.meta.client) {
-      const watcherInitialized = useState<boolean>('drupal-ce-watcher-init', () => false)
+    // Stores the key used to look up the page in nuxtApp.payload.data
+    const currentKey = useState<string>('drupal-ce-current-page-key', () => '')
 
-      if (!watcherInitialized.value) {
-        watcherInitialized.value = true
-        try {
-          const router = useRouter()
+    // Stores the last successfully loaded full page
+    const lastValidPage = useState<DrupalCePage | null>(
+      'drupal-ce-last-valid-page',
+      () => null
+    )
 
-          // Determine proxy mode based on config (same logic as fetchPage)
-          const skipProxy = !config.serverApiProxy
-
-          // Update key on initial load
-          currentPageKey.value = computePageKey(skipProxy, nuxtApp)
-
-          // Use router.afterEach to ensure navigation is fully complete before updating
-          router.afterEach(() => {
-            currentPageKey.value = computePageKey(skipProxy, nuxtApp)
-          })
-        }
-        catch {
-          // Silently skip if not in proper Nuxt context (e.g., unit tests)
-        }
-      }
-    }
-
-    // Return computed ref that looks up the page data in the reactive Nuxt payload
-    // Uses custom key if provided, otherwise uses current route's key
     return computed(() => {
-      const key = customKey || currentPageKey.value
-      if (key && nuxtApp.payload.data[key]) {
-        return nuxtApp.payload.data[key]
+      const key = customKey || currentKey.value
+      const page = nuxtApp.payload?.data?.[key] as DrupalCePage | undefined
+
+      // If we have a real page for this key, update stable cache
+      if (page) {
+        lastValidPage.value = page
+        return page
       }
-      // Return empty page data if no page has been fetched yet
-      return createEmptyPage()
+
+      // Otherwise return the last good page (avoids flicker)
+      return lastValidPage.value
     })
   }
 
@@ -601,7 +593,7 @@ export const useDrupalCe = () => {
     getMenuBaseUrl,
     getPageLayout,
     usePageHead,
-    
+
   }
 }
 
