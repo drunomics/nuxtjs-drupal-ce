@@ -3,7 +3,10 @@ import { defu } from 'defu'
 import type { NuxtOptionsWithDrupalCe } from './types'
 
 function getCorsOrigin(nuxt: any): string | null {
-  const drupalBaseUrl = nuxt.options.runtimeConfig.public.drupalCe.drupalBaseUrl
+  // Check environment variable first (higher priority), then runtimeConfig.
+  // Env vars are merged later in the Nuxt lifecycle, so we check them directly.
+  const drupalBaseUrl = process.env.NUXT_PUBLIC_DRUPAL_CE_DRUPAL_BASE_URL
+    || nuxt.options.runtimeConfig.public.drupalCe.drupalBaseUrl
 
   if (!drupalBaseUrl) {
     return null
