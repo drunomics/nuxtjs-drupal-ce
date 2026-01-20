@@ -144,14 +144,20 @@ export const useDrupalCe = () => {
    * @param nuxtApp Nuxt app instance (needed to move __ssr__ cache on client)
    */
   const computePageKey = (skipProxy: boolean, nuxtApp: any): string => {
+    // Helper to build the standard cache key from a path
+    const buildKey = (path: string) => {
+      const sanitized = path.replace(/\/(\?|$)/, '$1')
+      const proxyMode = skipProxy ? '-direct' : '-proxy'
+      return `page-${sanitized}${proxyMode}`
+    }
+
     // During prerendering (SSG), use route-based keys to prevent data sharing between pages.
-    // Each prerendered page gets its own unique key. The static HTML will contain this
-    // key in the payload, ensuring each page has its own data when hydrating.
+    // Each prerendered page gets its own unique key. Static files can't vary by query params,
+    // so using route.path (without query) is correct and matches what the client will compute.
     // @ts-expect-error import.meta.prerender is available in Nuxt 3.8+
     if (import.meta.prerender) {
       const route = useRoute()
-      // Use route path as key to ensure each prerendered page has unique data
-      return `__prerender__${route.path}`
+      return buildKey(route.path)
     }
 
     // During SSR (not prerendering), use the special __ssr__ key.
@@ -164,12 +170,7 @@ export const useDrupalCe = () => {
     // During hydration, use nuxtApp's router which is always available
     const route = nuxtApp.$router?.currentRoute?.value || useRoute()
     const pathWithQuery = route.fullPath.split('#')[0]
-
-    // On client-side, calculate the proper cache key with full path and query parameters
-    // Remove trailing slash from path as it might cause issues in SSG (except for homepage)
-    const sanitized = pathWithQuery.replace(/\/(\?|$)/, '$1')
-    const proxyMode = skipProxy ? '-direct' : '-proxy'
-    const properKey = `page-${sanitized}${proxyMode}`
+    const properKey = buildKey(pathWithQuery)
 
     // During initial hydration, if __ssr__ cache exists, move it to the proper key
     // This ensures the SSR data is available under the correct key for this URL
