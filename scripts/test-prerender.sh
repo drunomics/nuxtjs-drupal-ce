@@ -30,15 +30,23 @@ echo "=== Step 1: Starting backend dev server on port $BACKEND_PORT ==="
 NUXT_PORT=$BACKEND_PORT npx nuxi dev playground &
 BACKEND_PID=$!
 
-# Wait for backend to be ready
+# Wait for backend to be ready (longer timeout for CI)
 echo "Waiting for backend server to start..."
-for i in {1..30}; do
-  if curl -s "http://127.0.0.1:$BACKEND_PORT/ce-api/node/1" > /dev/null 2>&1; then
+for i in {1..60}; do
+  # Check if process is still running
+  if ! kill -0 $BACKEND_PID 2>/dev/null; then
+    echo "ERROR: Backend server process died"
+    exit 1
+  fi
+  # Try to reach the API endpoint
+  if curl -sf "http://localhost:$BACKEND_PORT/ce-api/node/1" > /dev/null 2>&1; then
     echo "Backend server is ready."
     break
   fi
-  if [ $i -eq 30 ]; then
-    echo "ERROR: Backend server failed to start within 30 seconds"
+  if [ $i -eq 60 ]; then
+    echo "ERROR: Backend server failed to start within 60 seconds"
+    echo "Trying to debug..."
+    curl -v "http://localhost:$BACKEND_PORT/ce-api/node/1" 2>&1 | head -20 || true
     exit 1
   fi
   sleep 1
