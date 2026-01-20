@@ -32,6 +32,7 @@ reports
 coverage
 *.lcov
 .nyc_output
+test-results
 
 # VSCode
 .vscode/*
