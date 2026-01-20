@@ -25,28 +25,26 @@ trap cleanup EXIT
 
 cd "$PROJECT_DIR"
 
-echo "=== Step 1: Starting backend dev server on port $BACKEND_PORT ==="
-# Start the playground dev server which serves the mock API
-NUXT_PORT=$BACKEND_PORT npx nuxi dev playground &
+echo "=== Step 1: Starting mock API server on port $BACKEND_PORT ==="
+# Start simple mock API server (more reliable than full nuxt dev server)
+PORT=$BACKEND_PORT node "$SCRIPT_DIR/mock-api-server.mjs" &
 BACKEND_PID=$!
 
-# Wait for backend to be ready (longer timeout for CI)
-echo "Waiting for backend server to start..."
-for i in {1..60}; do
+# Wait for backend to be ready
+echo "Waiting for mock API server to start..."
+for i in {1..10}; do
   # Check if process is still running
   if ! kill -0 $BACKEND_PID 2>/dev/null; then
-    echo "ERROR: Backend server process died"
+    echo "ERROR: Mock API server process died"
     exit 1
   fi
   # Try to reach the API endpoint
-  if curl -sf "http://localhost:$BACKEND_PORT/ce-api/node/1" > /dev/null 2>&1; then
-    echo "Backend server is ready."
+  if curl -sf "http://127.0.0.1:$BACKEND_PORT/ce-api/node/1" > /dev/null 2>&1; then
+    echo "Mock API server is ready."
     break
   fi
-  if [ $i -eq 60 ]; then
-    echo "ERROR: Backend server failed to start within 60 seconds"
-    echo "Trying to debug..."
-    curl -v "http://localhost:$BACKEND_PORT/ce-api/node/1" 2>&1 | head -20 || true
+  if [ $i -eq 10 ]; then
+    echo "ERROR: Mock API server failed to start within 10 seconds"
     exit 1
   fi
   sleep 1
@@ -56,7 +54,7 @@ echo "=== Step 2: Running nuxt generate ==="
 cd "$PROJECT_DIR"
 NUXT_PUBLIC_DRUPAL_CE_DRUPAL_BASE_URL="http://127.0.0.1:$BACKEND_PORT" npx nuxi generate "$FIXTURE_DIR"
 
-echo "=== Step 3: Stopping backend server ==="
+echo "=== Step 3: Stopping mock API server ==="
 kill $BACKEND_PID 2>/dev/null || true
 BACKEND_PID=""
 
