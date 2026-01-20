@@ -6,6 +6,12 @@ export default defineEventHandler(async (event) => {
   const { disableFormHandler } = useRuntimeConfig().drupalCe
   const { ceApiEndpoint } = useRuntimeConfig().public.drupalCe
 
+  // Skip API proxy routes - we don't want to handle them here.
+  const currentPath = event.node.req.url?.split('?')[0] || ''
+  if (currentPath.startsWith('/api/drupal-ce/') || currentPath === '/api/drupal-ce') {
+    return
+  }
+
   if (event.node.req.method === 'POST') {
     const routesToBypass = Array.isArray(disableFormHandler) ? disableFormHandler : []
 
