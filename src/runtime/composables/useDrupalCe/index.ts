@@ -114,7 +114,15 @@ export const useDrupalCe = () => {
   /**
    * Helper to compute page cache key
    *
-   * Uses a special '__ssr__' cache key during SSR to handle CDN query parameter filtering.
+   * Uses different strategies based on rendering mode:
+   *
+   * **Prerendering (SSG):**
+   * Uses route path as cache key (e.g., `__prerender__/node/1`). This is safe because
+   * static files can't vary by query parameters - the same HTML file is served regardless
+   * of URL query params. Each prerendered page gets its own unique cache key.
+   *
+   * **Server-Side Rendering (SSR):**
+   * Uses a special '__ssr__' cache key to handle CDN query parameter filtering.
    * CDNs typically strip tracking parameters (utm_*, fbclid, etc.) from their cache keys:
    *
    * 1. CDN caches: /blog?page=1 (strips utm_source=newsletter)
@@ -132,28 +140,21 @@ export const useDrupalCe = () => {
    * - Client moves __ssr__ cache to proper key on first access
    * - After move, all subsequent calls use normal keys
    *
-   * During prerendering (SSG), multiple pages are rendered in sequence, so
-   * fetchPage clears the __ssr__ cache when the route changes to prevent
-   * data sharing between pages.
-   *
    * @param skipProxy Whether proxy is being skipped
    * @param nuxtApp Nuxt app instance (needed to move __ssr__ cache on client)
    */
   const computePageKey = (skipProxy: boolean, nuxtApp: any): string => {
-    // During prerendering (SSG), clear __ssr__ cache when route changes to prevent
-    // data sharing between pages. Track route via nuxtApp property (not useState to avoid hydration).
+    // During prerendering (SSG), use route-based keys to prevent data sharing between pages.
+    // Each prerendered page gets its own unique key. The static HTML will contain this
+    // key in the payload, ensuring each page has its own data when hydrating.
     // @ts-expect-error import.meta.prerender is available in Nuxt 3.8+
     if (import.meta.prerender) {
       const route = useRoute()
-      // @ts-expect-error custom property for prerender tracking
-      if (nuxtApp._drupalCeLastPrerenderRoute !== route.path) {
-        // @ts-expect-error custom property for prerender tracking
-        nuxtApp._drupalCeLastPrerenderRoute = route.path
-        delete nuxtApp.payload.data['__ssr__']
-      }
+      // Use route path as key to ensure each prerendered page has unique data
+      return `__prerender__${route.path}`
     }
 
-    // During SSR (including prerendering), use the special __ssr__ key.
+    // During SSR (not prerendering), use the special __ssr__ key.
     // This handles CDN query parameter filtering where CDNs strip tracking params.
     if (import.meta.server) {
       return '__ssr__'
