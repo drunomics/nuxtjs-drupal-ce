@@ -117,9 +117,10 @@ export const useDrupalCe = () => {
    * Uses different strategies based on rendering mode:
    *
    * **Prerendering (SSG):**
-   * Uses route path as cache key (e.g., `__prerender__/node/1`). This is safe because
+   * Uses route path as cache key (e.g., `page-/node/1-direct`). This is safe because
    * static files can't vary by query parameters - the same HTML file is served regardless
-   * of URL query params. Each prerendered page gets its own unique cache key.
+   * of URL query params. Each prerendered page gets its own unique cache key, using the
+   * same key format as the client-side for consistency.
    *
    * **Server-Side Rendering (SSR):**
    * Uses a special '__ssr__' cache key to handle CDN query parameter filtering.
@@ -166,8 +167,8 @@ export const useDrupalCe = () => {
       return '__ssr__'
     }
 
-    // Get path with query params from current route (without hash)
-    // During hydration, use nuxtApp's router which is always available
+    // On client-side, calculate the proper cache key with full path and query parameters.
+    // During hydration, use nuxtApp's router which is always available.
     const route = nuxtApp.$router?.currentRoute?.value || useRoute()
     const pathWithQuery = route.fullPath.split('#')[0]
     const properKey = buildKey(pathWithQuery)
