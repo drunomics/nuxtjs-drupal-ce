@@ -46,7 +46,7 @@ done
 
 echo "=== Step 2: Running nuxt generate ==="
 cd "$PROJECT_DIR"
-DRUPAL_BASE_URL="http://127.0.0.1:$BACKEND_PORT" npx nuxi generate "$FIXTURE_DIR"
+NUXT_PUBLIC_DRUPAL_CE_DRUPAL_BASE_URL="http://127.0.0.1:$BACKEND_PORT" npx nuxi generate "$FIXTURE_DIR"
 
 echo "=== Step 3: Stopping backend server ==="
 kill $BACKEND_PID 2>/dev/null || true

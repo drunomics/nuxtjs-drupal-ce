@@ -11,7 +11,7 @@ export default defineNuxtConfig({
   ],
   compatibilityDate: '2024-12-16',
   drupalCe: {
-    drupalBaseUrl: process.env.DRUPAL_BASE_URL || 'http://127.0.0.1:3010',
+    drupalBaseUrl: 'http://127.0.0.1:3010',
     ceApiEndpoint: '/ce-api',
     enableComponentPreview: false,
   },

@@ -27,3 +27,5 @@ jobs:
       - run: npx playwright install --with-deps
       - run: npm run dev:prepare
       - run: npm run test
+      - name: Run prerender test
+        run: ./scripts/test-prerender.sh
