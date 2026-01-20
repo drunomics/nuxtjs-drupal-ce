@@ -27,7 +27,7 @@ cd "$PROJECT_DIR"
 
 echo "=== Step 1: Starting mock API server on port $BACKEND_PORT ==="
 # Start simple mock API server (more reliable than full nuxt dev server)
-PORT=$BACKEND_PORT node "$SCRIPT_DIR/mock-api-server.mjs" &
+PORT=$BACKEND_PORT node "$FIXTURE_DIR/mock-api-server.mjs" &
 BACKEND_PID=$!
 
 # Wait for backend to be ready

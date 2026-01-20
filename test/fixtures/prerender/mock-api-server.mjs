@@ -7,6 +7,11 @@ import { createServer } from 'node:http'
 const PORT = process.env.PORT || 3010
 
 const responses = {
+  '/ce-api/api/menu_items/main': [
+    { key: '1', title: 'Test page', relative: '/node/1' },
+    { key: '2', title: 'Another page', relative: '/node/3' }
+  ],
+  '/ce-api/api/menu_items/account': [],
   '/ce-api/node/1': {
     title: 'Test page',
     messages: [],
