@@ -346,6 +346,7 @@ export const useDrupalCe = () => {
     // Only needed when using default key (not custom key)
     if (!customKey && import.meta.client) {
       const watcherInitialized = useState<boolean>('drupal-ce-watcher-init', () => false)
+      const pendingPageKey = useState<string>('drupal-ce-pending-page-key', () => '')
 
       if (!watcherInitialized.value) {
         watcherInitialized.value = true
@@ -355,13 +356,24 @@ export const useDrupalCe = () => {
           // Determine proxy mode based on config (same logic as fetchPage)
           const skipProxy = !config.serverApiProxy
 
-          // Update key on initial load
-          currentPageKey.value = computePageKey(skipProxy, nuxtApp)
+          // Track the initial key without switching current until data exists
+          pendingPageKey.value = computePageKey(skipProxy, nuxtApp)
 
-          // Use router.afterEach to ensure navigation is fully complete before updating
+          // Use router.afterEach to update the pending key after navigation completes
           router.afterEach(() => {
-            currentPageKey.value = computePageKey(skipProxy, nuxtApp)
+            pendingPageKey.value = computePageKey(skipProxy, nuxtApp)
           })
+
+          // Promote pending key to current key once payload data is present
+          watch(
+            () => pendingPageKey.value && nuxtApp.payload.data[pendingPageKey.value],
+            (page) => {
+              if (page && pendingPageKey.value) {
+                currentPageKey.value = pendingPageKey.value
+              }
+            },
+            { immediate: true },
+          )
         }
         catch {
           // Silently skip if not in proper Nuxt context (e.g., unit tests)
