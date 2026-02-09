@@ -285,10 +285,7 @@ export const useDrupalCe = () => {
     pageRef.value.key = useFetchOptions.key
 
     // Store the current page key for getPage() lookup
-    // Only update once page data exists to avoid transient empty-page states
-    if (pageRef.value) {
-      currentPageKey.value = useFetchOptions.key
-    }
+    currentPageKey.value = useFetchOptions.key
 
     return pageRef
   }
