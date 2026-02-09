@@ -140,10 +140,6 @@ export default defineNuxtModule<ModuleOptions>({
         // See https://github.com/drunomics/nuxt-component-preview#cross-domain-configuration
         nuxt.options.experimental = nuxt.options.experimental || {}
         nuxt.options.experimental.appManifest = false
-        const corsOrigin = getCorsOrigin(nuxt)
-        if (corsOrigin) {
-          console.info('[nuxtjs-drupal-ce] Component preview enabled with CORS origin:', corsOrigin)
-        }
       }
     }
 
