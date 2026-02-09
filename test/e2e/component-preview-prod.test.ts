@@ -26,7 +26,10 @@ describe('Component Preview Production CORS', async () => {
     const assetMatch = html.match(/\/_nuxt\/([A-Za-z0-9_-]+\.js)/)
     expect(assetMatch).toBeTruthy()
 
-    const assetResponse = await fetch(`/_nuxt/${assetMatch[1]}`)
+    // Simulate a cross-origin request from the Drupal backend.
+    const assetResponse = await fetch(`/_nuxt/${assetMatch[1]}`, {
+      headers: { Origin: 'http://127.0.0.1:3015' },
+    })
     const corsOrigin = assetResponse.headers.get('access-control-allow-origin')
     const corsMethod = assetResponse.headers.get('access-control-allow-methods')
 
