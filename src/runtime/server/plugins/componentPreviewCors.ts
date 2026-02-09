@@ -2,18 +2,15 @@ import { setResponseHeader, getRequestHeader } from 'h3'
 import { defineNitroPlugin, useRuntimeConfig } from '#imports'
 
 /**
- * Sets CORS headers at runtime for component preview paths.
+ * Sets CORS headers at runtime for component preview requests.
  *
- * Uses beforeResponse to run for ALL requests including static /_nuxt/ assets,
- * ensuring the runtime drupalBaseUrl is used even when it differs from build-time.
+ * Uses beforeResponse to run for ALL requests including static assets,
+ * ensuring the runtime drupalBaseUrl is used even when it differs from
+ * build-time. Only sets headers when the request origin matches the
+ * Drupal backend, so regular requests are unaffected.
  */
 export default defineNitroPlugin((nitroApp) => {
   nitroApp.hooks.hook('beforeResponse', (event) => {
-    const path = event.path?.split('?')[0] || ''
-    if (!path.startsWith('/_nuxt/') && !path.startsWith('/nuxt-component-preview/')) {
-      return
-    }
-
     const drupalBaseUrl = useRuntimeConfig().public.drupalCe?.drupalBaseUrl
     if (!drupalBaseUrl) {
       return
