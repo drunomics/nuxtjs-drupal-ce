@@ -22,32 +22,24 @@ function getCorsOrigin(nuxt: any): string | null {
   }
 }
 
-function setupCors(nuxt: any, corsOrigin: string) {
+function setupCors(nuxt: any) {
+  const { resolve } = createResolver(import.meta.url)
+
   if (nuxt.options.dev) {
-    nuxt.options.vite = nuxt.options.vite || {}
-    nuxt.options.vite.server = nuxt.options.vite.server || {}
-    nuxt.options.vite.server.cors = defu(nuxt.options.vite.server.cors, {
-      origin: [corsOrigin],
-    })
+    const corsOrigin = getCorsOrigin(nuxt)
+    if (corsOrigin) {
+      nuxt.options.vite = nuxt.options.vite || {}
+      nuxt.options.vite.server = nuxt.options.vite.server || {}
+      nuxt.options.vite.server.cors = defu(nuxt.options.vite.server.cors, {
+        origin: [corsOrigin],
+      })
+    }
   }
 
-  nuxt.options.nitro = nuxt.options.nitro || {}
-  nuxt.options.nitro.routeRules = nuxt.options.nitro.routeRules || {}
-
-  const corsHeaders = {
-    'Access-Control-Allow-Origin': corsOrigin,
-    'Access-Control-Allow-Methods': 'GET',
-  }
-
-  nuxt.options.nitro.routeRules['/_nuxt/**'] = defu(
-    nuxt.options.nitro.routeRules['/_nuxt/**'],
-    { headers: corsHeaders }
-  )
-
-  nuxt.options.nitro.routeRules['/nuxt-component-preview/**'] = defu(
-    nuxt.options.nitro.routeRules['/nuxt-component-preview/**'],
-    { headers: corsHeaders }
-  )
+  // Use a runtime Nitro plugin to set CORS headers. This ensures the
+  // correct drupalBaseUrl is used even when it differs between build-time
+  // and runtime, and covers static /_nuxt/ assets.
+  addServerPlugin(resolve('./runtime/server/plugins/componentPreviewCors'))
 }
 
 export interface ModuleOptions {
@@ -141,20 +133,15 @@ export default defineNuxtModule<ModuleOptions>({
 
     if (options.enableComponentPreview !== false) {
       await installModule('nuxt-component-preview')
+      setupCors(nuxt)
 
-      const corsOrigin = getCorsOrigin(nuxt)
-
-      if (!corsOrigin) {
-        console.warn('[nuxtjs-drupal-ce] Component preview enabled but could not derive CORS origin from drupalBaseUrl')
-      }
-      else {
-        setupCors(nuxt, corsOrigin)
-
-        if (nuxt.options.dev) {
-          // Disable appManifest in dev mode as recommended by nuxt-component-preview
-          // See https://github.com/drunomics/nuxt-component-preview#cross-domain-configuration
-          nuxt.options.experimental = nuxt.options.experimental || {}
-          nuxt.options.experimental.appManifest = false
+      if (nuxt.options.dev) {
+        // Disable appManifest in dev mode as recommended by nuxt-component-preview
+        // See https://github.com/drunomics/nuxt-component-preview#cross-domain-configuration
+        nuxt.options.experimental = nuxt.options.experimental || {}
+        nuxt.options.experimental.appManifest = false
+        const corsOrigin = getCorsOrigin(nuxt)
+        if (corsOrigin) {
           console.info('[nuxtjs-drupal-ce] Component preview enabled with CORS origin:', corsOrigin)
         }
       }
