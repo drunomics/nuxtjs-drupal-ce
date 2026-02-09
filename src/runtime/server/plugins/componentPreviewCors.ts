@@ -26,7 +26,7 @@ export default defineNitroPlugin((nitroApp) => {
 
     const origin = getRequestHeader(event, 'origin')
     // Only set CORS headers when the request comes from the Drupal backend.
-    if (origin && origin !== corsOrigin) {
+    if (!origin || origin !== corsOrigin) {
       return
     }
 
