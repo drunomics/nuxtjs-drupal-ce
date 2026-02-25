@@ -1,9 +1,18 @@
 <template>
   <div class="view">
     <h1>{{ title }}</h1>
+    <div v-if="slots.header" class="view-header">
+      <slot name="header" />
+    </div>
     <component :is="rowsWrapper" class="view-rows">
       <slot name="rows" />
     </component>
+    <div v-if="slots.footer" class="view-footer">
+      <slot name="footer" />
+    </div>
+    <div v-if="slots.empty" class="view-empty">
+      <slot name="empty" />
+    </div>
     <DrupalViewsPagination
       v-if="pager.totalPages"
       :total-pages="pager.totalPages"
@@ -13,10 +22,6 @@
 </template>
 
 <script setup lang="ts">
-defineSlots<{
-  default(): any,
-}>();
-
 const props = withDefaults(defineProps<{
   title: string,
   viewId: string,
@@ -32,4 +37,6 @@ const props = withDefaults(defineProps<{
   rowsWrapper: 'div',
   pager: () => ({}),
 });
+
+const slots = useSlots();
 </script>
