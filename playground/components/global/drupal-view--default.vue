@@ -22,6 +22,13 @@
 </template>
 
 <script setup lang="ts">
+defineSlots<{
+  rows(): any,
+  header(): any,
+  footer(): any,
+  empty(): any,
+}>();
+
 const props = withDefaults(defineProps<{
   title: string,
   viewId: string,
