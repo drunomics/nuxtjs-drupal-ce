@@ -1,11 +1,11 @@
 import { defu } from 'defu'
 import { appendResponseHeader } from 'h3'
 import type { $Fetch, NitroFetchRequest } from 'nitropack'
-import type { Ref, ComputedRef, Component, VNode } from 'vue'
+import { type Ref, type ComputedRef, type Component, type VNode, Fragment } from 'vue'
 import { getDrupalBaseUrl, getMenuBaseUrl } from './server'
 import type { UseFetchOptions, AsyncData } from '#app'
 import { callWithNuxt } from '#app'
-import { useRuntimeConfig, useState, useFetch, navigateTo, createError, h, resolveComponent, setResponseStatus, useNuxtApp, useRequestHeaders, ref, unref, watch, useRequestEvent, computed, useHead, defineComponent, toRef, useRoute, useRouter } from '#imports'
+import { useRuntimeConfig, useState, useFetch, navigateTo, createError, h, resolveComponent, setResponseStatus, useNuxtApp, useRequestHeaders, ref, unref, watch, useRequestEvent, computed, useHead, defineComponent, toRef, useRoute, useRouter, useSlots } from '#imports'
 import type { DrupalCePage, DrupalCeApiResponse } from '../../types'
 
 export const useDrupalCe = () => {
@@ -618,6 +618,24 @@ export const useDrupalCe = () => {
     return computed(() => pageData.value?.page_layout || 'default')
   }
 
+  /**
+   * Extracts individual VNodes from a named slot, unwrapping any Fragment
+   * wrappers that Vue adds during template-based slot forwarding.
+   *
+   * This allows components to work with slot content as a flat array of items,
+   * which is needed when the component controls rendering (e.g. carousel items,
+   * load-more lists).
+   */
+  const useSlotItems = (slotName: string): ComputedRef<VNode[]> => {
+    const slots = useSlots()
+    return computed(() => {
+      const vnodes = slots[slotName]?.() ?? []
+      return vnodes.flatMap(vnode =>
+        vnode.type === Fragment ? (vnode.children as VNode[]) : [vnode]
+      )
+    })
+  }
+
   return {
     $ceApi,
     useCeApi,
@@ -634,7 +652,7 @@ export const useDrupalCe = () => {
     getMenuBaseUrl,
     getPageLayout,
     usePageHead,
-
+    useSlotItems,
   }
 }
 
