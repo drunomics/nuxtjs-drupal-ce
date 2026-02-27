@@ -4,7 +4,7 @@ import { useRuntimeConfig } from '#imports'
 
 export default defineEventHandler(async (event) => {
   const { disableFormHandler } = useRuntimeConfig().drupalCe
-  const { ceApiEndpoint } = useRuntimeConfig().public.drupalCe
+  const { ceApiEndpoint, fetchProxyHeaders } = useRuntimeConfig().public.drupalCe
 
   // Skip API proxy routes - we don't want to handle them here.
   const currentPath = event.node.req.url?.split('?')[0] || ''
@@ -41,10 +41,21 @@ export default defineEventHandler(async (event) => {
 
     if (formData) {
       const targetUrl = event.node.req.url
+      // Forward configured proxy headers (e.g. cookie) from the original request.
+      const proxyHeaders: Record<string, string> = {}
+      if (Array.isArray(fetchProxyHeaders)) {
+        for (const name of fetchProxyHeaders) {
+          const value = event.node.req.headers[name.toLowerCase()]
+          if (value) {
+            proxyHeaders[name.toLowerCase()] = Array.isArray(value) ? value.join(', ') : value
+          }
+        }
+      }
       const response = await $fetch.raw(getDrupalBaseUrl() + ceApiEndpoint + targetUrl, {
         method: 'POST',
         body: formData,
         headers: {
+          ...proxyHeaders,
           'x-form-processed': 'true',
         },
       }).catch((error) => {
