@@ -71,6 +71,31 @@ describe('Drupal form handler', async () => {
     expect(text).toContain('Form response received')
   }, 15000)
 
+  it('fetchProxyHeaders are forwarded to Drupal', async () => {
+    const page = await createPage('/form/custom')
+
+    // Set a cookie on the page before submitting.
+    await page.context().addCookies([{
+      name: 'test_session',
+      value: 'abc123',
+      domain: '127.0.0.1',
+      path: '/',
+    }])
+    await page.reload()
+
+    const name = page.locator('input[name="name"]')
+    const submit = page.locator('input[type="submit"]')
+    await name.fill('admin')
+    await submit.click()
+
+    await new Promise(resolve => setTimeout(resolve, 3000))
+
+    // The mock server echoes back received cookies in data-received-cookie attribute.
+    const content = await page.content()
+    expect(content).toContain('Form response received, submit was successful!')
+    expect(content).toContain('test_session=abc123')
+  }, 15000)
+
   it('form handler is bypassed with not matching content-type header', async () => {
     const page = await createPage('/form/custom')
     const name = page.locator('input[name="name"]')
