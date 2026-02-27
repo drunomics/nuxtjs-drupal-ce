@@ -122,11 +122,13 @@ describe('useSlotItems', () => {
         const teasers = useSlotItems('teasers')
         return { teasers }
       },
-      render() {
-        return h('div', { class: 'teaser-list' },
-          this.teasers.map((vnode, i) => h('div', { class: 'teaser-item', key: i }, [vnode])),
-        )
-      },
+      template: `
+        <div class="teaser-list">
+          <div v-for="(teaser, i) in teasers" :key="i" class="teaser-item">
+            <component :is="teaser" />
+          </div>
+        </div>
+      `,
     })
 
     const TeaserSquare = defineComponent({
@@ -168,18 +170,14 @@ describe('useSlotItems', () => {
     // Verify teaser-list renders
     expect(wrapper.find('.teaser-list').exists()).toBe(true)
 
-    // Verify useSlotItems extracts all 3 teasers from the slot
+    // Verify each teaser-item wraps a teaser-square with correct props
     const items = wrapper.findAll('.teaser-item')
     expect(items).toHaveLength(3)
-
-    // Verify each teaser-square renders with correct props
-    const teasers = wrapper.findAll('.teaser-square')
-    expect(teasers).toHaveLength(3)
-    expect(teasers[0].text()).toBe('Node 1')
-    expect(teasers[0].attributes('href')).toBe('/node/1')
-    expect(teasers[1].text()).toBe('Node 2')
-    expect(teasers[1].attributes('href')).toBe('/node/2')
-    expect(teasers[2].text()).toBe('Node 3')
-    expect(teasers[2].attributes('href')).toBe('/node/3')
+    expect(items[0].find('.teaser-square').text()).toBe('Node 1')
+    expect(items[0].find('.teaser-square').attributes('href')).toBe('/node/1')
+    expect(items[1].find('.teaser-square').text()).toBe('Node 2')
+    expect(items[1].find('.teaser-square').attributes('href')).toBe('/node/2')
+    expect(items[2].find('.teaser-square').text()).toBe('Node 3')
+    expect(items[2].find('.teaser-square').attributes('href')).toBe('/node/3')
   })
 })
