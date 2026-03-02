@@ -5,7 +5,7 @@ import { defineComponent, h, Fragment } from 'vue'
 import { useDrupalCe } from '../../src/runtime/composables/useDrupalCe'
 import { useNuxtApp } from '#imports'
 
-// A wrapper component that uses useSlotItems and renders each item in a .item div
+// A wrapper component that uses getSlotItems and renders each item in a .item div
 const SlotConsumer = defineComponent({
   name: 'SlotConsumer',
   props: {
@@ -15,20 +15,20 @@ const SlotConsumer = defineComponent({
     },
   },
   setup(props) {
-    const { useSlotItems } = useDrupalCe()
-    const items = useSlotItems(props.slotName)
+    const { getSlotItems } = useDrupalCe()
+    const items = getSlotItems(props.slotName)
     return { items }
   },
-  render() {
-    return h(
-      'div',
-      { class: 'items' },
-      this.items.map((vnode, i) => h('div', { class: 'item', key: i }, [vnode])),
-    )
-  },
+  template: `
+    <div class="items">
+      <div class="item" v-for="(item, i) in items" :key="i">
+        <component :is="() => item" />
+      </div>
+    </div>
+  `,
 })
 
-describe('useSlotItems', () => {
+describe('getSlotItems', () => {
   it('returns empty array when slot is not provided', async () => {
     const wrapper = await mountSuspended(
       defineComponent({
@@ -118,14 +118,14 @@ describe('useSlotItems', () => {
     const TeaserList = defineComponent({
       name: 'TeaserList',
       setup() {
-        const { useSlotItems } = useDrupalCe()
-        const teasers = useSlotItems('teasers')
+        const { getSlotItems } = useDrupalCe()
+        const teasers = getSlotItems('teasers')
         return { teasers }
       },
       template: `
         <div class="teaser-list">
-          <div v-for="(teaser, i) in teasers" :key="i" class="teaser-item">
-            <component :is="teaser" />
+          <div class="teaser-item" v-for="(teaser, i) in teasers" :key="i">
+            <component :is="() => teaser" />
           </div>
         </div>
       `,
@@ -170,14 +170,17 @@ describe('useSlotItems', () => {
     // Verify teaser-list renders
     expect(wrapper.find('.teaser-list').exists()).toBe(true)
 
-    // Verify each teaser-item wraps a teaser-square with correct props
+    // Verify getSlotItems extracts all 3 teasers from the slot
     const items = wrapper.findAll('.teaser-item')
     expect(items).toHaveLength(3)
-    expect(items[0].find('.teaser-square').text()).toBe('Node 1')
-    expect(items[0].find('.teaser-square').attributes('href')).toBe('/node/1')
-    expect(items[1].find('.teaser-square').text()).toBe('Node 2')
-    expect(items[1].find('.teaser-square').attributes('href')).toBe('/node/2')
-    expect(items[2].find('.teaser-square').text()).toBe('Node 3')
-    expect(items[2].find('.teaser-square').attributes('href')).toBe('/node/3')
+
+    // Verify each teaser-item wraps exactly one teaser-square
+    for (let i = 0; i < 3; i++) {
+      const item = items[i]
+      const teaser = item.find('.teaser-square')
+      expect(teaser.exists()).toBe(true)
+      expect(teaser.text()).toBe(`Node ${i + 1}`)
+      expect(teaser.attributes('href')).toBe(`/node/${i + 1}`)
+    }
   })
 })

@@ -626,7 +626,7 @@ export const useDrupalCe = () => {
    * which is needed when the component controls rendering (e.g. carousel items,
    * load-more lists).
    */
-  const useSlotItems = (slotName: string): ComputedRef<VNode[]> => {
+  const getSlotItems = (slotName: string): ComputedRef<VNode[]> => {
     const slots = useSlots()
     return computed(() => {
       const vnodes = slots[slotName]?.() ?? []
@@ -652,7 +652,7 @@ export const useDrupalCe = () => {
     getMenuBaseUrl,
     getPageLayout,
     usePageHead,
-    useSlotItems,
+    getSlotItems,
   }
 }
 
