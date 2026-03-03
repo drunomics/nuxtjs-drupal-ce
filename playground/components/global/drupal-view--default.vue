@@ -7,9 +7,6 @@
     <component :is="rowsWrapper" class="view-rows">
       <slot name="rows" />
     </component>
-    <div v-if="slots.footer" class="view-footer">
-      <slot name="footer" />
-    </div>
     <div v-if="slots.empty" class="view-empty">
       <slot name="empty" />
     </div>
@@ -18,6 +15,9 @@
       :total-pages="pager.totalPages"
       :current="pager.current"
     />
+    <div v-if="slots.footer" class="view-footer">
+      <slot name="footer" />
+    </div>
   </div>
 </template>
 
