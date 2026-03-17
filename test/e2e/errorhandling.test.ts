@@ -35,12 +35,12 @@ describe('Module error handling', async () => {
     // These would fail to render if the page data wasn't properly cached during SSR
     expect(html).toContain('Page not found')
   })
-  it('handles 500 statusCode', async () => {
-    const response = await fetch('/error500')
-    expect(response.status).toEqual(500)
-  })
   it('handles 404 statusCode', async () => {
     const { status } = await fetch('/error404')
     expect(status).toEqual(404)
+  })
+  it('handles 500 statusCode', async () => {
+    const response = await fetch('/error500')
+    expect(response.status).toEqual(500)
   })
 })
