@@ -1,15 +1,15 @@
 <template>
   <div class="views-pager">
     <nav class="isolate inline-flex -space-x-px gap-1" aria-label="Pagination">
-      <button
+      <a
         v-if="hasPrevious"
         class="relative inline-flex min-w-10 items-center px-2 py-2 text-sm"
-        type="button"
-        @click="goTo(currentPage - 1)"
+        :href="hrefForPage(currentPage - 1)"
+        @click="onPageClick($event, currentPage - 1)"
       >
         <span class="sr-only">Previous</span>
         &lt;&lt;
-      </button>
+      </a>
 
       <span
         v-if="showLeftEllipsis"
@@ -19,15 +19,15 @@
       </span>
 
       <component
-        :is="page.index === currentPage ? 'span' : 'button'"
+        :is="page.index === currentPage ? 'span' : 'a'"
         v-for="page in pageLinks"
         :key="page.index"
         :class="{
           'relative z-10 inline-flex min-w-10 items-center px-4 py-2': page.index === currentPage,
           'relative inline-flex min-w-10 items-center px-4 py-2': page.index !== currentPage,
         }"
-        :type="page.index === currentPage ? undefined : 'button'"
-        @click="page.index === currentPage ? undefined : goTo(page.index)"
+        :href="page.index === currentPage ? undefined : hrefForPage(page.index)"
+        @click="page.index === currentPage ? undefined : onPageClick($event, page.index)"
       >
         {{ page.label }}
       </component>
@@ -39,15 +39,15 @@
         &hellip;
       </span>
 
-      <button
+      <a
         v-if="hasNext"
         class="relative inline-flex min-w-10 items-center px-2 py-2"
-        type="button"
-        @click="goTo(currentPage + 1)"
+        :href="hrefForPage(currentPage + 1)"
+        @click="onPageClick($event, currentPage + 1)"
       >
         <span class="sr-only">Next</span>
         &gt;&gt;
-      </button>
+      </a>
     </nav>
   </div>
 </template>
@@ -70,9 +70,17 @@ const emit = defineEmits<{
   'update:current': [value: number],
 }>();
 
+const attrs = useAttrs();
+const route = useRoute();
+const router = useRouter();
+
 const currentPage = computed(() => Math.max(0, props.current));
 const totalPages = computed(() => Math.max(0, props.totalPages));
 const maxLinks = computed(() => Math.max(1, props.maxLinks));
+const hasUpdateListener = computed(() => {
+  const handler = attrs['onUpdate:current'];
+  return typeof handler === 'function' || Array.isArray(handler);
+});
 
 const startIndex = computed(() => {
   if (totalPages.value <= maxLinks.value) return 0;
@@ -104,5 +112,27 @@ const showRightEllipsis = computed(() => endIndex.value < totalPages.value - 1);
 
 function goTo(page: number) {
   emit('update:current', Math.max(0, page));
+}
+
+function hrefForPage(page: number) {
+  const normalizedPage = Math.max(0, page);
+  const query = { ...route.query } as Record<string, string | string[] | undefined>;
+
+  if (normalizedPage > 0) {
+    query.page = String(normalizedPage);
+  } else {
+    delete query.page;
+  }
+
+  return router.resolve({
+    path: route.path,
+    query,
+  }).href;
+}
+
+function onPageClick(event: MouseEvent, page: number) {
+  if (!hasUpdateListener.value) return;
+  event.preventDefault();
+  goTo(page);
 }
 </script>
