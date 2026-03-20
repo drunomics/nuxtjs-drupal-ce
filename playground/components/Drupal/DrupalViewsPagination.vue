@@ -5,7 +5,7 @@
         v-if="hasPrevious"
         class="relative inline-flex min-w-10 items-center px-2 py-2 text-sm"
         :href="hrefForPage(currentPage - 1)"
-        @click="onPageClick($event, currentPage - 1)"
+        @click="goTo(currentPage - 1)"
       >
         <span class="sr-only">Previous</span>
         &lt;&lt;
@@ -27,7 +27,7 @@
           'relative inline-flex min-w-10 items-center px-4 py-2': page.index !== currentPage,
         }"
         :href="page.index === currentPage ? undefined : hrefForPage(page.index)"
-        @click="page.index === currentPage ? undefined : onPageClick($event, page.index)"
+        @click="page.index === currentPage ? undefined : goTo(page.index)"
       >
         {{ page.label }}
       </component>
@@ -43,7 +43,7 @@
         v-if="hasNext"
         class="relative inline-flex min-w-10 items-center px-2 py-2"
         :href="hrefForPage(currentPage + 1)"
-        @click="onPageClick($event, currentPage + 1)"
+        @click="goTo(currentPage + 1)"
       >
         <span class="sr-only">Next</span>
         &gt;&gt;
@@ -70,17 +70,11 @@ const emit = defineEmits<{
   'update:current': [value: number],
 }>();
 
-const attrs = useAttrs();
 const route = useRoute();
-const router = useRouter();
 
 const currentPage = computed(() => Math.max(0, props.current));
 const totalPages = computed(() => Math.max(0, props.totalPages));
 const maxLinks = computed(() => Math.max(1, props.maxLinks));
-const hasUpdateListener = computed(() => {
-  const handler = attrs['onUpdate:current'];
-  return typeof handler === 'function' || Array.isArray(handler);
-});
 
 const startIndex = computed(() => {
   if (totalPages.value <= maxLinks.value) return 0;
@@ -124,15 +118,16 @@ function hrefForPage(page: number) {
     delete query.page;
   }
 
-  return router.resolve({
-    path: route.path,
-    query,
-  }).href;
-}
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(query)) {
+    if (Array.isArray(value)) {
+      for (const item of value) params.append(key, item);
+    } else if (typeof value === 'string') {
+      params.set(key, value);
+    }
+  }
 
-function onPageClick(event: MouseEvent, page: number) {
-  if (!hasUpdateListener.value) return;
-  event.preventDefault();
-  goTo(page);
+  const queryString = params.toString();
+  return queryString ? `${route.path}?${queryString}` : route.path;
 }
 </script>
