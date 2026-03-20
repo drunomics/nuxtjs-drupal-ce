@@ -1,15 +1,15 @@
 <template>
   <div class="views-pager">
     <nav class="isolate inline-flex -space-x-px gap-1" aria-label="Pagination">
-      <a
+      <NuxtLink
         v-if="hasPrevious"
         class="relative inline-flex min-w-10 items-center px-2 py-2 text-sm"
-        :href="hrefForPage(currentPage - 1)"
+        :to="toForPage(currentPage - 1)"
         @click="goTo(currentPage - 1)"
       >
         <span class="sr-only">Previous</span>
         &lt;&lt;
-      </a>
+      </NuxtLink>
 
       <span
         v-if="showLeftEllipsis"
@@ -19,14 +19,14 @@
       </span>
 
       <component
-        :is="page.index === currentPage ? 'span' : 'a'"
+        :is="page.index === currentPage ? 'span' : 'NuxtLink'"
         v-for="page in pageLinks"
         :key="page.index"
         :class="{
           'relative z-10 inline-flex min-w-10 items-center px-4 py-2': page.index === currentPage,
           'relative inline-flex min-w-10 items-center px-4 py-2': page.index !== currentPage,
         }"
-        :href="page.index === currentPage ? undefined : hrefForPage(page.index)"
+        :to="page.index === currentPage ? undefined : toForPage(page.index)"
         @click="page.index === currentPage ? undefined : goTo(page.index)"
       >
         {{ page.label }}
@@ -39,15 +39,15 @@
         &hellip;
       </span>
 
-      <a
+      <NuxtLink
         v-if="hasNext"
         class="relative inline-flex min-w-10 items-center px-2 py-2"
-        :href="hrefForPage(currentPage + 1)"
+        :to="toForPage(currentPage + 1)"
         @click="goTo(currentPage + 1)"
       >
         <span class="sr-only">Next</span>
         &gt;&gt;
-      </a>
+      </NuxtLink>
     </nav>
   </div>
 </template>
@@ -108,7 +108,7 @@ function goTo(page: number) {
   emit('update:current', Math.max(0, page));
 }
 
-function hrefForPage(page: number) {
+function toForPage(page: number) {
   const normalizedPage = Math.max(0, page);
   const query = { ...route.query } as Record<string, string | string[] | undefined>;
 
@@ -118,16 +118,9 @@ function hrefForPage(page: number) {
     delete query.page;
   }
 
-  const params = new URLSearchParams();
-  for (const [key, value] of Object.entries(query)) {
-    if (Array.isArray(value)) {
-      for (const item of value) params.append(key, item);
-    } else if (typeof value === 'string') {
-      params.set(key, value);
-    }
-  }
-
-  const queryString = params.toString();
-  return queryString ? `${route.path}?${queryString}` : route.path;
+  return {
+    path: route.path,
+    query,
+  };
 }
 </script>
