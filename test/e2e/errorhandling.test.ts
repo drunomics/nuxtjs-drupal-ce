@@ -30,6 +30,29 @@ async function fetchWithRetry(url: string, attempts = 4, delayMs = 350) {
   throw new Error(`Failed to fetch ${url} after ${attempts} attempts`)
 }
 
+async function fetchExpectStatus(url: string, expectedStatus: number, attempts = 5, delayMs = 350) {
+  let lastResponse: Awaited<ReturnType<typeof fetch>> | undefined
+
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    const response = await fetchWithRetry(url, 3, delayMs)
+    lastResponse = response
+
+    if (response.status === expectedStatus) {
+      return response
+    }
+
+    // During app startup in CI, Drupal proxy can briefly return gateway errors.
+    if ((response.status === 502 || response.status === 503) && attempt < attempts) {
+      await new Promise(resolve => setTimeout(resolve, delayMs))
+      continue
+    }
+
+    return response
+  }
+
+  return lastResponse as Awaited<ReturnType<typeof fetch>>
+}
+
 describe('Module error handling', async () => {
   await setup({
     rootDir: join(fileURLToPath(import.meta.url), '../../../playground'),
@@ -63,11 +86,11 @@ describe('Module error handling', async () => {
     expect(html).toContain('Page not found')
   })
   it('handles 404 statusCode', async () => {
-    const { status } = await fetchWithRetry('/error404')
+    const { status } = await fetchExpectStatus('/error404', 404)
     expect(status).toEqual(404)
   })
   it('handles 500 statusCode', async () => {
-    const response = await fetchWithRetry('/error500')
+    const response = await fetchExpectStatus('/error500', 500)
     expect(response.status).toEqual(500)
   })
 })
