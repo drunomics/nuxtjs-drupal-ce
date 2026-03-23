@@ -5,7 +5,7 @@ import { type Ref, type ComputedRef, type Component, type VNode, Fragment } from
 import { getDrupalBaseUrl, getMenuBaseUrl } from './server'
 import type { UseFetchOptions, AsyncData } from '#app'
 import { callWithNuxt } from '#app'
-import { useRuntimeConfig, useState, useFetch, navigateTo, createError, h, resolveComponent, setResponseStatus, useNuxtApp, useRequestHeaders, ref, unref, watch, useRequestEvent, computed, useHead, defineComponent, toRef, useRoute, useRouter, useSlots } from '#imports'
+import { useRuntimeConfig, useState, useFetch, navigateTo, createError, h, resolveComponent, setResponseStatus, useNuxtApp, useRequestHeaders, ref, isRef, isReactive, toValue, watch, useRequestEvent, computed, useHead, defineComponent, toRef, useRoute, useRouter, useSlots } from '#imports'
 import type { DrupalCePage, DrupalCeApiResponse } from '../../types'
 
 export const useDrupalCe = () => {
@@ -87,6 +87,18 @@ export const useDrupalCe = () => {
    */
   const useCeApi = (path: string | Ref<string>, fetchOptions: UseFetchOptions<any> = {}, doPassThroughHeaders?: boolean, skipDrupalCeApiProxy: boolean = false): AsyncData<DrupalCeApiResponse, any> => {
     const nuxtApp = useNuxtApp()
+
+    // Handle reactive query separately — processFetchOptions and $ceApi both
+    // mutate query as a plain object and cannot handle Refs, reactive objects,
+    // or getter functions. Extract it before processing so defaults like
+    // _content_format are computed correctly, then merge it back as a computed
+    // for useFetch's built-in reactive re-fetching and race condition handling.
+    const userQuery = fetchOptions.query
+    const hasReactiveQuery = isRef(userQuery) || isReactive(userQuery) || typeof userQuery === 'function'
+    if (hasReactiveQuery) {
+      fetchOptions = { ...fetchOptions, query: undefined }
+    }
+
     fetchOptions.onResponse = (context) => {
       if (doPassThroughHeaders && import.meta.server && privateConfig?.passThroughHeaders) {
         const headersObject = Object.fromEntries([...context.response.headers.entries()])
@@ -94,8 +106,26 @@ export const useDrupalCe = () => {
       }
     }
 
+    const processed = processFetchOptions(fetchOptions, skipDrupalCeApiProxy)
+
+    // Re-integrate reactive query, merging with defaults from processFetchOptions.
+    // This enables useFetch's built-in dedupe: 'cancel' (default) to automatically
+    // cancel in-flight requests when the query changes, preventing race conditions.
+    if (hasReactiveQuery) {
+      const queryDefaults = { ...processed.query }
+      processed.query = computed(() => {
+        const resolved = toValue(userQuery) ?? {}
+        const merged = { ...queryDefaults, ...resolved }
+        // Preserve original behavior: remove _content_format if falsy.
+        if (!merged._content_format) {
+          delete merged._content_format
+        }
+        return merged
+      })
+    }
+
     return useFetch<DrupalCeApiResponse>(path, {
-      ...processFetchOptions(fetchOptions, skipDrupalCeApiProxy),
+      ...processed,
       $fetch: $ceApi(fetchOptions, skipDrupalCeApiProxy),
     })
   }
