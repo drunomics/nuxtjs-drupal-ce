@@ -1,0 +1,22 @@
+import type { $Fetch, NitroFetchRequest } from 'nitropack';
+import { type Ref, type ComputedRef, type Component, type VNode } from 'vue';
+import type { UseFetchOptions, AsyncData } from '#app';
+import type { DrupalCePage, DrupalCeApiResponse } from '../../types.js';
+export declare const useDrupalCe: () => {
+    $ceApi: (fetchOptions?: UseFetchOptions<any>, skipDrupalCeApiProxy?: boolean) => $Fetch<unknown, NitroFetchRequest>;
+    useCeApi: (path: string | Ref<string>, fetchOptions?: UseFetchOptions<any>, doPassThroughHeaders?: boolean, skipDrupalCeApiProxy?: boolean) => AsyncData<DrupalCeApiResponse, any>;
+    fetchPage: (path: string, useFetchOptions?: UseFetchOptions<any>, overrideErrorHandler?: (error?: any) => void, skipDrupalCeApiProxy?: boolean) => Promise<Ref<DrupalCePage>>;
+    fetchMenu: (name: string, useFetchOptions?: UseFetchOptions<any>, overrideErrorHandler?: (error?: any) => void, skipDrupalCeApiProxy?: boolean) => Promise<Ref<any, any>>;
+    getMessages: () => Ref;
+    getPage: (customKey?: string) => Ref<DrupalCePage>;
+    renderCustomElements: (customElements: CustomElementContent) => VNode | Component | null;
+    renderCustomElementsToVNodes: (customElements: CustomElementContent) => VNode | VNode[] | null;
+    resolveCustomElement: (element: string) => string | import("vue").ConcreteComponent<{}, any, any, import("vue").ComputedOptions, import("vue").MethodOptions, {}, any> | null;
+    passThroughHeaders: (nuxtApp: any, pageHeaders: any) => void;
+    getCeApiEndpoint: (localize?: boolean) => string;
+    getDrupalBaseUrl: () => string;
+    getMenuBaseUrl: () => string;
+    getPageLayout: (page?: Ref<any>) => ComputedRef<string>;
+    usePageHead: (page: Ref<any>, include?: Array<"title" | "meta" | "link" | "jsonld">) => void;
+    getSlotItems: (slotName: string) => ComputedRef<VNode[]>;
+};
