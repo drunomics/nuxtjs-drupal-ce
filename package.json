@@ -32,7 +32,7 @@
     "lint-fix": "eslint . --fix"
   },
   "dependencies": {
-    "defu": "^6.1.4",
+    "defu": "^6.1.6",
     "nuxt-component-preview": "^1.0.0-beta.9"
   },
   "devDependencies": {
