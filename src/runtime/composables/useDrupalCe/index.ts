@@ -89,7 +89,21 @@ export const useDrupalCe = () => {
     const nuxtApp = useNuxtApp()
     fetchOptions.onResponse = (context) => {
       if (doPassThroughHeaders && import.meta.server && privateConfig?.passThroughHeaders) {
-        const headersObject = Object.fromEntries([...context.response.headers.entries()])
+        // Preserve multiple values for the same header (notably set-cookie).
+        // Object.fromEntries() would silently keep only the last value.
+        const headersObject: Record<string, string | string[]> = {}
+        for (const [key, value] of context.response.headers.entries()) {
+          const existing = headersObject[key]
+          if (existing === undefined) {
+            headersObject[key] = value
+          }
+          else if (Array.isArray(existing)) {
+            existing.push(value)
+          }
+          else {
+            headersObject[key] = [existing, value]
+          }
+        }
         passThroughHeaders(nuxtApp, headersObject)
       }
     }
@@ -584,7 +598,19 @@ export const useDrupalCe = () => {
     if (pageHeaders) {
       Object.keys(pageHeaders).forEach((key) => {
         if (privateConfig?.passThroughHeaders.includes(key)) {
-          appendResponseHeader(event, key, pageHeaders[key])
+          // Call once per value so arrays of headers (e.g. multiple
+          // set-cookie values) are appended individually rather than as a
+          // nested array, which h3's appendResponseHeader would mishandle
+          // when a header with the same name already exists on the response.
+          const value = pageHeaders[key]
+          if (Array.isArray(value)) {
+            for (const v of value) {
+              appendResponseHeader(event, key, v)
+            }
+          }
+          else {
+            appendResponseHeader(event, key, value)
+          }
         }
       })
     }
