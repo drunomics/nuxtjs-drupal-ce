@@ -69,21 +69,13 @@ export default defineEventHandler(async (event) => {
       })
 
       if (response) {
-        // Preserve multiple values for the same header (notably set-cookie).
-        // Object.fromEntries() would silently keep only the last value, which
-        // drops the session cookie when Drupal sets multiple cookies on login.
-        const headers: Record<string, string | string[]> = {}
-        for (const [key, value] of response.headers.entries()) {
-          const existing = headers[key]
-          if (existing === undefined) {
-            headers[key] = value
-          }
-          else if (Array.isArray(existing)) {
-            existing.push(value)
-          }
-          else {
-            headers[key] = [existing, value]
-          }
+        // Preserve all Set-Cookie values — Object.fromEntries() keeps only
+        // the last one when Drupal sets multiple cookies (e.g. session SSESS
+        // plus a CDN login-state flag), dropping the session cookie.
+        const headers: Record<string, string | string[]> = Object.fromEntries(response.headers.entries())
+        const setCookies = response.headers.getSetCookie()
+        if (setCookies.length > 1) {
+          headers['set-cookie'] = setCookies
         }
         event.context.drupalCeCustomPageResponse = {
           _data: response._data,

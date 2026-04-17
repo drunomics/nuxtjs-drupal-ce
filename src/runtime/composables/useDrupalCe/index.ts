@@ -8,6 +8,21 @@ import { callWithNuxt } from '#app'
 import { useRuntimeConfig, useState, useFetch, navigateTo, createError, h, resolveComponent, setResponseStatus, useNuxtApp, useRequestHeaders, ref, unref, watch, useRequestEvent, computed, useHead, defineComponent, toRef, useRoute, useRouter, useSlots } from '#imports'
 import type { DrupalCePage, DrupalCeApiResponse } from '../../types'
 
+/**
+ * Converts a Headers object to a plain record, preserving multiple Set-Cookie
+ * values as an array. Object.fromEntries(headers.entries()) silently drops all
+ * but the last Set-Cookie when a response sets more than one cookie (e.g.
+ * session SSESS plus a CDN login-state flag).
+ */
+const headersToRecord = (headers: Headers): Record<string, string | string[]> => {
+  const record: Record<string, string> = Object.fromEntries(headers.entries())
+  const setCookies = headers.getSetCookie()
+  if (setCookies.length > 1) {
+    (record as Record<string, string | string[]>)['set-cookie'] = setCookies
+  }
+  return record
+}
+
 export const useDrupalCe = () => {
   const config = useRuntimeConfig().public.drupalCe
   const privateConfig = import.meta.server && useRuntimeConfig().drupalCe
@@ -87,23 +102,13 @@ export const useDrupalCe = () => {
    */
   const useCeApi = (path: string | Ref<string>, fetchOptions: UseFetchOptions<any> = {}, doPassThroughHeaders?: boolean, skipDrupalCeApiProxy: boolean = false): AsyncData<DrupalCeApiResponse, any> => {
     const nuxtApp = useNuxtApp()
+    // Pass through Drupal response headers (e.g. cache-control, set-cookie)
+    // to the SSR response, so the browser sees them. This handles the normal
+    // page-fetch path; form POST responses go through drupalFormHandler
+    // middleware instead and are passed through in useDrupalCePage below.
     fetchOptions.onResponse = (context) => {
       if (doPassThroughHeaders && import.meta.server && privateConfig?.passThroughHeaders) {
-        // Preserve multiple values for the same header (notably set-cookie).
-        // Object.fromEntries() would silently keep only the last value.
-        const headersObject: Record<string, string | string[]> = {}
-        for (const [key, value] of context.response.headers.entries()) {
-          const existing = headersObject[key]
-          if (existing === undefined) {
-            headersObject[key] = value
-          }
-          else if (Array.isArray(existing)) {
-            existing.push(value)
-          }
-          else {
-            headersObject[key] = [existing, value]
-          }
-        }
+        const headersObject = headersToRecord(context.response.headers)
         passThroughHeaders(nuxtApp, headersObject)
       }
     }
@@ -220,18 +225,21 @@ export const useDrupalCe = () => {
       useFetchOptions.key = computePageKey(skipProxy, nuxtApp)
     }
 
-    // Check if page data is provided by custom page response (e.g. form submission via POST)
-    // This is only available during SSR
+    // Two paths for page data:
+    // 1. Form POST: drupalFormHandler middleware already fetched the response
+    //    from Drupal and stored it in event.context.drupalCeCustomPageResponse.
+    //    We use that data directly (no second fetch) and pass through its
+    //    headers here — this is how session cookies reach the browser on login.
+    // 2. Normal GET: we fetch from the CE API via useCeApi; headers are passed
+    //    through in its onResponse callback above.
     const customPageResponse = import.meta.server
       ? useRequestEvent(nuxtApp).context.drupalCeCustomPageResponse
       : null
 
-    // Get page ref and error - either from customPageResponse or API
     let pageRef: Ref<DrupalCePage>
     let error: any
 
     if (customPageResponse) {
-      // Custom response path: skip API call, use provided data
       pageRef = toRef(nuxtApp.payload.data, useFetchOptions.key)
       pageRef.value = customPageResponse._data
       error = customPageResponse.error
@@ -241,7 +249,6 @@ export const useDrupalCe = () => {
       }
     }
     else {
-      // Normal path: fetch from API
       const result = await useCeApi(path, useFetchOptions, true, skipDrupalCeApiProxy)
       pageRef = result.data
       error = result.error.value
@@ -590,29 +597,20 @@ export const useDrupalCe = () => {
    * @param pageHeaders The headers from the Drupal response
    */
   const passThroughHeaders = (nuxtApp, pageHeaders) => {
-    // Only run when SSR context is available.
-    if (!nuxtApp.ssrContext) {
+    if (!nuxtApp.ssrContext || !pageHeaders) {
       return
     }
     const event = nuxtApp.ssrContext.event
-    if (pageHeaders) {
-      Object.keys(pageHeaders).forEach((key) => {
-        if (privateConfig?.passThroughHeaders.includes(key)) {
-          // Call once per value so arrays of headers (e.g. multiple
-          // set-cookie values) are appended individually rather than as a
-          // nested array, which h3's appendResponseHeader would mishandle
-          // when a header with the same name already exists on the response.
-          const value = pageHeaders[key]
-          if (Array.isArray(value)) {
-            for (const v of value) {
-              appendResponseHeader(event, key, v)
-            }
-          }
-          else {
-            appendResponseHeader(event, key, value)
-          }
-        }
-      })
+    for (const key of Object.keys(pageHeaders)) {
+      if (!privateConfig?.passThroughHeaders.includes(key)) continue
+      // Flatten to an array so both single-value strings and multi-value
+      // arrays (e.g. multiple set-cookie values) are handled uniformly.
+      // Each value is appended individually because h3's appendResponseHeader
+      // comma-joins arrays when a same-named header already exists.
+      const values = [].concat(pageHeaders[key])
+      for (const value of values) {
+        appendResponseHeader(event, key, value)
+      }
     }
   }
 
