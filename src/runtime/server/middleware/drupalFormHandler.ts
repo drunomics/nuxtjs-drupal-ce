@@ -4,7 +4,7 @@ import { useRuntimeConfig } from '#imports'
 
 export default defineEventHandler(async (event) => {
   const { disableFormHandler } = useRuntimeConfig().drupalCe
-  const { ceApiEndpoint, fetchProxyHeaders } = useRuntimeConfig().public.drupalCe
+  const { ceApiEndpoint, fetchProxyHeaders, fetchOptions } = useRuntimeConfig().public.drupalCe
 
   // Skip API proxy routes - we don't want to handle them here.
   const currentPath = event.node.req.url?.split('?')[0] || ''
@@ -55,6 +55,7 @@ export default defineEventHandler(async (event) => {
         method: 'POST',
         body: formData,
         headers: {
+          ...fetchOptions?.headers,
           ...proxyHeaders,
           'x-form-processed': 'true',
         },
