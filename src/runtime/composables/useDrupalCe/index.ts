@@ -15,10 +15,10 @@ import type { DrupalCePage, DrupalCeApiResponse } from '../../types'
  * session SSESS plus a CDN login-state flag).
  */
 const headersToRecord = (headers: Headers): Record<string, string | string[]> => {
-  const record: Record<string, string> = Object.fromEntries(headers.entries())
+  const record: Record<string, string | string[]> = Object.fromEntries(headers.entries())
   const setCookies = headers.getSetCookie()
   if (setCookies.length > 1) {
-    (record as Record<string, string | string[]>)['set-cookie'] = setCookies
+    record['set-cookie'] = setCookies
   }
   return record
 }
