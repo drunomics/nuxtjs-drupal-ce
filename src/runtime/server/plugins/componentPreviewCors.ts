@@ -1,4 +1,4 @@
-import { setResponseHeader, getRequestHeader } from 'h3'
+import { setResponseHeader, getRequestHeader, getResponseHeader } from 'h3'
 import { defineNitroPlugin, useRuntimeConfig } from '#imports'
 
 /**
@@ -22,6 +22,22 @@ export default defineNitroPlugin((nitroApp) => {
     }
     catch {
       return
+    }
+
+    // Always vary on Origin so a response cached without CORS headers (e.g.
+    // fetched by the SSR server or a same-origin request without an Origin
+    // header) is not reused for cross-origin requests that need the CORS
+    // headers set below.
+    const existingVary = getResponseHeader(event, 'Vary')
+    const varyTokens = existingVary
+      ? String(Array.isArray(existingVary) ? existingVary.join(',') : existingVary)
+        .split(',')
+        .map(s => s.trim())
+        .filter(Boolean)
+      : []
+    if (!varyTokens.some(t => t.toLowerCase() === 'origin')) {
+      varyTokens.push('Origin')
+      setResponseHeader(event, 'Vary', varyTokens.join(', '))
     }
 
     const origin = getRequestHeader(event, 'origin')
