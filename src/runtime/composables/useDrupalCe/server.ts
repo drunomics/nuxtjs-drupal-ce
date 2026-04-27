@@ -20,3 +20,16 @@ export const getMenuBaseUrl = () => {
   const config = useRuntimeConfig().public.drupalCe
   return config.menuBaseUrl ? config.menuBaseUrl : getDrupalBaseUrl() + config.ceApiEndpoint
 }
+
+/**
+ * Converts a Headers object to a plain record, keeping multiple Set-Cookie
+ * values as an array under the 'set-cookie' key.
+ */
+export const headersToRecord = (headers: Headers): Record<string, string | string[]> => {
+  const record: Record<string, string | string[]> = Object.fromEntries(headers.entries())
+  const setCookies = headers.getSetCookie()
+  if (setCookies.length > 1) {
+    record['set-cookie'] = setCookies
+  }
+  return record
+}

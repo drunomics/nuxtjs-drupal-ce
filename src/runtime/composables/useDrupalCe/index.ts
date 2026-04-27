@@ -2,26 +2,11 @@ import { defu } from 'defu'
 import { appendResponseHeader } from 'h3'
 import type { $Fetch, NitroFetchRequest } from 'nitropack'
 import { type Ref, type ComputedRef, type Component, type VNode, Fragment } from 'vue'
-import { getDrupalBaseUrl, getMenuBaseUrl } from './server'
+import { getDrupalBaseUrl, getMenuBaseUrl, headersToRecord } from './server'
 import type { UseFetchOptions, AsyncData } from '#app'
 import { callWithNuxt } from '#app'
 import { useRuntimeConfig, useState, useFetch, navigateTo, createError, h, resolveComponent, setResponseStatus, useNuxtApp, useRequestHeaders, ref, unref, watch, useRequestEvent, computed, useHead, defineComponent, toRef, useRoute, useRouter, useSlots } from '#imports'
 import type { DrupalCePage, DrupalCeApiResponse } from '../../types'
-
-/**
- * Converts a Headers object to a plain record, preserving multiple Set-Cookie
- * values as an array. Object.fromEntries(headers.entries()) silently drops all
- * but the last Set-Cookie when a response sets more than one cookie (e.g.
- * session SSESS plus a CDN login-state flag).
- */
-const headersToRecord = (headers: Headers): Record<string, string | string[]> => {
-  const record: Record<string, string | string[]> = Object.fromEntries(headers.entries())
-  const setCookies = headers.getSetCookie()
-  if (setCookies.length > 1) {
-    record['set-cookie'] = setCookies
-  }
-  return record
-}
 
 export const useDrupalCe = () => {
   const config = useRuntimeConfig().public.drupalCe
@@ -108,8 +93,7 @@ export const useDrupalCe = () => {
     // middleware instead and are passed through in useDrupalCePage below.
     fetchOptions.onResponse = (context) => {
       if (doPassThroughHeaders && import.meta.server && privateConfig?.passThroughHeaders) {
-        const headersObject = headersToRecord(context.response.headers)
-        passThroughHeaders(nuxtApp, headersObject)
+        passThroughHeaders(nuxtApp, headersToRecord(context.response.headers))
       }
     }
 
@@ -592,25 +576,35 @@ export const useDrupalCe = () => {
   }
 
   /**
-   * Pass through headers from Drupal to the client
+   * Pass through allow-listed headers from a Drupal response to the SSR
+   * response.
+   *
    * @param nuxtApp The Nuxt app instance
-   * @param pageHeaders The headers from the Drupal response
+   * @param pageHeaders The headers from the Drupal response, as a plain
+   *   record. Multi-value headers (e.g. multiple Set-Cookie values) must
+   *   arrive as an array - use headersToRecord() from ./server when
+   *   converting from a Headers object.
    */
-  const passThroughHeaders = (nuxtApp, pageHeaders) => {
-    if (!nuxtApp.ssrContext || !pageHeaders) {
+  const passThroughHeaders = (nuxtApp, pageHeaders: Record<string, string | string[]> | undefined) => {
+    if (!nuxtApp.ssrContext) {
       return
     }
     const event = nuxtApp.ssrContext.event
-    for (const key of Object.keys(pageHeaders)) {
-      if (!privateConfig?.passThroughHeaders.includes(key)) continue
-      // Flatten to an array so both single-value strings and multi-value
-      // arrays (e.g. multiple set-cookie values) are handled uniformly.
-      // Each value is appended individually because h3's appendResponseHeader
-      // comma-joins arrays when a same-named header already exists.
-      const values = [].concat(pageHeaders[key])
-      for (const value of values) {
-        appendResponseHeader(event, key, value)
-      }
+    if (pageHeaders) {
+      Object.keys(pageHeaders).forEach((key) => {
+        if (!privateConfig?.passThroughHeaders.includes(key)) return
+        const value = pageHeaders[key]
+        // Multi-value headers must be appended once per value - h3's
+        // appendResponseHeader comma-joins arrays.
+        if (Array.isArray(value)) {
+          for (const v of value) {
+            appendResponseHeader(event, key, v)
+          }
+        }
+        else {
+          appendResponseHeader(event, key, value)
+        }
+      })
     }
   }
 

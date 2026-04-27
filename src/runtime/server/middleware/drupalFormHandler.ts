@@ -1,5 +1,5 @@
 import { defineEventHandler, readFormData } from 'h3'
-import { getDrupalBaseUrl } from '../../composables/useDrupalCe/server'
+import { getDrupalBaseUrl, headersToRecord } from '../../composables/useDrupalCe/server'
 import { useRuntimeConfig } from '#imports'
 
 export default defineEventHandler(async (event) => {
@@ -70,17 +70,9 @@ export default defineEventHandler(async (event) => {
       })
 
       if (response) {
-        // Preserve all Set-Cookie values — Object.fromEntries() keeps only
-        // the last one when Drupal sets multiple cookies (e.g. session SSESS
-        // plus a CDN login-state flag), dropping the session cookie.
-        const headers: Record<string, string | string[]> = Object.fromEntries(response.headers.entries())
-        const setCookies = response.headers.getSetCookie()
-        if (setCookies.length > 1) {
-          headers['set-cookie'] = setCookies
-        }
         event.context.drupalCeCustomPageResponse = {
           _data: response._data,
-          headers,
+          headers: headersToRecord(response.headers),
         }
       }
     }
