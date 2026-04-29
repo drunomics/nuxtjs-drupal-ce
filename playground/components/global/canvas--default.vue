@@ -1,5 +1,5 @@
 <template>
-  <div class="canvas-page">
+  <div class="canvas">
     <slot name="components" />
   </div>
 </template>
