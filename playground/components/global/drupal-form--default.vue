@@ -1,4 +1,7 @@
 <template>
+  <!-- #prefix / #suffix render outside <form> so sibling forms (e.g.
+       openid_connect's per-provider buttons) aren't nested. -->
+  <slot name="prefix" />
   <form
     :formId="formId"
     :method="method"
@@ -8,6 +11,7 @@
   >
     <slot />
   </form>
+  <slot name="suffix" />
 </template>
 
 <script setup lang="ts">
@@ -19,6 +23,8 @@ defineProps<{
 
 defineSlots<{
   default(): any
+  prefix(): any
+  suffix(): any
 }>()
 </script>
 
