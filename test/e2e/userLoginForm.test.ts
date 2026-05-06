@@ -53,9 +53,12 @@ describe('User login form', async () => {
     // Wait for login success redirect
     await page.waitForURL('**/node/1')
 
-    // Check for session cookie
+    // Check that ALL Set-Cookie headers from Drupal are forwarded — not just
+    // the last one. Regression test for set-cookie deduplication via
+    // Object.fromEntries() in the form handler / passThroughHeaders path.
     const cookies = await page.context().cookies()
     expect(cookies.some(cookie => cookie.name === 'SSESSf9f2dc90f4drupal')).toBe(true)
+    expect(cookies.some(cookie => cookie.name === 'loginState')).toBe(true)
     // Cleanup
     await page.context().clearCookies()
   })

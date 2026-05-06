@@ -2,7 +2,7 @@ import { defu } from 'defu'
 import { appendResponseHeader } from 'h3'
 import type { $Fetch, NitroFetchRequest } from 'nitropack'
 import { type Ref, type ComputedRef, type Component, type VNode, Fragment } from 'vue'
-import { getDrupalBaseUrl, getMenuBaseUrl } from './server'
+import { getDrupalBaseUrl, getMenuBaseUrl, headersToRecord } from './server'
 import type { UseFetchOptions, AsyncData } from '#app'
 import { callWithNuxt } from '#app'
 import { useRuntimeConfig, useState, useFetch, navigateTo, createError, h, resolveComponent, setResponseStatus, useNuxtApp, useRequestHeaders, ref, unref, watch, useRequestEvent, computed, useHead, defineComponent, toRef, useRoute, useRouter, useSlots } from '#imports'
@@ -87,10 +87,13 @@ export const useDrupalCe = () => {
    */
   const useCeApi = (path: string | Ref<string>, fetchOptions: UseFetchOptions<any> = {}, doPassThroughHeaders?: boolean, skipDrupalCeApiProxy: boolean = false): AsyncData<DrupalCeApiResponse, any> => {
     const nuxtApp = useNuxtApp()
+    // Pass through Drupal response headers (e.g. cache-control, set-cookie)
+    // to the SSR response, so the browser sees them. This handles the normal
+    // page-fetch path; form POST responses go through drupalFormHandler
+    // middleware instead and are passed through in useDrupalCePage below.
     fetchOptions.onResponse = (context) => {
       if (doPassThroughHeaders && import.meta.server && privateConfig?.passThroughHeaders) {
-        const headersObject = Object.fromEntries([...context.response.headers.entries()])
-        passThroughHeaders(nuxtApp, headersObject)
+        passThroughHeaders(nuxtApp, headersToRecord(context.response.headers))
       }
     }
 
@@ -206,18 +209,21 @@ export const useDrupalCe = () => {
       useFetchOptions.key = computePageKey(skipProxy, nuxtApp)
     }
 
-    // Check if page data is provided by custom page response (e.g. form submission via POST)
-    // This is only available during SSR
+    // Two paths for page data:
+    // 1. Form POST: drupalFormHandler middleware already fetched the response
+    //    from Drupal and stored it in event.context.drupalCeCustomPageResponse.
+    //    We use that data directly (no second fetch) and pass through its
+    //    headers here — this is how session cookies reach the browser on login.
+    // 2. Normal GET: we fetch from the CE API via useCeApi; headers are passed
+    //    through in its onResponse callback above.
     const customPageResponse = import.meta.server
       ? useRequestEvent(nuxtApp).context.drupalCeCustomPageResponse
       : null
 
-    // Get page ref and error - either from customPageResponse or API
     let pageRef: Ref<DrupalCePage>
     let error: any
 
     if (customPageResponse) {
-      // Custom response path: skip API call, use provided data
       pageRef = toRef(nuxtApp.payload.data, useFetchOptions.key)
       pageRef.value = customPageResponse._data
       error = customPageResponse.error
@@ -227,7 +233,6 @@ export const useDrupalCe = () => {
       }
     }
     else {
-      // Normal path: fetch from API
       const result = await useCeApi(path, useFetchOptions, true, skipDrupalCeApiProxy)
       pageRef = result.data
       error = result.error.value
@@ -571,20 +576,33 @@ export const useDrupalCe = () => {
   }
 
   /**
-   * Pass through headers from Drupal to the client
+   * Pass through allow-listed headers from a Drupal response to the SSR
+   * response.
+   *
    * @param nuxtApp The Nuxt app instance
-   * @param pageHeaders The headers from the Drupal response
+   * @param pageHeaders The headers from the Drupal response, as a plain
+   *   record. Multi-value headers (e.g. multiple Set-Cookie values) must
+   *   arrive as an array - use headersToRecord() from ./server when
+   *   converting from a Headers object.
    */
-  const passThroughHeaders = (nuxtApp, pageHeaders) => {
-    // Only run when SSR context is available.
+  const passThroughHeaders = (nuxtApp, pageHeaders: Record<string, string | string[]> | undefined) => {
     if (!nuxtApp.ssrContext) {
       return
     }
     const event = nuxtApp.ssrContext.event
     if (pageHeaders) {
       Object.keys(pageHeaders).forEach((key) => {
-        if (privateConfig?.passThroughHeaders.includes(key)) {
-          appendResponseHeader(event, key, pageHeaders[key])
+        if (!privateConfig?.passThroughHeaders.includes(key)) return
+        const value = pageHeaders[key]
+        // Multi-value headers must be appended once per value - h3's
+        // appendResponseHeader comma-joins arrays.
+        if (Array.isArray(value)) {
+          for (const v of value) {
+            appendResponseHeader(event, key, v)
+          }
+        }
+        else {
+          appendResponseHeader(event, key, value)
         }
       })
     }
