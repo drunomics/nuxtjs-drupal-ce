@@ -1,4 +1,4 @@
-import { defineNuxtModule, addServerPlugin, createResolver, addImportsDir, addServerHandler, addImports, installModule } from '@nuxt/kit'
+import { defineNuxtModule, addPlugin, addServerPlugin, createResolver, addImportsDir, addServerHandler, addImports, installModule } from '@nuxt/kit'
 import { defu } from 'defu'
 import type { NuxtOptionsWithDrupalCe } from './types'
 
@@ -108,6 +108,7 @@ export default defineNuxtModule<ModuleOptions>({
       addServerPlugin(resolve(runtimeDir, 'server/plugins/errorLogger'))
     }
     addImportsDir(resolve(runtimeDir, 'composables/useDrupalCe'))
+    addPlugin(resolve(runtimeDir, 'plugins/payloadPath.client'))
 
     // Add form handler middleware if not disabled (via boolean)
     if (!(options.disableFormHandler === true)) {
