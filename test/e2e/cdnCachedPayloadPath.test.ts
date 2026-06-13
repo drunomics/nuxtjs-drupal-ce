@@ -23,20 +23,20 @@ describe('Hydration with a CDN-shared cache entry', async () => {
   })
 
   /**
-   * Serves the given HTML for any document request to /node/1, regardless
-   * of its query string — exactly what a CDN with a shared cache entry
-   * does. Returns a counter of client-side page-data requests, which must
-   * stay empty: the page has to hydrate from the embedded SSR payload.
+   * Serves the given HTML for any document request to `requestPath`,
+   * regardless of its query string — exactly what a CDN with a shared cache
+   * entry does. Returns a counter of client-side page-data requests, which
+   * must stay empty when the page hydrates from the embedded SSR payload.
    */
-  const createPageWithCachedResponse = async (cachedHtml: string) => {
+  const createPageWithCachedResponse = async (cachedHtml: string, requestPath = '/node/1') => {
     const page = await createPage()
     const pageDataRequests: string[] = []
     page.on('request', (request) => {
-      if (request.url().includes('/api/drupal-ce/node/1')) {
+      if (request.url().includes('/api/drupal-ce/node/')) {
         pageDataRequests.push(request.url())
       }
     })
-    await page.route('**/node/1*', (route) => {
+    await page.route(`**${requestPath}*`, (route) => {
       if (route.request().resourceType() === 'document') {
         return route.fulfill({ body: cachedHtml, contentType: 'text/html' })
       }
@@ -76,6 +76,33 @@ describe('Hydration with a CDN-shared cache entry', async () => {
 
     expect(page.url()).toBe(visitorUrl)
     expect(await page.evaluate(() => document.body.textContent)).toContain('Test page')
+    expect(pageDataRequests).toEqual([])
+
+    await page.close()
+  })
+
+  /**
+   * The reverse guard: when the rendered path differs from the browser URL
+   * in the *pathname* (not just the query string), it is a genuine
+   * server-side redirect — `payload.path` is the redirect target and must
+   * NOT be aligned to the browser URL. Nuxt's router then navigates the
+   * address bar to that target. If the plugin ever clobbered `payload.path`
+   * in this case, the redirect would be silently lost.
+   */
+  it('follows the redirect target when the rendered path differs in the pathname', { timeout: 30000 }, async () => {
+    // The redirect target render: payload.path is /node/3 ("Another page").
+    const targetResponse = await fetch('/node/3')
+    const targetHtml = await targetResponse.text()
+    expect(targetHtml).toContain('__NUXT_DATA__')
+
+    // The CDN serves that HTML for a request to the pre-redirect URL /node/1.
+    const { page, pageDataRequests } = await createPageWithCachedResponse(targetHtml, '/node/1')
+    await page.goto(url('/node/1'), { waitUntil: 'hydration' })
+
+    // The router must follow payload.path to the redirect target /node/3 —
+    // the plugin must leave it untouched, never rewrite it to /node/1.
+    expect(page.url()).toBe(url('/node/3'))
+    expect(await page.evaluate(() => document.body.textContent)).toContain('Another page')
     expect(pageDataRequests).toEqual([])
 
     await page.close()
