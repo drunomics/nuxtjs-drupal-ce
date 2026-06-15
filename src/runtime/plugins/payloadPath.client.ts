@@ -22,8 +22,8 @@ import { defineNuxtPlugin, useRuntimeConfig } from '#imports'
  * this client plugin runs after the payload is revived
  * (`nuxt:revive-payload:client`, order -30) and before the router is
  * created (`nuxt:router`, order -20): when the rendered path matches the
- * browser URL up to query string and hash, `payload.path` is updated to
- * the browser URL. A rendered path that differs in the path itself (e.g.
+ * browser URL up to query string, `payload.path` is updated to the browser
+ * pathname and query. A rendered path that differs in the path itself (e.g.
  * after a server-side redirect) is left for the router to handle.
  *
  * The page data stored under the SSR payload key is re-keyed to the
@@ -41,7 +41,13 @@ export default defineNuxtPlugin({
     const base = useRuntimeConfig().app.baseURL
     const displayedPath = withoutBase(window.location.pathname, base)
     if (isSamePath(parseURL(renderedPath).pathname, displayedPath)) {
-      nuxtApp.payload.path = displayedPath + window.location.search + window.location.hash
+      // The hash is intentionally omitted: it never reaches the server, so it
+      // is not part of the rendered path, and `nuxt:router`'s
+      // `createCurrentLocation()` unconditionally appends the live
+      // `window.location.hash` to whatever `payload.path` holds. Including it
+      // here would double the fragment (e.g. `/p#gallery-1#gallery-1`) and
+      // break hash-based navigation such as gallery deep links.
+      nuxtApp.payload.path = displayedPath + window.location.search
     }
   },
 })

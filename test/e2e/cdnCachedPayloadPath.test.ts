@@ -157,4 +157,31 @@ describe('Hydration with a CDN-shared cache entry', async () => {
 
     await page.close()
   })
+
+  /**
+   * A URL fragment is client-only: it never reaches the server, so it is not
+   * part of the rendered `payload.path`. Nuxt's router already appends the
+   * live `window.location.hash` when building the initial location, so the
+   * plugin must NOT also carry the hash into `payload.path` — doing so
+   * doubles the fragment (e.g. `/node/1#section-2#section-2`), which breaks
+   * hash-driven navigation such as gallery deep links.
+   */
+  it('preserves a single hash fragment when hydrating a CDN-shared entry', { timeout: 30000 }, async () => {
+    // The CDN entry was filled by a plain request (the hash never reached it).
+    const cachedResponse = await fetch('/node/1')
+    const cachedHtml = await cachedResponse.text()
+
+    const { page, pageDataRequests } = await createPageWithCachedResponse(cachedHtml)
+    const visitorUrl = url('/node/1#section-2')
+    await page.goto(visitorUrl, { waitUntil: 'hydration' })
+
+    // The fragment must survive verbatim — exactly one `#section-2`, not a
+    // doubled `#section-2#section-2`.
+    expect(page.url()).toBe(visitorUrl)
+    expect(await page.evaluate(() => window.location.hash)).toBe('#section-2')
+    expect(await page.evaluate(() => document.body.textContent)).toContain('Test page')
+    expect(pageDataRequests).toEqual([])
+
+    await page.close()
+  })
 })
