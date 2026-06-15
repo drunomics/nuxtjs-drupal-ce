@@ -32,7 +32,7 @@ describe('Hydration with a CDN-shared cache entry', async () => {
     const page = await createPage()
     const pageDataRequests: string[] = []
     page.on('request', (request) => {
-      if (request.url().includes('/api/drupal-ce/node/')) {
+      if (request.url().includes('/api/drupal-ce/')) {
         pageDataRequests.push(request.url())
       }
     })
@@ -103,6 +103,56 @@ describe('Hydration with a CDN-shared cache entry', async () => {
     // the plugin must leave it untouched, never rewrite it to /node/1.
     expect(page.url()).toBe(url('/node/3'))
     expect(await page.evaluate(() => document.body.textContent)).toContain('Another page')
+    expect(pageDataRequests).toEqual([])
+
+    await page.close()
+  })
+
+  /**
+   * A paginated listing where the `page` query parameter changes the SSR
+   * output but a client-only parameter (`track`) does not. The CDN varies
+   * its cache key on `page` and strips `track`, so the entry rendered for
+   * `?page=2` is served to `?page=2&track=1`. The visitor's `track`
+   * parameter must survive hydration and the page must hydrate from the
+   * page-2 SSR payload — not the page-1 entry and no client-side re-fetch.
+   */
+  it('serves a paginated SSR entry for the same page plus a client-only param', { timeout: 30000 }, async () => {
+    // The CDN's cache key for the listing varies on `page` but not `track`,
+    // so the entry was filled by a `?page=2` render (no `track`).
+    const cachedResponse = await fetch('/listing?page=2')
+    const cachedHtml = await cachedResponse.text()
+    expect(cachedHtml).toContain('Listing items — page 2')
+
+    const { page, pageDataRequests } = await createPageWithCachedResponse(cachedHtml, '/listing')
+    const visitorUrl = url('/listing?page=2&track=1')
+    await page.goto(visitorUrl, { waitUntil: 'hydration' })
+
+    // The visitor keeps their full URL, including the client-only `track`.
+    expect(page.url()).toBe(visitorUrl)
+    // The page-2 SSR content hydrates as served — not page 1, no re-fetch.
+    expect(await page.evaluate(() => document.body.textContent)).toContain('Listing items — page 2')
+    expect(pageDataRequests).toEqual([])
+
+    await page.close()
+  })
+
+  /**
+   * The unparametrized listing entry (page 1) is served by the CDN for a
+   * request carrying only the client-only `track` parameter. The visitor's
+   * URL must survive and the page-1 SSR payload must hydrate without a
+   * client-side re-fetch.
+   */
+  it('serves the unparametrized SSR entry for a client-only param', { timeout: 30000 }, async () => {
+    const cachedResponse = await fetch('/listing')
+    const cachedHtml = await cachedResponse.text()
+    expect(cachedHtml).toContain('Listing items — page 1')
+
+    const { page, pageDataRequests } = await createPageWithCachedResponse(cachedHtml, '/listing')
+    const visitorUrl = url('/listing?track=1')
+    await page.goto(visitorUrl, { waitUntil: 'hydration' })
+
+    expect(page.url()).toBe(visitorUrl)
+    expect(await page.evaluate(() => document.body.textContent)).toContain('Listing items — page 1')
     expect(pageDataRequests).toEqual([])
 
     await page.close()
