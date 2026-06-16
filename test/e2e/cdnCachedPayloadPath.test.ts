@@ -1,0 +1,187 @@
+import { fileURLToPath } from 'node:url'
+import { join } from 'node:path'
+import { describe, it, expect } from 'vitest'
+import { setup, fetch, url, createPage } from '@nuxt/test-utils/e2e'
+
+/**
+ * A CDN in front of the SSR server typically ignores tracking query
+ * parameters (utm_*, gclid, gbraid, ...) in its cache key: the HTML cached
+ * for one visitor's URL is served to every visitor of the page, whatever
+ * their query string. The Nuxt payload of such a response carries the URL
+ * of the request that filled the cache (payload.path), which differs from
+ * the URL in the visitor's browser. The visitor's URL must survive
+ * hydration (no foreign query string replaced into the address bar) and
+ * the page must hydrate from the SSR payload without a client-side
+ * re-fetch.
+ */
+describe('Hydration with a CDN-shared cache entry', async () => {
+  await setup({
+    rootDir: join(fileURLToPath(import.meta.url), '../../../playground'),
+    configFile: 'nuxt.config4test',
+    port: 3001,
+    browser: true,
+  })
+
+  /**
+   * Serves the given HTML for any document request to `requestPath`,
+   * regardless of its query string — exactly what a CDN with a shared cache
+   * entry does. Returns a counter of client-side page-data requests, which
+   * must stay empty when the page hydrates from the embedded SSR payload.
+   */
+  const createPageWithCachedResponse = async (cachedHtml: string, requestPath = '/node/1') => {
+    const page = await createPage()
+    const pageDataRequests: string[] = []
+    page.on('request', (request) => {
+      if (request.url().includes('/api/drupal-ce/')) {
+        pageDataRequests.push(request.url())
+      }
+    })
+    await page.route(`**${requestPath}*`, (route) => {
+      if (route.request().resourceType() === 'document') {
+        return route.fulfill({ body: cachedHtml, contentType: 'text/html' })
+      }
+      return route.continue()
+    })
+    return { page, pageDataRequests }
+  }
+
+  it('keeps the visitor URL when the payload was rendered for a different query string', { timeout: 30000 }, async () => {
+    // Fill the "CDN cache": render the page for a foreign ad-click URL.
+    const cachedResponse = await fetch('/node/1?gclid=foreign-click-id&gad_source=1')
+    const cachedHtml = await cachedResponse.text()
+    expect(cachedHtml).toContain('__NUXT_DATA__')
+
+    const { page, pageDataRequests } = await createPageWithCachedResponse(cachedHtml)
+    const visitorUrl = url('/node/1?utm_source=newsletter&gclid=visitor-click-id')
+    await page.goto(visitorUrl, { waitUntil: 'hydration' })
+
+    // The visitor's own URL must survive hydration — the foreign URL from
+    // the payload must not be replaced into the address bar.
+    expect(page.url()).toBe(visitorUrl)
+
+    // The page must have hydrated from the SSR payload.
+    expect(await page.evaluate(() => document.body.textContent)).toContain('Test page')
+    expect(pageDataRequests).toEqual([])
+
+    await page.close()
+  })
+
+  it('keeps the visitor URL when the payload was rendered without any query string', { timeout: 30000 }, async () => {
+    const cachedResponse = await fetch('/node/1')
+    const cachedHtml = await cachedResponse.text()
+
+    const { page, pageDataRequests } = await createPageWithCachedResponse(cachedHtml)
+    const visitorUrl = url('/node/1?gbraid=visitor-click-id&gad_source=1')
+    await page.goto(visitorUrl, { waitUntil: 'hydration' })
+
+    expect(page.url()).toBe(visitorUrl)
+    expect(await page.evaluate(() => document.body.textContent)).toContain('Test page')
+    expect(pageDataRequests).toEqual([])
+
+    await page.close()
+  })
+
+  /**
+   * The reverse guard: when the rendered path differs from the browser URL
+   * in the *pathname* (not just the query string), it is a genuine
+   * server-side redirect — `payload.path` is the redirect target and must
+   * NOT be aligned to the browser URL. Nuxt's router then navigates the
+   * address bar to that target. If the plugin ever clobbered `payload.path`
+   * in this case, the redirect would be silently lost.
+   */
+  it('follows the redirect target when the rendered path differs in the pathname', { timeout: 30000 }, async () => {
+    // The redirect target render: payload.path is /node/3 ("Another page").
+    const targetResponse = await fetch('/node/3')
+    const targetHtml = await targetResponse.text()
+    expect(targetHtml).toContain('__NUXT_DATA__')
+
+    // The CDN serves that HTML for a request to the pre-redirect URL /node/1.
+    const { page, pageDataRequests } = await createPageWithCachedResponse(targetHtml, '/node/1')
+    await page.goto(url('/node/1'), { waitUntil: 'hydration' })
+
+    // The router must follow payload.path to the redirect target /node/3 —
+    // the plugin must leave it untouched, never rewrite it to /node/1.
+    expect(page.url()).toBe(url('/node/3'))
+    expect(await page.evaluate(() => document.body.textContent)).toContain('Another page')
+    expect(pageDataRequests).toEqual([])
+
+    await page.close()
+  })
+
+  /**
+   * A paginated listing where the `page` query parameter changes the SSR
+   * output but a client-only parameter (`track`) does not. The CDN varies
+   * its cache key on `page` and strips `track`, so the entry rendered for
+   * `?page=2` is served to `?page=2&track=1`. The visitor's `track`
+   * parameter must survive hydration and the page must hydrate from the
+   * page-2 SSR payload — not the page-1 entry and no client-side re-fetch.
+   */
+  it('serves a paginated SSR entry for the same page plus a client-only param', { timeout: 30000 }, async () => {
+    // The CDN's cache key for the listing varies on `page` but not `track`,
+    // so the entry was filled by a `?page=2` render (no `track`).
+    const cachedResponse = await fetch('/listing?page=2')
+    const cachedHtml = await cachedResponse.text()
+    expect(cachedHtml).toContain('Listing items — page 2')
+
+    const { page, pageDataRequests } = await createPageWithCachedResponse(cachedHtml, '/listing')
+    const visitorUrl = url('/listing?page=2&track=1')
+    await page.goto(visitorUrl, { waitUntil: 'hydration' })
+
+    // The visitor keeps their full URL, including the client-only `track`.
+    expect(page.url()).toBe(visitorUrl)
+    // The page-2 SSR content hydrates as served — not page 1, no re-fetch.
+    expect(await page.evaluate(() => document.body.textContent)).toContain('Listing items — page 2')
+    expect(pageDataRequests).toEqual([])
+
+    await page.close()
+  })
+
+  /**
+   * The unparametrized listing entry (page 1) is served by the CDN for a
+   * request carrying only the client-only `track` parameter. The visitor's
+   * URL must survive and the page-1 SSR payload must hydrate without a
+   * client-side re-fetch.
+   */
+  it('serves the unparametrized SSR entry for a client-only param', { timeout: 30000 }, async () => {
+    const cachedResponse = await fetch('/listing')
+    const cachedHtml = await cachedResponse.text()
+    expect(cachedHtml).toContain('Listing items — page 1')
+
+    const { page, pageDataRequests } = await createPageWithCachedResponse(cachedHtml, '/listing')
+    const visitorUrl = url('/listing?track=1')
+    await page.goto(visitorUrl, { waitUntil: 'hydration' })
+
+    expect(page.url()).toBe(visitorUrl)
+    expect(await page.evaluate(() => document.body.textContent)).toContain('Listing items — page 1')
+    expect(pageDataRequests).toEqual([])
+
+    await page.close()
+  })
+
+  /**
+   * A URL fragment is client-only: it never reaches the server, so it is not
+   * part of the rendered `payload.path`. Nuxt's router already appends the
+   * live `window.location.hash` when building the initial location, so the
+   * plugin must NOT also carry the hash into `payload.path` — doing so
+   * doubles the fragment (e.g. `/node/1#section-2#section-2`), which breaks
+   * hash-driven navigation such as gallery deep links.
+   */
+  it('preserves a single hash fragment when hydrating a CDN-shared entry', { timeout: 30000 }, async () => {
+    // The CDN entry was filled by a plain request (the hash never reached it).
+    const cachedResponse = await fetch('/node/1')
+    const cachedHtml = await cachedResponse.text()
+
+    const { page, pageDataRequests } = await createPageWithCachedResponse(cachedHtml)
+    const visitorUrl = url('/node/1#section-2')
+    await page.goto(visitorUrl, { waitUntil: 'hydration' })
+
+    // The fragment must survive verbatim — exactly one `#section-2`, not a
+    // doubled `#section-2#section-2`.
+    expect(page.url()).toBe(visitorUrl)
+    expect(await page.evaluate(() => window.location.hash)).toBe('#section-2')
+    expect(await page.evaluate(() => document.body.textContent)).toContain('Test page')
+    expect(pageDataRequests).toEqual([])
+
+    await page.close()
+  })
+})
