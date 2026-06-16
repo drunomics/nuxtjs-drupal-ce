@@ -23,6 +23,10 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: "npm"
+      # Renovate and dependabot regenerate package-lock.json with npm 11;
+      # the npm 10 bundled with Node 22 rejects those lockfiles as out of
+      # sync, so `npm ci` needs npm 11 too.
+      - run: npm install -g npm@^11
       - run: npm ci
       - run: npx playwright install --with-deps
       - run: npm run dev:prepare
