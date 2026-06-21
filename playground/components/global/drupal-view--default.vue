@@ -14,6 +14,7 @@
       v-if="pager.totalPages"
       :total-pages="pager.totalPages"
       :current="pager.current"
+      @update:current="onPageChange"
     />
     <div v-if="slots.footer" class="view-footer">
       <slot name="footer" />
@@ -45,5 +46,22 @@ const props = withDefaults(defineProps<{
   pager: () => ({}),
 });
 
+const route = useRoute();
+const router = useRouter();
 const slots = useSlots();
+
+function onPageChange(page: number) {
+  const query = { ...route.query } as Record<string, string | string[] | undefined>;
+
+  if (page > 0) {
+    query.page = String(page);
+  } else {
+    delete query.page;
+  }
+
+  void router.replace({
+    path: route.path,
+    query,
+  });
+}
 </script>
