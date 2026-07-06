@@ -3,6 +3,7 @@ import { appendResponseHeader } from 'h3'
 import type { $Fetch, NitroFetchRequest } from 'nitropack'
 import { type Ref, type ComputedRef, type Component, type VNode, Fragment } from 'vue'
 import { getDrupalBaseUrl, getMenuBaseUrl, headersToRecord } from './server'
+import type { DrupalResolvedLibrary } from './drupalLibraryLoader'
 import type { UseFetchOptions, AsyncData } from '#app'
 import { callWithNuxt } from '#app'
 import { useRuntimeConfig, useState, useFetch, navigateTo, createError, h, resolveComponent, setResponseStatus, useNuxtApp, useRequestHeaders, ref, unref, watch, useRequestEvent, computed, useHead, defineComponent, toRef, useRoute, useRouter, useSlots } from '#imports'
@@ -654,9 +655,39 @@ export const useDrupalCe = () => {
     })
   }
 
+  /**
+   * Lazily loads a Drupal JS library in the browser and runs its behaviours.
+   *
+   * The heavy loader (script queue, drupalSettings seeding, attachBehaviors)
+   * lives in a separate module and is dynamically imported here, so it — and
+   * the Drupal JS it pulls in — is only fetched the first time a component
+   * calls loadLibrary(). Use this from custom components to lazy-load a Drupal
+   * behaviour (form #states, autocomplete, …) exactly when it is needed.
+   *
+   * Pass a resolved library ({ js, drupalSettings }, as the backend emits on a
+   * <drupal-library-*> element) to load it directly, or a Drupal library name
+   * (e.g. 'core/drupal.states') to have the backend resolve it first — the
+   * latter needs the companion `/drupal-library/{name}` endpoint.
+   *
+   * @param library A resolved library object or a Drupal library name.
+   * @returns Promise settling once the library's JS has loaded (client-side);
+   *   resolves immediately on the server.
+   */
+  const loadLibrary = async (library: DrupalResolvedLibrary | string): Promise<void> => {
+    if (import.meta.server) {
+      return
+    }
+    const { loadDrupalLibrary } = await import('./drupalLibraryLoader')
+    const resolved = typeof library === 'string'
+      ? await $fetch<DrupalResolvedLibrary>(`${getDrupalBaseUrl()}/drupal-library/${encodeURIComponent(library)}`)
+      : library
+    await loadDrupalLibrary(resolved, getDrupalBaseUrl())
+  }
+
   return {
     $ceApi,
     useCeApi,
+    loadLibrary,
     fetchPage,
     fetchMenu,
     getMessages,
