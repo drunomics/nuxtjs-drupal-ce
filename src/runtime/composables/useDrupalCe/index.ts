@@ -663,32 +663,27 @@ export const useDrupalCe = () => {
   }
 
   /**
-   * Lazily loads a Drupal JS library in the browser and runs its behaviours.
+   * Lazily loads a resolved Drupal JS library in the browser and runs its
+   * behaviours.
    *
    * The heavy loader (script queue, drupalSettings seeding, attachBehaviors)
    * lives in a separate module and is dynamically imported here, so it — and
-   * the Drupal JS it pulls in — is only fetched the first time a component
-   * calls loadLibrary(). Use this from custom components to lazy-load a Drupal
-   * behaviour (form #states, autocomplete, …) exactly when it is needed.
+   * the Drupal JS it pulls in — is only fetched the first time loadLibrary() is
+   * called. The library is already resolved by the backend, which emits its JS
+   * files (in dependency order) and merged drupalSettings on the corresponding
+   * <drupal-library-*> custom element; this just loads them.
    *
-   * Pass a resolved library ({ js, drupalSettings }, as the backend emits on a
-   * <drupal-library-*> element) to load it directly, or a Drupal library name
-   * (e.g. 'core/drupal.states') to have the backend resolve it first — the
-   * latter needs the companion `/drupal-library/{name}` endpoint.
-   *
-   * @param library A resolved library object or a Drupal library name.
+   * @param library The resolved library ({ js, drupalSettings }) from the
+   *   backend-generated <drupal-library-*> element.
    * @returns Promise settling once the library's JS has loaded (client-side);
    *   resolves immediately on the server.
    */
-  const loadLibrary = async (library: DrupalResolvedLibrary | string): Promise<void> => {
+  const loadLibrary = async (library: DrupalResolvedLibrary): Promise<void> => {
     if (import.meta.server) {
       return
     }
     const { loadDrupalLibrary } = await (drupalLibraryLoaderPromise ??= import('./drupalLibraryLoader'))
-    const resolved = typeof library === 'string'
-      ? await $fetch<DrupalResolvedLibrary>(`${getDrupalBaseUrl()}/drupal-library/${encodeURIComponent(library)}`)
-      : library
-    await loadDrupalLibrary(resolved, getDrupalBaseUrl())
+    await loadDrupalLibrary(library, getDrupalBaseUrl())
   }
 
   return {
