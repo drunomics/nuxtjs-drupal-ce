@@ -3,10 +3,18 @@ import { appendResponseHeader } from 'h3'
 import type { $Fetch, NitroFetchRequest } from 'nitropack'
 import { type Ref, type ComputedRef, type Component, type VNode, Fragment } from 'vue'
 import { getDrupalBaseUrl, getMenuBaseUrl, headersToRecord } from './server'
+import type { DrupalResolvedLibrary } from './drupalLibraryLoader'
 import type { UseFetchOptions, AsyncData } from '#app'
 import { callWithNuxt } from '#app'
 import { useRuntimeConfig, useState, useFetch, navigateTo, createError, h, resolveComponent, setResponseStatus, useNuxtApp, useRequestHeaders, ref, unref, watch, useRequestEvent, computed, useHead, defineComponent, toRef, useRoute, useRouter, useSlots } from '#imports'
 import type { DrupalCePage, DrupalCeApiResponse } from '../../types'
+
+// Cache the dynamic import of the library loader in a single module-level
+// promise. All loadLibrary() callers await the *same* promise, so their
+// continuations run in strict call order — which keeps libraries enqueued in
+// dependency order even when several <drupal-library-*> elements call it in the
+// same tick. (Per-call `import()` can resolve out of order under Vite dev.)
+let drupalLibraryLoaderPromise: Promise<typeof import('./drupalLibraryLoader')> | undefined
 
 export const useDrupalCe = () => {
   const config = useRuntimeConfig().public.drupalCe
@@ -654,9 +662,34 @@ export const useDrupalCe = () => {
     })
   }
 
+  /**
+   * Lazily loads a resolved Drupal JS library in the browser and runs its
+   * behaviours.
+   *
+   * The heavy loader (script queue, drupalSettings seeding, attachBehaviors)
+   * lives in a separate module and is dynamically imported here, so it — and
+   * the Drupal JS it pulls in — is only fetched the first time loadLibrary() is
+   * called. The library is already resolved by the backend, which emits its JS
+   * files (in dependency order) and merged drupalSettings on the corresponding
+   * <drupal-library-*> custom element; this just loads them.
+   *
+   * @param library The resolved library ({ js, drupalSettings }) from the
+   *   backend-generated <drupal-library-*> element.
+   * @returns Promise settling once the library's JS has loaded (client-side);
+   *   resolves immediately on the server.
+   */
+  const loadLibrary = async (library: DrupalResolvedLibrary): Promise<void> => {
+    if (import.meta.server) {
+      return
+    }
+    const { loadDrupalLibrary } = await (drupalLibraryLoaderPromise ??= import('./drupalLibraryLoader'))
+    await loadDrupalLibrary(library, getDrupalBaseUrl())
+  }
+
   return {
     $ceApi,
     useCeApi,
+    loadLibrary,
     fetchPage,
     fetchMenu,
     getMessages,
