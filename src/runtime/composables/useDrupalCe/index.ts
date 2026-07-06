@@ -9,6 +9,13 @@ import { callWithNuxt } from '#app'
 import { useRuntimeConfig, useState, useFetch, navigateTo, createError, h, resolveComponent, setResponseStatus, useNuxtApp, useRequestHeaders, ref, unref, watch, useRequestEvent, computed, useHead, defineComponent, toRef, useRoute, useRouter, useSlots } from '#imports'
 import type { DrupalCePage, DrupalCeApiResponse } from '../../types'
 
+// Cache the dynamic import of the library loader in a single module-level
+// promise. All loadLibrary() callers await the *same* promise, so their
+// continuations run in strict call order — which keeps libraries enqueued in
+// dependency order even when several <drupal-library-*> elements call it in the
+// same tick. (Per-call `import()` can resolve out of order under Vite dev.)
+let drupalLibraryLoaderPromise: Promise<typeof import('./drupalLibraryLoader')> | undefined
+
 export const useDrupalCe = () => {
   const config = useRuntimeConfig().public.drupalCe
   const privateConfig = import.meta.server && useRuntimeConfig().drupalCe
@@ -677,7 +684,7 @@ export const useDrupalCe = () => {
     if (import.meta.server) {
       return
     }
-    const { loadDrupalLibrary } = await import('./drupalLibraryLoader')
+    const { loadDrupalLibrary } = await (drupalLibraryLoaderPromise ??= import('./drupalLibraryLoader'))
     const resolved = typeof library === 'string'
       ? await $fetch<DrupalResolvedLibrary>(`${getDrupalBaseUrl()}/drupal-library/${encodeURIComponent(library)}`)
       : library
