@@ -12,7 +12,7 @@ describe('field--default custom element', () => {
       const { renderCustomElements } = useDrupalCe()
       return { component: renderCustomElements({
         element: 'field-image',
-        content,
+        slots: { default: content },
       }) }
     },
     template: '<component :is="component" />',
