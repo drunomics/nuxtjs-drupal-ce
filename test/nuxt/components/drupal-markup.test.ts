@@ -61,8 +61,9 @@ describe('drupal-markup custom element', () => {
       })
       const wrapper = await mountSuspended(TestComponent)
       expect(wrapper.html()).toContain('<p>Slotted <b>content</b></p>')
-      // drupal-markup should not add a wrapping element when only slot is used
-      expect(wrapper.html()).toEqual('<p>Slotted <b>content</b></p>')
+      // drupal-markup should not add a wrapping element when only slot is used.
+      // (Vue emits a <!--v-if--> placeholder for the unused content div.)
+      expect(wrapper.html()).not.toContain('<div')
     })
 
     it('renders nested elements via slot', async () => {
@@ -157,7 +158,9 @@ describe('drupal-markup custom element', () => {
       })
       const wrapper = await mountSuspended(component)
       expect(wrapper.html()).toContain('<p>Only slot</p>')
-      expect(wrapper.html()).not.toContain('display: contents')
+      // The component's own content div is skipped when the content prop is undefined;
+      // Vue emits a <!--v-if--> placeholder in its place.
+      expect(wrapper.html()).toContain('<!--v-if-->')
     })
 
     it('renders only content prop when slot is empty', async () => {

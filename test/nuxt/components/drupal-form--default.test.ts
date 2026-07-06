@@ -8,13 +8,17 @@ import DrupalFormDefault from '../../../playground/components/global/drupal-form
 describe('drupal-form--default custom element', () => {
   const formData = {
     element: 'drupal-form',
-    formId: 'user_login_form',
-    attributes: {
-      class: ['user-login-form'],
-      dataDrupalSelector: 'user-login-form'
+    props: {
+      formId: 'user_login_form',
+      attributes: {
+        class: ['user-login-form'],
+        dataDrupalSelector: 'user-login-form'
+      },
+      method: 'post',
     },
-    method: 'post',
-    content: '<div>Some form content html.</div>'
+    slots: {
+      default: '<div>Some form content html.</div>'
+    }
   }
 
   const createFormComponent = (data = formData) => defineComponent({
