@@ -191,92 +191,12 @@ Drupal form, the browser autofills it, Drupal libraries attach listeners, a
 lazy-loader swaps image sources. All of that happens in DOM Vue does not own.
 
 `v-html` binds `innerHTML`, and hydration re-applies a vnode's bound props over
-the live DOM
+the live DOM since
 ([vuejs/core#15138](https://github.com/vuejs/core/issues/15138), vue >= 3.5.39).
-Re-setting `innerHTML` recreates every child node, so anything that happened in
-the server-rendered markup before hydration is lost. `v-drupal-markup` renders
-the markup into the server response only, which leaves hydration nothing to
-re-apply.
+That way, anything that happened in the server-rendered markup before hydration
+would be lost. `v-drupal-markup` renders the markup into the server response
+only, which leaves hydration nothing to re-apply.
 
-#### Semantics
-
-| Situation | Behaviour |
-| --- | --- |
-| Server-side rendering | The markup is rendered into the server response. |
-| Hydration | The server-rendered DOM is adopted untouched - no re-set, no node recreation. |
-| Client-side mount (SPA navigation, `v-if`, modals) | The markup is rendered. |
-| The bound value changes | The markup is replaced, as `v-html` does. State inside the replaced DOM goes with it - it belonged to the previous content. |
-| A re-render leaves the value unchanged | The DOM is not touched. |
-
-#### Trust model
-
-The value is written to `innerHTML` verbatim - identical to `v-html`, and
-nothing is sanitized. Only pass HTML the server is trusted to produce.
-
-#### Host element
-
-A directive needs an element to attach to, so the markup always lands inside a
-wrapper. `style="display: contents"` keeps that wrapper out of the layout, which
-is what the `drupal-markup` component does.
-
-#### Interactive widgets inside the markup
-
-Vue does not own the DOM inside the markup, so a component cannot be rendered
-into it directly. Have Drupal render a placeholder element and teleport onto it
-from the frontend - the pattern behind reCAPTCHA fields, maps and similar
-widgets:
-
-```vue
-<template>
-  <div v-drupal-markup="content" />
-  <Teleport
-    v-if="mounted"
-    :key="target"
-    :to="target"
-    defer
-  >
-    <MyWidget />
-  </Teleport>
-</template>
-
-<script setup lang="ts">
-const props = defineProps<{ content: string }>()
-const target = computed(() => '[data-widget]')
-const mounted = ref(false)
-onMounted(() => (mounted.value = true))
-</script>
-```
-
-Three details make this work:
-
-- **`v-if="mounted"`** keeps the teleport out of SSR and out of the hydration
-  pass. The target lives inside an opaque markup string, so it does not exist in
-  the server vdom - server-rendering teleported content into a markup blob is
-  not possible.
-- **`defer`** lets the teleport resolve its target after the current render
-  cycle, so a placeholder written in that same cycle is found.
-- **`:key`** remounts the teleport when the markup changes, which re-resolves
-  the target: the previous placeholder was discarded together with the previous
-  markup.
-
-`test/nuxt/drupalMarkupTeleport.test.ts` covers this pattern end to end.
-
-#### Migrating from `v-html`
-
-Replace `v-html` with `v-drupal-markup` in every component that renders
-server-delivered markup.
-
-Projects using the scaffolded `drupal-markup` component get markup strings
-fixed without any change, because the module now passes them through the
-component's default slot. The legacy JSON format passes markup as a prop
-(`{element: 'drupal-markup', content: '…'}`) and still renders through the
-component's own template, so update that one attribute in
-`components/global/drupal-markup.vue`:
-
-```diff
--  <div v-if="content" style="display: contents" v-html="content" />
-+  <div v-if="content" v-drupal-markup="content" style="display: contents" />
-```
 
 ### Default components (JSON only)
 
