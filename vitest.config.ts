@@ -28,14 +28,17 @@ export default defineConfig({
           include: ['test/nuxt/**/*.{test,spec}.ts'],
           environment: 'nuxt',
           environmentOptions: {
-            port: 3001,
+            // Own port: the six e2e suites built on nuxt.config4test.ts are
+            // locked to 3001 (self-referencing drupalBaseUrl), and vitest
+            // interleaves project files in one worker pool.
+            port: 3021,
             nuxt: {
               rootDir: fileURLToPath(new URL('./playground', import.meta.url)),
-              port: 3001,
+              port: 3021,
               overrides: {
                 modules: ['../dist/module.mjs'],
                 drupalCe: {
-                  drupalBaseUrl: 'http://127.0.0.1:3001',
+                  drupalBaseUrl: 'http://127.0.0.1:3021',
                   ceApiEndpoint: '/ce-api',
                 }
               }

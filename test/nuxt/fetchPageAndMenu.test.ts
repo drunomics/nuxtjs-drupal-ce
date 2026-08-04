@@ -15,13 +15,13 @@ describe('fetchPage and fetchMenu use the right API endpoints', () => {
     registerEndpoint('/api/drupal-ce/test-page', () => ({
       content: { title: 'Via Proxy' }
     }))
-    registerEndpoint('http://127.0.0.1:3001/ce-api/test-page', () => ({
+    registerEndpoint('http://127.0.0.1:3021/ce-api/test-page', () => ({
       content: { title: 'Direct API' }
     }))
     registerEndpoint('/api/menu/api/menu_items/main', () => ({
       items: [{ title: 'Via Proxy Menu' }]
     }))
-    registerEndpoint('http://127.0.0.1:3001/ce-api/api/menu_items/main', () => ({
+    registerEndpoint('http://127.0.0.1:3021/ce-api/api/menu_items/main', () => ({
       items: [{ title: 'Direct API Menu' }]
     }))
   })
@@ -69,7 +69,7 @@ describe('fetchPage and fetchMenu use the right API endpoints', () => {
         registerEndpoint('/api/menu/fr/api/menu_items/main', () => ({
           items: [{ title: 'Via Proxy Menu FR' }]
         }))
-        registerEndpoint('http://127.0.0.1:3001/ce-api/fr/api/menu_items/main', () => ({
+        registerEndpoint('http://127.0.0.1:3021/ce-api/fr/api/menu_items/main', () => ({
           items: [{ title: 'Direct API Menu FR' }]
         }))
       })
