@@ -253,11 +253,15 @@ export const useDrupalCe = () => {
 
     // Handle redirect
     if (pageRef.value?.redirect) {
+      const redirect = pageRef.value.redirect
       await callWithNuxt(nuxtApp, navigateTo, [
-        pageRef.value.redirect.url,
-        { external: pageRef.value.redirect.external, redirectCode: pageRef.value.redirect.statusCode, replace: true },
+        redirect.url,
+        { external: redirect.external, redirectCode: redirect.statusCode, replace: true },
       ])
-      pageRef.value = createEmptyPage()
+      // Return an empty page without touching pageRef: pageRef is bound to
+      // the useFetch payload cache entry, overwriting it would poison the
+      // cache with an empty page and drop the redirect on repeat visits.
+      pageRef = ref(createEmptyPage())
     }
     // Handle error
     else if (error) {
