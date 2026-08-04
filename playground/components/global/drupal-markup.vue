@@ -1,6 +1,6 @@
 <template>
   <slot />
-  <div v-if="content" style="display: contents" v-html="content" />
+  <div v-if="content" v-drupal-markup="content" style="display: contents" />
 </template>
 
 <script setup lang="ts">
@@ -19,6 +19,9 @@ defineProps<{
 
 // Using display:contents makes this div virtually invisible in the layout
 // This mitigates the impact of the wrapping div when rendering the content.
+// The markup is applied with v-drupal-markup rather than v-html so that
+// hydration adopts the server-rendered DOM instead of recreating it - see the
+// directive in nuxtjs-drupal-ce for what that protects.
 defineSlots<{
   default(): any
 }>()

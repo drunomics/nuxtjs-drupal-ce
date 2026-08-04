@@ -109,6 +109,7 @@ export default defineNuxtModule<ModuleOptions>({
     }
     addImportsDir(resolve(runtimeDir, 'composables/useDrupalCe'))
     addPlugin(resolve(runtimeDir, 'plugins/payloadPath.client'))
+    addPlugin(resolve(runtimeDir, 'plugins/drupalMarkup'))
 
     // Add form handler middleware if not disabled (via boolean)
     if (!(options.disableFormHandler === true)) {

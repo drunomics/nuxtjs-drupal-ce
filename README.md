@@ -172,6 +172,36 @@ We recommend to name the components lowercase using kebap-case, such that there 
 custom element names used in the API response and the frontend components. For
 example use `custom-element-name.vue` instead of `CustomElementName.vue`. Both variants work though.
 
+### Rendering markup strings: the `v-drupal-markup` directive
+
+Markup strings in the API response are rendered through your project's
+`drupal-markup` component. The module registers the `v-drupal-markup` directive
+app-wide — update that component (and any other place rendering HTML Drupal
+produced) to use it instead of `v-html`:
+
+```vue
+<template>
+  <div v-drupal-markup="content" style="display: contents" />
+</template>
+```
+
+See `playground/components/global/drupal-markup.vue` for the full reference
+component.
+
+#### Why not `v-html`
+
+Server-delivered markup keeps evolving outside of Vue: a visitor types into a
+Drupal form, the browser autofills it, Drupal libraries attach listeners, a
+lazy-loader swaps image sources. All of that happens in DOM Vue does not own.
+
+`v-html` binds `innerHTML`, and hydration re-applies a vnode's bound props over
+the live DOM since
+([vuejs/core#15138](https://github.com/vuejs/core/issues/15138), vue >= 3.5.39).
+That way, anything that happened in the server-rendered markup before hydration
+would be lost. `v-drupal-markup` renders the markup into the server response
+only, which leaves hydration nothing to re-apply.
+
+
 ### Default components (JSON only)
 
 When using JSON-based rendering of custom elements, the module offers fallback component support. If a custom element lacks a corresponding Vue component, the module attempts to find a suitable default component.
