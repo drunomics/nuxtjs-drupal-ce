@@ -1,13 +1,12 @@
 import { defu } from 'defu'
 import { appendResponseHeader } from 'h3'
 import type { $Fetch, NitroFetchRequest } from 'nitropack'
-import { type Ref, type ComputedRef, type Component, type VNode, Fragment, withDirectives } from 'vue'
+import { type Ref, type ComputedRef, type Component, type VNode, Fragment } from 'vue'
 import { getDrupalBaseUrl, getMenuBaseUrl, headersToRecord } from './server'
-import { vDrupalMarkup } from '../../directives/drupalMarkup'
 import type { DrupalResolvedLibrary } from './drupalLibraryLoader'
 import type { UseFetchOptions, AsyncData } from '#app'
 import { callWithNuxt } from '#app'
-import { useRuntimeConfig, useState, useFetch, navigateTo, createError, h, resolveComponent, setResponseStatus, useNuxtApp, useRequestHeaders, ref, unref, watch, useRequestEvent, computed, useHead, defineComponent, toRef, useRoute, useRouter, useSlots } from '#imports'
+import { useRuntimeConfig, useState, useFetch, navigateTo, createError, h, resolveComponent, setResponseStatus, useNuxtApp, useRequestHeaders, ref, watch, useRequestEvent, computed, useHead, defineComponent, toRef, useRoute, useRouter, useSlots } from '#imports'
 import type { DrupalCePage, DrupalCeApiResponse } from '../../types'
 
 // Cache the dynamic import of the library loader in a single module-level
@@ -16,23 +15,6 @@ import type { DrupalCePage, DrupalCeApiResponse } from '../../types'
 // dependency order even when several <drupal-library-*> elements call it in the
 // same tick. (Per-call `import()` can resolve out of order under Vite dev.)
 let drupalLibraryLoaderPromise: Promise<typeof import('./drupalLibraryLoader')> | undefined
-
-/**
- * Renders a Drupal markup string into a display:contents wrapper.
- *
- * Kept out of useDrupalCe() so the component identity is stable across
- * renders - a component recreated per call would remount its DOM on every
- * parent update.
- */
-const MarkupRenderer = defineComponent({
-  name: 'DrupalMarkupContent',
-  props: {
-    markup: { type: String, default: '' },
-  },
-  render() {
-    return withDirectives(h('div', { style: 'display: contents' }), [[vDrupalMarkup, this.markup]])
-  },
-})
 
 export const useDrupalCe = () => {
   const config = useRuntimeConfig().public.drupalCe
@@ -478,22 +460,6 @@ export const useDrupalCe = () => {
   }
 
   /**
-   * Wraps a Drupal-rendered markup string in a vnode.
-   *
-   * The markup is applied through `v-drupal-markup` rather than `v-html` so that
-   * hydration adopts it instead of recreating it - see the directive.
-   * display:contents keeps the wrapping div invisible to layout.
-   *
-   * The directive is attached inside a component of its own because
-   * `withDirectives()` needs an active rendering instance, while
-   * `renderCustomElements()` is routinely called from `setup()`.
-   *
-   * @param markup {string} - HTML rendered by Drupal.
-   * @returns VNode
-   */
-  const renderMarkup = (markup: string): VNode => h(MarkupRenderer, { markup })
-
-  /**
    * Converts custom element data to VNodes for use in slots and render functions.
    *
    * This is the main rendering function that contains all the logic for converting
@@ -520,13 +486,14 @@ export const useDrupalCe = () => {
       return null
     }
 
-    // Handle string case: markup Drupal already rendered. It goes through
-    // drupal-markup's default slot rather than its content prop, so projects
-    // still shipping the v-html version of that component are covered too.
+    // Handle string case by creating a component that renders HTML content
     if (typeof customElements === 'string') {
-      const markup = renderMarkup(customElements)
       const component = resolveCustomElement('drupal-markup')
-      return component ? h(component, null, { default: () => markup }) : markup
+      if (component) {
+        return h(component, {content: customElements})
+      }
+      // Else fallback to a simple wrapping div.
+      return h('div', customElements)
     }
 
     // Handle empty object case
@@ -729,7 +696,6 @@ export const useDrupalCe = () => {
     getPage,
     renderCustomElements,
     renderCustomElementsToVNodes,
-    renderMarkup,
     resolveCustomElement,
     passThroughHeaders,
     getCeApiEndpoint,

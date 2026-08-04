@@ -174,15 +174,19 @@ example use `custom-element-name.vue` instead of `CustomElementName.vue`. Both v
 
 ### Rendering markup strings: the `v-drupal-markup` directive
 
-Markup strings in the API response are rendered through the `v-drupal-markup`
-directive, which the module registers app-wide. Use it in place of `v-html`
-wherever you render HTML that Drupal produced:
+Markup strings in the API response are rendered through your project's
+`drupal-markup` component. The module registers the `v-drupal-markup` directive
+app-wide — update that component (and any other place rendering HTML Drupal
+produced) to use it instead of `v-html`:
 
 ```vue
 <template>
-  <div v-drupal-markup="content" />
+  <div v-drupal-markup="content" style="display: contents" />
 </template>
 ```
+
+See `playground/components/global/drupal-markup.vue` for the full reference
+component.
 
 #### Why not `v-html`
 
