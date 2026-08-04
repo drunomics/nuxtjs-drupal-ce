@@ -559,7 +559,7 @@ export const useDrupalCe = () => {
    * <component :is> by wrapping VNode[] in a Component.
    *
    * @param customElements {CustomElementContent} - Custom element data to render.
-   *          See {@link https://github.com/drunomics/nuxtjs-drupal-ce/blob/2.x/src/types.d.ts} type definition for detailed structure documentation.
+   *          See {@link https://github.com/drunomics/nuxtjs-drupal-ce/blob/2.x/src/runtime/types.d.ts} type definition for detailed structure documentation.
    * @returns VNode | Component | null
    *          - VNode: For single elements and strings
    *          - Component: For arrays (wraps VNode[] in defineComponent for <component :is> compatibility)

@@ -8,6 +8,13 @@ export default defineConfig({
     projects: [
       {
         test: {
+          name: 'packaging',
+          include: ['test/packaging.test.ts'],
+          environment: 'node',
+        }
+      },
+      {
+        test: {
           name: 'e2e',
           include: ['test/e2e/*.{test,spec}.ts'],
           environment: 'node',
