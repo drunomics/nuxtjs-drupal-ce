@@ -33,12 +33,19 @@ export const vDrupalMarkup: ObjectDirective<HTMLElement, string | undefined> = {
   getSSRProps(binding) {
     return { innerHTML: binding.value ?? '' }
   },
-  mounted(el, binding) {
+  beforeMount(el, binding) {
     // `getSSRProps` never runs on the client, so an element mounted without
     // server-rendered DOM - client-side navigation, a form step swapped in
     // after a POST - starts out empty and has to fill itself in. After
     // hydration the element already holds the server-rendered children and is
     // left alone.
+    //
+    // `beforeMount`, not `mounted`: the write must land during patch, exactly
+    // when `v-html` used to write, so the markup already exists when any
+    // component's `onMounted` runs. Consumers scan freshly mounted markup for
+    // placeholders from `onMounted` (e.g. a captcha teleport) - a `mounted`
+    // hook write happens after those scans and before their MutationObservers
+    // attach, so it goes unseen.
     if (!el.firstChild) {
       el.innerHTML = binding.value ?? ''
     }

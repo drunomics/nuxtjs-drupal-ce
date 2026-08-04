@@ -1,6 +1,7 @@
 // @vitest-environment nuxt
 import { describe, it, expect, vi, afterEach } from 'vitest'
-import { createApp, createSSRApp, h, nextTick, ref, withDirectives } from 'vue'
+import { mountSuspended } from '@nuxt/test-utils/runtime'
+import { createApp, createSSRApp, defineAsyncComponent, defineComponent, h, nextTick, onMounted, ref, withDirectives } from 'vue'
 import { renderToString } from 'vue/server-renderer'
 import { vDrupalMarkup } from '../../src/runtime/directives/drupalMarkup'
 import DrupalMarkup from '../../playground/components/global/drupal-markup.vue'
@@ -126,5 +127,36 @@ describe('drupal-markup', () => {
     const { before, after } = await typeBeforeHydration(() => h(DrupalMarkup, { content: FORM }))
     expect(after).toBe(before)
     expect(after.value).toBe('typed before hydration')
+  })
+})
+
+describe('write timing on fresh client-side mounts', () => {
+  // The write must land during patch, like v-html: consumers scan freshly
+  // mounted markup for placeholders from onMounted (e.g. a captcha teleport),
+  // which runs before their MutationObservers attach. Under a Suspense
+  // boundary (every Nuxt page), a write in the directive's \`mounted\` hook
+  // flushes after ancestor onMounted callbacks and goes unseen. Needs
+  // mountSuspended - a plain createApp mount does not reproduce the ordering.
+  it('makes the markup visible to onMounted hooks up the tree', async () => {
+    let htmlAtMounted: string | null = null
+    // Nuxt global components are async components: their subtree mounts in
+    // the Suspense resolve flush, after ancestor onMounted callbacks would
+    // have run with a mounted-hook write.
+    const AsyncMarkup = defineAsyncComponent(() => Promise.resolve(defineComponent({
+      setup: () => () => markupVNode('<span id="probe">content</span>'),
+    })))
+    const Reader = defineComponent({
+      setup() {
+        const rootEl = ref<HTMLElement | null>(null)
+        onMounted(() => {
+          htmlAtMounted = rootEl.value?.innerHTML ?? null
+        })
+        return () => h('div', { ref: rootEl }, [h(AsyncMarkup)])
+      },
+    })
+    await mountSuspended(Reader)
+    await nextTick()
+
+    expect(htmlAtMounted).toContain('id="probe"')
   })
 })
