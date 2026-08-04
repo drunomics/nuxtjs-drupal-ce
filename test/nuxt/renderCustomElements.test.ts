@@ -66,7 +66,10 @@ describe('renderCustomElements', () => {
         template: '<component :is="component" />'
       }))
       expect(wrapper.html()).toContain(htmlString)
-      expect(wrapper.html()).toEqual('<div style="display: contents;">\n  ' + htmlString + '\n</div>')
+      // Markup strings go through drupal-markup's default slot, so the
+      // component's own content div is skipped and Vue emits a <!--v-if-->
+      // placeholder in its place.
+      expect(wrapper.html()).toEqual('<div style="display: contents;">\n  ' + htmlString + '\n</div>\n<!--v-if-->')
       expect(wrapper.text()).toBe('Hello World')
 
       // Ensure bogus html and html with multiple root nodes works.
@@ -81,7 +84,7 @@ describe('renderCustomElements', () => {
       expect(component.html()).toEqual('<div style="display: contents;">\n' +
         '  <div><input type="text"><a></a></div>\n' +
         '  <p>second element</p>\n' +
-        '</div>')
+        '</div>\n<!--v-if-->')
     })
   })
 

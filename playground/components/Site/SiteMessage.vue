@@ -3,7 +3,7 @@
     :class="['message', type]"
     @click="dismiss"
   >
-    <div v-html="message" />
+    <div v-drupal-markup="message" />
   </div>
 </template>
 
