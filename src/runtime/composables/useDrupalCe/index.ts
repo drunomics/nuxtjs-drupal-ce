@@ -308,14 +308,18 @@ export const useDrupalCe = () => {
   }
 
   /**
-   * Fetches menu data from Drupal (configured by menuEndpoint option), handles errors
+   * Creates a Nuxt async-data request for menu data from Drupal.
+   *
+   * Call this composable during component setup. For an imperative request later in
+   * the component lifecycle, pass `immediate: false` and call the returned `execute`
+   * function from the event or lifecycle hook.
+   *
    * @param name Menu name being fetched
    * @param useFetchOptions Optional Nuxt useFetch options
-   * @param overrideErrorHandler Optional error handler
    * @param skipDrupalCeApiProxy Force skip the Drupal CE API proxy. Defaults to false.
    *                             The proxy might still be skipped if serverApiProxy is set to false globally.
    */
-  const fetchMenu = async (name: string, useFetchOptions: UseFetchOptions<any> = {}, overrideErrorHandler?: (error?: any) => void, skipDrupalCeApiProxy: boolean = false) => {
+  const useMenu = (name: string, useFetchOptions: UseFetchOptions<any> = {}, skipDrupalCeApiProxy: boolean = false): AsyncData<any, any> => {
     const nuxtApp = useNuxtApp()
     useFetchOptions = processFetchOptions(useFetchOptions)
     useFetchOptions.key = useFetchOptions.key || `menu-${name}`
@@ -350,7 +354,24 @@ export const useDrupalCe = () => {
       useFetchOptions.baseURL = getDrupalBaseUrl() + getCeApiEndpoint(false)
     }
 
-    const { data: menu, error } = await useFetch(menuPath, useFetchOptions)
+    return useFetch(menuPath, useFetchOptions)
+  }
+
+  /**
+   * Fetches menu data from Drupal (configured by menuEndpoint option), handles errors.
+   *
+   * This convenience helper must be called during component setup because it uses
+   * Nuxt's useFetch lifecycle internally. Use useMenu() when a deferred request needs
+   * to be executed from onMounted, a watcher, or an event handler.
+   *
+   * @param name Menu name being fetched
+   * @param useFetchOptions Optional Nuxt useFetch options
+   * @param overrideErrorHandler Optional error handler
+   * @param skipDrupalCeApiProxy Force skip the Drupal CE API proxy. Defaults to false.
+   *                             The proxy might still be skipped if serverApiProxy is set to false globally.
+   */
+  const fetchMenu = async (name: string, useFetchOptions: UseFetchOptions<any> = {}, overrideErrorHandler?: (error?: any) => void, skipDrupalCeApiProxy: boolean = false) => {
+    const { data: menu, error } = await useMenu(name, useFetchOptions, skipDrupalCeApiProxy)
 
     if (error.value) {
       overrideErrorHandler ? overrideErrorHandler(error) : menuErrorHandler(error)
@@ -695,6 +716,7 @@ export const useDrupalCe = () => {
     useCeApi,
     loadLibrary,
     fetchPage,
+    useMenu,
     fetchMenu,
     getMessages,
     getPage,
