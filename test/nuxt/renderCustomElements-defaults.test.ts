@@ -1,5 +1,5 @@
 // @vitest-environment nuxt
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeAll } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import { defineComponent, useNuxtApp } from '#imports'
 import { useDrupalCe } from '../../src/runtime/composables/useDrupalCe'
@@ -23,10 +23,14 @@ describe('Custom Element Fallback Tests', () => {
     template: `<div class="node"><h2>Node Default Component</h2>{{ content }}</div>`
   })
 
-  const app = useNuxtApp()
-  app.vueApp.component('NodeArticleDemo', NodeArticleDemo)
-  app.vueApp.component('NodeArticleDefault', NodeArticleDefault)
-  app.vueApp.component('NodeDefault', NodeDefault)
+  // Registered in beforeAll: the nuxt app instance only exists once the
+  // environment has initialized, after test collection.
+  beforeAll(() => {
+    const app = useNuxtApp()
+    app.vueApp.component('NodeArticleDemo', NodeArticleDemo)
+    app.vueApp.component('NodeArticleDefault', NodeArticleDefault)
+    app.vueApp.component('NodeDefault', NodeDefault)
+  })
 
   const createTestComponent = (elementData) => defineComponent({
     setup() {

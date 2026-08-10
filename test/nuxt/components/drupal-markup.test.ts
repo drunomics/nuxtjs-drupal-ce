@@ -1,12 +1,18 @@
 // test/unit/components/drupal-markup.test.ts
 // @vitest-environment nuxt
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeAll } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import { defineComponent } from 'vue'
 import { useDrupalCe } from '../../../src/runtime/composables/useDrupalCe'
 
 describe('drupal-markup custom element', () => {
-  const { renderCustomElements } = useDrupalCe()
+  // Resolved in beforeAll: the nuxt app instance only exists once the
+  // environment has initialized, after test collection.
+  let renderCustomElements: ReturnType<typeof useDrupalCe>['renderCustomElements']
+
+  beforeAll(() => {
+    ({ renderCustomElements } = useDrupalCe())
+  })
   const addWrappingDiv = (children: string): string => '<div style="display: contents;">\n  ' + children + '\n</div>'
 
   describe('content prop', () => {
