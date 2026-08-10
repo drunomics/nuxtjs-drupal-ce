@@ -1,12 +1,14 @@
 // @vitest-environment nuxt
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeAll } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
 import { defineComponent } from 'vue'
 import { useDrupalCe } from '../../src/runtime/composables/useDrupalCe'
 import { useNuxtApp } from '#imports'
 
 describe('renderCustomElements - Explicit Format', () => {
-  const { renderCustomElements } = useDrupalCe()
+  // Resolved in beforeAll: the nuxt app instance only exists once the
+  // environment has initialized, after test collection.
+  let renderCustomElements: ReturnType<typeof useDrupalCe>['renderCustomElements']
 
   // Define reusable test components
   const TestComponent = defineComponent({
@@ -40,9 +42,12 @@ describe('renderCustomElements - Explicit Format', () => {
     `,
   })
 
-  const app = useNuxtApp()
-  app.vueApp.component('TestComponent', TestComponent)
-  app.vueApp.component('SlotComponent', SlotComponent)
+  beforeAll(() => {
+    ({ renderCustomElements } = useDrupalCe())
+    const app = useNuxtApp()
+    app.vueApp.component('TestComponent', TestComponent)
+    app.vueApp.component('SlotComponent', SlotComponent)
+  })
 
   describe('props only', () => {
     it('should render element with props only', async () => {
