@@ -253,11 +253,15 @@ export const useDrupalCe = () => {
 
     // Handle redirect
     if (pageRef.value?.redirect) {
+      const redirect = pageRef.value.redirect
       await callWithNuxt(nuxtApp, navigateTo, [
-        pageRef.value.redirect.url,
-        { external: pageRef.value.redirect.external, redirectCode: pageRef.value.redirect.statusCode, replace: true },
+        redirect.url,
+        { external: redirect.external, redirectCode: redirect.statusCode, replace: true },
       ])
-      pageRef.value = createEmptyPage()
+      // Return an empty page without touching pageRef: pageRef is bound to
+      // the useFetch payload cache entry, overwriting it would poison the
+      // cache with an empty page and drop the redirect on repeat visits.
+      pageRef = ref(createEmptyPage())
     }
     // Handle error
     else if (error) {
@@ -555,7 +559,7 @@ export const useDrupalCe = () => {
    * <component :is> by wrapping VNode[] in a Component.
    *
    * @param customElements {CustomElementContent} - Custom element data to render.
-   *          See {@link https://github.com/drunomics/nuxtjs-drupal-ce/blob/2.x/src/types.d.ts} type definition for detailed structure documentation.
+   *          See {@link https://github.com/drunomics/nuxtjs-drupal-ce/blob/2.x/src/runtime/types.d.ts} type definition for detailed structure documentation.
    * @returns VNode | Component | null
    *          - VNode: For single elements and strings
    *          - Component: For arrays (wraps VNode[] in defineComponent for <component :is> compatibility)

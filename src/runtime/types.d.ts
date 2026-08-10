@@ -1,4 +1,5 @@
-import type { ModuleOptions } from './module'
+import type { NuxtOptions } from '@nuxt/schema'
+import type { ModuleOptions } from '../module'
 
 /**
  * Explicit format custom element with separated props and slots

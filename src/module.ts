@@ -1,6 +1,6 @@
 import { defineNuxtModule, addPlugin, addServerPlugin, createResolver, addImportsDir, addServerHandler, addImports, installModule } from '@nuxt/kit'
 import { defu } from 'defu'
-import type { NuxtOptionsWithDrupalCe } from './types'
+import type { NuxtOptionsWithDrupalCe } from './runtime/types'
 
 function getCorsOrigin(nuxt: any): string | null {
   // Check environment variable first (higher priority), then runtimeConfig.
@@ -164,7 +164,7 @@ export default defineNuxtModule<ModuleOptions>({
     addImports([
       {
         name: 'CustomElementContent',
-        from: resolve('./types.d.ts'),
+        from: resolve('./runtime/types.d.ts'),
         type: true
       },
     ])

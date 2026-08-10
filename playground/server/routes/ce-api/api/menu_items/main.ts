@@ -32,6 +32,22 @@ export default defineEventHandler(() => [
     options: [] 
   },
   {
+    key: 'redirecting-page',
+    title: 'Redirecting page',
+    description: null,
+    uri: 'redirect-to-3',
+    alias: 'redirect-to-3',
+    external: false,
+    absolute: 'https:\/\/8080-drunomics-lupusdecouple-fd0ilwlpax7.ws-eu84.gitpod.io\/redirect-to-3',
+    relative: '\/redirect-to-3',
+    existing: true,
+    weight: '0',
+    expanded: false,
+    enabled: true,
+    uuid: 'redirecting-page',
+    options: []
+  },
+  {
     key: 'layout-builder-demo',
     title: 'Layout',
     description: null,
