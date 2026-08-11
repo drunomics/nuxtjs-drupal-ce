@@ -48,6 +48,22 @@ export default defineEventHandler(() => [
     options: []
   },
   {
+    key: 'states-form-demo',
+    title: 'Conditional form',
+    description: null,
+    uri: 'form\/states',
+    alias: 'form\/states',
+    external: false,
+    absolute: 'https:\/\/8080-drunomics-lupusdecouple-fd0ilwlpax7.ws-eu84.gitpod.io\/form\/states',
+    relative: '\/form\/states',
+    existing: true,
+    weight: '0',
+    expanded: false,
+    enabled: true,
+    uuid: 'states-form-demo',
+    options: []
+  },
+  {
     key: 'layout-builder-demo',
     title: 'Layout',
     description: null,
