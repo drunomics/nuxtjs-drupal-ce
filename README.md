@@ -228,45 +228,17 @@ x node-custom--default.vue
 
 ## Loading Drupal JavaScript libraries
 
-Drupal attaches JavaScript libraries to the render arrays it converts to custom
-elements - form `#states`, autocomplete, module behaviors. The backend emits
-one `drupal-library-*` element per attached library alongside the markup, in
-dependency order, each carrying the library's resolved JS files; the first one
-also carries the merged `drupalSettings` as a JSON string:
+The backend emits the JavaScript libraries attached to a rendered form, block or
+component as `drupal-library-*` elements. To load them, add a global
+`drupal-library--default.vue` component - see
+`playground/components/global/drupal-library--default.vue` for a renderless
+reference component handing the library to `useDrupalCe().loadLibrary()`, and
+`/form/states` in the playground for a form whose conditional field is driven
+this way.
 
-```json
-{
-  "element": "drupal-library-core-drupal-states",
-  "props": {
-    "library": "core/drupal.states",
-    "js": [{ "url": "/core/misc/states.js?v=11.3.13", "attributes": [] }],
-    "drupalSettings": "{\"ajaxTrustedUrl\":{\"form_action_p_4kMHZg\":true}}"
-  }
-}
-```
-
-To load them, add a global `drupal-library--default.vue` component - the
-default-component lookup resolves it for every `drupal-library-*` element. It is
-renderless and hands the library to `useDrupalCe().loadLibrary()`; see
-`playground/components/global/drupal-library--default.vue` for the reference
-component, and `/form/states` in the playground for a form whose conditional
-field is driven this way.
-
-`loadLibrary()` lazy-loads the actual loader, so pages that render no library
-never fetch it. The loader resolves the file URLs against `drupalBaseUrl`,
-appends them as `<script>` tags in the requested order, loads each URL once
-across all libraries, merges `drupalSettings` into `window.drupalSettings`
-before any script runs, and calls `Drupal.attachBehaviors()` once the batch has
-loaded. A file that fails to load is skipped with a warning rather than
-aborting the batch. Stylesheets are not loaded: the frontend brings its own.
-
-### Overriding a library
-
-To replace a library with a native implementation, or to skip it, add a
-component named after its element tag - `drupal-library-core-drupal-states.vue`
-for `core/drupal.states`. It takes precedence over the default component, so the
-library's JS is never loaded; a component rendering nothing skips the library
-entirely.
+Docs: [Drupal JS libraries](https://lupus-decoupled.org/nuxt/drupal-libraries)
+for the Nuxt side, [Drupal JavaScript](https://lupus-decoupled.org/advanced-topics/drupal-javascript)
+for what the backend sends.
 
 ## Component Preview Integration
 
