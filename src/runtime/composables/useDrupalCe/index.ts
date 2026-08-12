@@ -318,7 +318,6 @@ export const useDrupalCe = () => {
   const fetchMenu = async (name: string, useFetchOptions: UseFetchOptions<any> = {}, overrideErrorHandler?: (error?: any) => void, skipDrupalCeApiProxy: boolean = false) => {
     const nuxtApp = useNuxtApp()
     useFetchOptions = processFetchOptions(useFetchOptions)
-    useFetchOptions.key = useFetchOptions.key || `menu-${name}`
     useFetchOptions.getCachedData = (key) => {
       if (nuxtApp.payload.data[key]) {
         return nuxtApp.payload.data[key]
@@ -341,6 +340,13 @@ export const useDrupalCe = () => {
     else {
       menuPath.value = sanitizeMenuPath(menuPath.value)
     }
+
+    // The key must vary with the localized menu path: with a fixed key,
+    // getCachedData keeps serving the previous language's menu from the
+    // payload cache after a locale switch. Deriving the key from menuPath
+    // also keeps key and request URL in sync (a single reactive source),
+    // so the refetch cannot race between old URL and new key.
+    useFetchOptions.key = useFetchOptions.key || computed(() => `menu-${name}--${menuPath.value}`)
 
     // Override baseURL specifically for menu endpoints
     if (config.serverApiProxy && !skipDrupalCeApiProxy) {

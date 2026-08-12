@@ -1,5 +1,5 @@
 // @vitest-environment nuxt
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { registerEndpoint } from '@nuxt/test-utils/runtime'
 import { useDrupalCe } from '../../src/runtime/composables/useDrupalCe'
 import { useNuxtApp } from '#imports'
@@ -84,6 +84,22 @@ describe('fetchPage and fetchMenu use the right API endpoints', () => {
         const { fetchMenu } = useDrupalCe()
         const result = await fetchMenu('main', { key: 'main-localized-direct' }, undefined, true)
         expect(result.value?.items?.[0]?.title).toBe('Direct API Menu FR')
+      })
+
+      it('refetches the menu when the locale changes', async () => {
+        const nuxtApp = useNuxtApp()
+        const locale = ref('en')
+        nuxtApp.$i18n = { locale, defaultLocale: 'en' }
+        nuxtApp.$localePath = (path: string) => locale.value === 'en' ? path : `/${locale.value}${path}`
+
+        const { fetchMenu } = useDrupalCe()
+        const result = await fetchMenu('main')
+        expect(result.value?.items?.[0]?.title).toBe('Via Proxy Menu')
+
+        locale.value = 'fr'
+        await vi.waitFor(() => {
+          expect(result.value?.items?.[0]?.title).toBe('Via Proxy Menu FR')
+        })
       })
     })
   })
