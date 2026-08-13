@@ -9,7 +9,7 @@ export default defineConfig({
       {
         test: {
           name: 'packaging',
-          include: ['test/packaging.test.ts'],
+          include: ['test/*.{test,spec}.ts'],
           environment: 'node',
         }
       },
