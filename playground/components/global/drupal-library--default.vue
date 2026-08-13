@@ -1,6 +1,5 @@
 <script lang="ts">
 import { defineComponent, onMounted, type PropType } from 'vue'
-import { useDrupalCe } from '../../../src/runtime/composables/useDrupalCe'
 
 /**
  * A single JS file of a Drupal library, as emitted by the backend.
