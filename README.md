@@ -226,6 +226,20 @@ x node-custom--default.vue
 ✓ node--default.vue
 ```
 
+## Loading Drupal JavaScript libraries
+
+The backend emits the JavaScript libraries attached to a rendered form, block or
+component as `drupal-library-*` elements. To load them, add a global
+`drupal-library--default.vue` component - see
+`playground/components/global/drupal-library--default.vue` for a renderless
+reference component handing the library to `useDrupalCe().loadLibrary()`, and
+`/form/states` in the playground for a form whose conditional field is driven
+this way.
+
+Docs: [Drupal JS libraries](https://lupus-decoupled.org/nuxt/drupal-libraries)
+for the Nuxt side, [Drupal JavaScript](https://lupus-decoupled.org/advanced-topics/drupal-javascript)
+for what the backend sends.
+
 ## Component Preview Integration
 
 Built-in support for [nuxt-component-preview](https://github.com/drunomics/nuxt-component-preview) enables fully-rendered component previews in Drupal and easy Drupal Canvas integration. It works automatically with your `drupalBaseUrl` - CORS is configured automatically.
