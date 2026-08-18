@@ -108,6 +108,71 @@ function deepMerge(target: Record<string, unknown>, source: Record<string, unkno
 }
 
 /**
+ * Rewrites root-relative URLs in the AJAX section of drupalSettings to absolute
+ * backend URLs, mutating `settings` in place.
+ *
+ * Core builds a form element's `#ajax` url from `Url::fromRoute('<current>')`,
+ * which serialises to a root-relative path (e.g. `/form/x?…`). On a decoupled
+ * page that resolves against the *frontend* origin, so `Drupal.ajax` would POST
+ * to the frontend, which runs no Drupal, and the request never reaches the
+ * backend (the managed_file upload symptom: clicking "Upload" produces no
+ * request at all). Rewriting the url — and the optional progress url — against
+ * the backend base URL points it at the backend, which serves the frontend's
+ * origin with credentialed CORS.
+ *
+ * `ajaxTrustedUrl` is re-keyed to match: `ajax.js` throws "The callback URL is
+ * not local and not trusted" for a cross-origin url absent from that map, and
+ * trusted urls also bypass its multipart-upload response-token check. Idempotent
+ * — an already-absolute url passes through `absoluteUrl` unchanged.
+ */
+function absolutizeAjaxSettings(settings: Record<string, unknown>, baseUrl: string): void {
+  const ajax = settings.ajax
+  if (isPlainObject(ajax)) {
+    for (const entry of Object.values(ajax)) {
+      if (!isPlainObject(entry)) {
+        continue
+      }
+      if (typeof entry.url === 'string') {
+        entry.url = absoluteUrl(entry.url, baseUrl)
+      }
+      const progress = entry.progress
+      if (isPlainObject(progress) && typeof progress.url === 'string') {
+        progress.url = absoluteUrl(progress.url, baseUrl)
+      }
+    }
+  }
+  const trusted = settings.ajaxTrustedUrl
+  if (isPlainObject(trusted)) {
+    const rekeyed: Record<string, unknown> = {}
+    for (const [url, value] of Object.entries(trusted)) {
+      rekeyed[absoluteUrl(url, baseUrl)] = value
+    }
+    settings.ajaxTrustedUrl = rekeyed
+  }
+}
+
+/**
+ * Injects, once, the single CSS rule that hides `.js-hide` elements.
+ *
+ * Core ships `.js .js-hide { display: none }` in its `system/base` CSS, which a
+ * decoupled frontend deliberately never loads. Without it, elements Drupal marks
+ * as JS-only stay visible — e.g. a managed_file element's "Upload" button, which
+ * is `js-hide` because its auto-upload behaviour replaces it; left visible,
+ * users click it and fall through to a plain submit. `core/drupal`
+ * (misc/drupal.init.js) already adds the `js` class to <html>, so the core
+ * selector applies as-is once this rule is present.
+ */
+function ensureDrupalBaseStyles(): void {
+  if (document.querySelector('style[data-drupal-base-styles]')) {
+    return
+  }
+  const style = document.createElement('style')
+  style.dataset.drupalBaseStyles = ''
+  style.textContent = '.js .js-hide{display:none}'
+  document.head.appendChild(style)
+}
+
+/**
  * Runs Drupal.attachBehaviors on the document, if Drupal has loaded.
  *
  * Safe to call repeatedly: Drupal's `once()` prevents re-processing.
@@ -133,10 +198,17 @@ function attachBehaviors(): void {
  * @returns A promise that settles once this library's files have loaded.
  */
 export function loadDrupalLibrary(library: DrupalResolvedLibrary, baseUrl: string): Promise<void> {
+  // Supply the js-hide rule core would have shipped in its (never-loaded) base
+  // CSS, whenever any Drupal library is about to run.
+  ensureDrupalBaseStyles()
+
   if (library.drupalSettings) {
     try {
       const win = window as unknown as { drupalSettings?: Record<string, unknown> }
       win.drupalSettings = deepMerge(win.drupalSettings ?? {}, JSON.parse(library.drupalSettings))
+      // The merged settings carry the backend's root-relative AJAX urls; point
+      // them at the backend so Drupal.ajax reaches it instead of the frontend.
+      absolutizeAjaxSettings(win.drupalSettings, baseUrl)
     }
     catch (error) {
       console.error('[drupal-library] invalid drupalSettings', error)
