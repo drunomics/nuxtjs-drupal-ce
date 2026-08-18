@@ -152,27 +152,6 @@ function absolutizeAjaxSettings(settings: Record<string, unknown>, baseUrl: stri
 }
 
 /**
- * Injects, once, the single CSS rule that hides `.js-hide` elements.
- *
- * Core ships `.js .js-hide { display: none }` in its `system/base` CSS, which a
- * decoupled frontend deliberately never loads. Without it, elements Drupal marks
- * as JS-only stay visible — e.g. a managed_file element's "Upload" button, which
- * is `js-hide` because its auto-upload behaviour replaces it; left visible,
- * users click it and fall through to a plain submit. `core/drupal`
- * (misc/drupal.init.js) already adds the `js` class to <html>, so the core
- * selector applies as-is once this rule is present.
- */
-function ensureDrupalBaseStyles(): void {
-  if (document.querySelector('style[data-drupal-base-styles]')) {
-    return
-  }
-  const style = document.createElement('style')
-  style.dataset.drupalBaseStyles = ''
-  style.textContent = '.js .js-hide{display:none}'
-  document.head.appendChild(style)
-}
-
-/**
  * Runs Drupal.attachBehaviors on the document, if Drupal has loaded.
  *
  * Safe to call repeatedly: Drupal's `once()` prevents re-processing.
@@ -198,10 +177,6 @@ function attachBehaviors(): void {
  * @returns A promise that settles once this library's files have loaded.
  */
 export function loadDrupalLibrary(library: DrupalResolvedLibrary, baseUrl: string): Promise<void> {
-  // Supply the js-hide rule core would have shipped in its (never-loaded) base
-  // CSS, whenever any Drupal library is about to run.
-  ensureDrupalBaseStyles()
-
   if (library.drupalSettings) {
     try {
       const win = window as unknown as { drupalSettings?: Record<string, unknown> }

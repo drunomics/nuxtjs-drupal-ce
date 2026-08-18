@@ -26,13 +26,9 @@ describe('drupalLibraryLoader', () => {
     if (!globalThis.CSS) {
       globalThis.CSS = { escape: (s: string) => s } as unknown as typeof CSS
     }
-    // The DOM persists across tests; drop any base-styles <style> a prior test
-    // injected so the once-guard starts clean.
-    document.head.querySelectorAll('style[data-drupal-base-styles]').forEach(el => el.remove())
 
     // Mock script insertion: record scripts and fire onload on the next
-    // microtask. Non-scripts (the injected base-styles <style>) are inserted for
-    // real so the loader's once-guard querySelector can find them.
+    // microtask.
     vi.spyOn(document.head, 'appendChild').mockImplementation(((el: HTMLElement) => {
       if (el.tagName === 'SCRIPT') {
         injected.push(el as HTMLScriptElement)
@@ -120,13 +116,5 @@ describe('drupalLibraryLoader', () => {
     const seeded = (window as unknown as { drupalSettings: typeof settings }).drupalSettings
     expect(seeded.ajax.btn.url).toBe('http://backend/form/x')
     expect(seeded.ajaxTrustedUrl).toEqual({ 'http://backend/form/x': true })
-  })
-
-  it('injects the js-hide rule once, even across calls', async () => {
-    await loadDrupalLibrary({ js: [{ url: '/a.js' }] }, 'http://backend')
-    await loadDrupalLibrary({ js: [{ url: '/b.js' }] }, 'http://backend')
-    const styles = document.head.querySelectorAll('style[data-drupal-base-styles]')
-    expect(styles).toHaveLength(1)
-    expect(styles[0]!.textContent).toContain('.js .js-hide')
   })
 })
