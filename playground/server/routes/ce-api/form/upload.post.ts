@@ -14,6 +14,10 @@ export default defineEventHandler((event) => {
   if (query.ajax_form) {
     setResponseHeader(event, 'X-Drupal-Ajax-Token', '1')
     setResponseHeader(event, 'Content-Type', 'application/json')
+    // An allow-listed header (in the default passThroughHeaders) and one that is
+    // not, to prove the proxy obeys the configured allow-list on AJAX responses.
+    setResponseHeader(event, 'X-Drupal-Cache', 'MISS')
+    setResponseHeader(event, 'X-Custom-Debug', 'should-be-dropped')
     return [
       {
         command: 'insert',

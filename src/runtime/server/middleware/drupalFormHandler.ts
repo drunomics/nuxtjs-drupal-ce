@@ -1,22 +1,17 @@
-import { defineEventHandler, readFormData, setResponseStatus, setResponseHeader } from 'h3'
+import { defineEventHandler, readFormData, setResponseStatus, appendResponseHeader } from 'h3'
 import { getDrupalBaseUrl, headersToRecord } from '../../composables/useDrupalCe/server'
 import { useRuntimeConfig } from '#imports'
 
 /**
- * Response headers that must not be copied verbatim when a proxied Drupal AJAX
- * response is returned. The body is re-serialised on the way out, so a copied
- * content-length / content-encoding would be wrong, and the rest are hop-by-hop.
+ * The X-Drupal-Ajax-Token verification header is always passed through on a
+ * proxied AJAX form response: ajax.js rejects an AJAX command response that
+ * lacks it. Every other response header obeys the configured passThroughHeaders
+ * allow-list.
  */
-const AJAX_HOP_BY_HOP_HEADERS = new Set([
-  'content-length',
-  'content-encoding',
-  'transfer-encoding',
-  'connection',
-  'keep-alive',
-])
+const AJAX_REQUIRED_HEADER = 'x-drupal-ajax-token'
 
 export default defineEventHandler(async (event) => {
-  const { disableFormHandler } = useRuntimeConfig().drupalCe
+  const { disableFormHandler, passThroughHeaders } = useRuntimeConfig().drupalCe
   const { ceApiEndpoint, fetchProxyHeaders, fetchOptions } = useRuntimeConfig().public.drupalCe
 
   // Skip API proxy routes - we don't want to handle them here.
@@ -112,17 +107,24 @@ export default defineEventHandler(async (event) => {
   if (isAjaxForm) {
     if (response) {
       setResponseStatus(event, response.status)
-      // Pass the backend response headers through so ajax.js sees the
-      // X-Drupal-Ajax-Token verification header (and Set-Cookie), then return
-      // the AJAX command payload directly — short-circuiting the SSR render.
-      for (const [name, value] of response.headers.entries()) {
-        if (!AJAX_HOP_BY_HOP_HEADERS.has(name.toLowerCase())) {
-          setResponseHeader(event, name, value)
+      // Obey the configured passThroughHeaders allow-list (same setting the SSR
+      // page-render path uses), plus the X-Drupal-Ajax-Token header ajax.js
+      // requires, then return the AJAX command payload directly — short-circuiting
+      // the SSR render.
+      const allowed = new Set(
+        [...(Array.isArray(passThroughHeaders) ? passThroughHeaders : []), AJAX_REQUIRED_HEADER]
+          .map(name => name.toLowerCase()),
+      )
+      const responseHeaders = headersToRecord(response.headers)
+      for (const [name, value] of Object.entries(responseHeaders)) {
+        if (!allowed.has(name.toLowerCase())) {
+          continue
         }
-      }
-      const setCookies = response.headers.getSetCookie?.() ?? []
-      if (setCookies.length > 1) {
-        setResponseHeader(event, 'set-cookie', setCookies)
+        // headersToRecord keeps multiple Set-Cookie values as an array; append
+        // each one so they are not comma-joined into a single invalid header.
+        for (const v of Array.isArray(value) ? value : [value]) {
+          appendResponseHeader(event, name, v)
+        }
       }
       return response._data
     }

@@ -114,6 +114,10 @@ describe('Drupal form handler', async () => {
     expect(response.headers.get('content-type')).toContain('application/json')
     // The verification header must survive the proxy or ajax.js rejects the response.
     expect(response.headers.get('x-drupal-ajax-token')).toBe('1')
+    // Other response headers obey the configured passThroughHeaders allow-list:
+    // an allow-listed one passes, a non-listed one is dropped.
+    expect(response.headers.get('x-drupal-cache')).toBe('MISS')
+    expect(response.headers.get('x-custom-debug')).toBe(null)
 
     const data = await response.json()
     expect(Array.isArray(data)).toBe(true)
