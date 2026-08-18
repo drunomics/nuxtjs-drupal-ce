@@ -125,6 +125,24 @@ describe('drupalLibraryLoader', () => {
     expect(seeded.ajaxPageState).toEqual({ theme: 'olivero', theme_token: 'tok', libraries: 'abc' })
   })
 
+  it('reports loaded library names as ajaxPageState.libraries so the backend skips their assets', async () => {
+    // The backend diffs its AJAX-response assets against ajaxPageState.libraries.
+    // Reporting what the drupal-library components loaded (a plain comma list)
+    // stops it re-sending add_css/add_js for libraries already on the page, and a
+    // non-empty list avoids the empty-'' entry that trips core's asset resolver.
+    await loadDrupalLibrary(
+      { name: 'core/drupal.ajax', js: [{ url: '/ajax.js' }], drupalSettings: '{"ajax":{"edit-x":{"url":"/form/x?ajax_form=1"}}}' },
+      'http://backend',
+    )
+    // A later element carries only its name (drupalSettings is on the first only).
+    await loadDrupalLibrary(
+      { name: 'webform/webform.element.managed_file', js: [{ url: '/managed-file.js' }] },
+      'http://backend',
+    )
+    const seeded = (window as unknown as { drupalSettings: { ajaxPageState: { libraries: string } } }).drupalSettings
+    expect(seeded.ajaxPageState.libraries).toBe('core/drupal.ajax,webform/webform.element.managed_file')
+  })
+
   it('keeps AJAX urls root-relative so they route through the same-origin form proxy', async () => {
     // The AJAX callback url must stay root-relative: it then resolves against the
     // frontend origin, where the drupalFormHandler middleware proxies the request

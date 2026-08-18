@@ -47,7 +47,7 @@ export default defineComponent({
     const { loadLibrary } = useDrupalCe()
 
     onMounted(() => {
-      loadLibrary({ js: props.js, drupalSettings: props.drupalSettings })
+      loadLibrary({ name: props.library, js: props.js, drupalSettings: props.drupalSettings })
     })
 
     // Renderless: emit no markup.

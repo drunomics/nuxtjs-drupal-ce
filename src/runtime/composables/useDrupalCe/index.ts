@@ -677,7 +677,7 @@ export const useDrupalCe = () => {
    * files (in dependency order) and merged drupalSettings on the corresponding
    * <drupal-library-*> custom element; this just loads them.
    *
-   * @param library The resolved library ({ js, drupalSettings }) from the
+   * @param library The resolved library ({ name, js, drupalSettings }) from the
    *   backend-generated <drupal-library-*> element.
    * @returns Promise settling once the library's JS has loaded (client-side);
    *   resolves immediately on the server.
