@@ -51,6 +51,22 @@ function absoluteUrl(url: string, baseUrl: string): string {
 }
 
 /**
+ * Whether to skip loading a given Drupal JS file.
+ *
+ * `core/misc/drupalSettingsLoader.js` unconditionally resets
+ * `window.drupalSettings` to `{}` and repopulates it only from a
+ * `drupal-settings-json` element, which a CE-rendered page never emits. On the
+ * decoupled frontend we own drupalSettings ourselves (see seedDrupalSettings),
+ * so running it would just wipe our merged settings. Skip it.
+ *
+ * @param url - Root-relative or absolute JS URL from the backend.
+ * @returns True if the file should not be loaded.
+ */
+function skipScript(url: string): boolean {
+  return /\/core\/misc\/drupalSettingsLoader\.js(\?|$)/.test(url)
+}
+
+/**
  * Injects a `<script>` for the given source, once.
  *
  * Already-loaded sources resolve immediately. A load error resolves (not
@@ -110,16 +126,11 @@ function deepMerge(target: Record<string, unknown>, source: Record<string, unkno
 /**
  * Seeds drupalSettings for the decoupled page.
  *
- * Merges the backend's settings into `window.drupalSettings` and writes them to
- * the `drupal-settings-json` `<script>` element that core's
- * `drupalSettingsLoader.js` reads. That element is essential:
- * `drupalSettingsLoader.js` unconditionally resets `window.drupalSettings` to
- * `{}` and only repopulates it from that element, so a plain in-memory merge is
- * wiped the moment core JS runs and behaviours (e.g. AJAX, which builds its
- * instances from `drupalSettings.ajax`) then see empty settings. Writing the
- * full merged settings to the element keeps them intact whenever
- * `drupalSettingsLoader.js` runs; the in-memory merge covers the window before
- * it does, and the case where it has already loaded and will not run again.
+ * Merges the backend's settings into `window.drupalSettings` in memory. This is
+ * the sole owner of `drupalSettings` on the decoupled frontend: core's
+ * `drupalSettingsLoader.js` (which would reset the global to `{}` and repopulate
+ * it from a `drupal-settings-json` element that a CE page never emits) is
+ * skipped at load time (see skipScript), so nothing wipes this merge.
  *
  * @param json - The backend's merged drupalSettings as a JSON string.
  */
@@ -130,21 +141,15 @@ function seedDrupalSettings(json: string): void {
     // ajaxPageState must exist for core's ajax.js: Drupal.Ajax.beforeSerialize()
     // reads drupalSettings.ajaxPageState.{theme,theme_token,libraries} and throws
     // (swallowed by Ajax.execute()) if it is absent, so no request is ever sent.
-    // The backend omits it from a CE-rendered form; default it so the first
-    // request works, then the AJAX response's own ajaxPageState takes over.
+    // The backend omits it from a CE-rendered form; a minimal stub is enough —
+    // an empty theme resolves to the default theme on the backend, and empty
+    // libraries only means the first AJAX response re-sends its (aggregated)
+    // assets. We deliberately do not track loaded libraries here: the frontend
+    // loads them through the drupal-library components, not this mechanism.
     if (!merged.ajaxPageState) {
       merged.ajaxPageState = { theme: '', theme_token: null, libraries: '' }
     }
     win.drupalSettings = merged
-    const selector = 'script[data-drupal-selector="drupal-settings-json"]'
-    let el = document.querySelector<HTMLScriptElement>(selector)
-    if (!el) {
-      el = document.createElement('script')
-      el.type = 'application/json'
-      el.dataset.drupalSelector = 'drupal-settings-json'
-      document.head.appendChild(el)
-    }
-    el.textContent = JSON.stringify(merged)
   }
   catch (error) {
     console.error('[drupal-library] invalid drupalSettings', error)
@@ -180,7 +185,9 @@ export function loadDrupalLibrary(library: DrupalResolvedLibrary, baseUrl: strin
     seedDrupalSettings(library.drupalSettings)
   }
 
-  const urls = (library.js ?? []).map(file => absoluteUrl(file.url, baseUrl))
+  const urls = (library.js ?? [])
+    .filter(file => !skipScript(file.url))
+    .map(file => absoluteUrl(file.url, baseUrl))
 
   pending++
   const done = queue

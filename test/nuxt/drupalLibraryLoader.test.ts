@@ -81,20 +81,27 @@ describe('drupalLibraryLoader', () => {
       .toEqual({ my_module: { some_key: 'value' }, ajaxPageState: { theme: '', theme_token: null, libraries: '' } })
   })
 
-  it('writes a drupal-settings-json <script> so core drupalSettingsLoader.js repopulates instead of wiping settings', async () => {
+  it('skips core drupalSettingsLoader.js so it cannot wipe the in-memory settings', async () => {
+    // core/misc/drupalSettingsLoader.js resets window.drupalSettings to {} and
+    // only repopulates it from a drupal-settings-json element that a CE page
+    // never emits. Loading it would drop the AJAX settings (and thus the
+    // managed_file upload's Drupal.ajax instance), so it must not be injected.
     await loadDrupalLibrary(
-      { js: [{ url: '/core/misc/drupalSettingsLoader.js' }], drupalSettings: '{"ajax":{"edit-x":{"url":"/form/x?ajax_form=1"}}}' },
+      {
+        js: [
+          { url: '/core/misc/drupalSettingsLoader.js?v=11.4.5' },
+          { url: '/core/misc/drupal.js?v=1' },
+        ],
+        drupalSettings: '{"ajax":{"edit-x":{"url":"/form/x?ajax_form=1"}}}',
+      },
       'http://backend',
     )
-    // core/misc/drupalSettingsLoader.js resets window.drupalSettings to {} and
-    // only repopulates it from this element; without it the AJAX settings (and
-    // thus the managed_file upload's Drupal.ajax instance) are lost.
-    const el = injected.find(s => s.type === 'application/json' && s.dataset.drupalSelector === 'drupal-settings-json')
-    expect(el).toBeDefined()
-    expect(JSON.parse(el!.textContent!)).toEqual({
-      ajax: { 'edit-x': { url: '/form/x?ajax_form=1' } },
-      ajaxPageState: { theme: '', theme_token: null, libraries: '' },
-    })
+    expect(injected.map(s => s.src)).toEqual(['http://backend/core/misc/drupal.js?v=1'])
+    expect((window as unknown as { drupalSettings: Record<string, unknown> }).drupalSettings)
+      .toEqual({
+        ajax: { 'edit-x': { url: '/form/x?ajax_form=1' } },
+        ajaxPageState: { theme: '', theme_token: null, libraries: '' },
+      })
   })
 
   it('defaults drupalSettings.ajaxPageState so Ajax.beforeSerialize does not throw', async () => {
