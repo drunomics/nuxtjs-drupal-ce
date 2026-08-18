@@ -81,7 +81,11 @@ describe('drupalLibraryLoader', () => {
       .toEqual({ my_module: { some_key: 'value' } })
   })
 
-  it('absolutizes root-relative AJAX urls against the backend and re-keys ajaxTrustedUrl', async () => {
+  it('keeps AJAX urls root-relative so they route through the same-origin form proxy', async () => {
+    // The AJAX callback url must stay root-relative: it then resolves against the
+    // frontend origin, where the drupalFormHandler middleware proxies the request
+    // (and its ?ajax_form=1 response) to the backend. Absolutizing it here would
+    // instead send Drupal.ajax cross-origin and bypass the proxy.
     const settings = {
       ajax: {
         'edit-upload-button': {
@@ -97,24 +101,8 @@ describe('drupalLibraryLoader', () => {
       'http://backend',
     )
     const seeded = (window as unknown as { drupalSettings: typeof settings }).drupalSettings
-    expect(seeded.ajax['edit-upload-button'].url).toBe('http://backend/form/x?ajax_form=1')
-    expect(seeded.ajax['edit-upload-button'].progress.url).toBe('http://backend/file/progress/123')
-    // The absolute url must be trusted — ajax.js throws on an untrusted
-    // cross-origin callback url and relies on trust to accept multipart uploads.
-    expect(seeded.ajaxTrustedUrl).toEqual({ 'http://backend/form/x?ajax_form=1': true })
-  })
-
-  it('leaves already-absolute AJAX urls untouched (idempotent)', async () => {
-    const settings = {
-      ajax: { btn: { url: 'http://backend/form/x' } },
-      ajaxTrustedUrl: { 'http://backend/form/x': true },
-    }
-    await loadDrupalLibrary(
-      { js: [{ url: '/a.js' }], drupalSettings: JSON.stringify(settings) },
-      'http://backend',
-    )
-    const seeded = (window as unknown as { drupalSettings: typeof settings }).drupalSettings
-    expect(seeded.ajax.btn.url).toBe('http://backend/form/x')
-    expect(seeded.ajaxTrustedUrl).toEqual({ 'http://backend/form/x': true })
+    expect(seeded.ajax['edit-upload-button'].url).toBe('/form/x?ajax_form=1')
+    expect(seeded.ajax['edit-upload-button'].progress.url).toBe('/file/progress/123')
+    expect(seeded.ajaxTrustedUrl).toEqual({ '/form/x?ajax_form=1': true })
   })
 })
