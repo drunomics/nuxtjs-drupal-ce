@@ -78,7 +78,44 @@ describe('drupalLibraryLoader', () => {
       'http://backend',
     )
     expect((window as unknown as { drupalSettings: Record<string, unknown> }).drupalSettings)
-      .toEqual({ my_module: { some_key: 'value' } })
+      .toEqual({ my_module: { some_key: 'value' }, ajaxPageState: { theme: '', theme_token: null, libraries: '' } })
+  })
+
+  it('writes a drupal-settings-json <script> so core drupalSettingsLoader.js repopulates instead of wiping settings', async () => {
+    await loadDrupalLibrary(
+      { js: [{ url: '/core/misc/drupalSettingsLoader.js' }], drupalSettings: '{"ajax":{"edit-x":{"url":"/form/x?ajax_form=1"}}}' },
+      'http://backend',
+    )
+    // core/misc/drupalSettingsLoader.js resets window.drupalSettings to {} and
+    // only repopulates it from this element; without it the AJAX settings (and
+    // thus the managed_file upload's Drupal.ajax instance) are lost.
+    const el = injected.find(s => s.type === 'application/json' && s.dataset.drupalSelector === 'drupal-settings-json')
+    expect(el).toBeDefined()
+    expect(JSON.parse(el!.textContent!)).toEqual({
+      ajax: { 'edit-x': { url: '/form/x?ajax_form=1' } },
+      ajaxPageState: { theme: '', theme_token: null, libraries: '' },
+    })
+  })
+
+  it('defaults drupalSettings.ajaxPageState so Ajax.beforeSerialize does not throw', async () => {
+    // core/misc/ajax.js Drupal.Ajax.beforeSerialize reads ajaxPageState.theme /
+    // .theme_token / .libraries; a CE-rendered form omits ajaxPageState, so
+    // without a default beforeSerialize throws and no request is ever sent.
+    await loadDrupalLibrary(
+      { js: [{ url: '/a.js' }], drupalSettings: '{"ajax":{"edit-x":{"url":"/form/x?ajax_form=1"}}}' },
+      'http://backend',
+    )
+    const seeded = (window as unknown as { drupalSettings: { ajaxPageState?: Record<string, unknown> } }).drupalSettings
+    expect(seeded.ajaxPageState).toEqual({ theme: '', theme_token: null, libraries: '' })
+  })
+
+  it('keeps a backend-provided ajaxPageState instead of overwriting it', async () => {
+    await loadDrupalLibrary(
+      { js: [{ url: '/a.js' }], drupalSettings: '{"ajaxPageState":{"theme":"olivero","theme_token":"tok","libraries":"abc"}}' },
+      'http://backend',
+    )
+    const seeded = (window as unknown as { drupalSettings: { ajaxPageState?: Record<string, unknown> } }).drupalSettings
+    expect(seeded.ajaxPageState).toEqual({ theme: 'olivero', theme_token: 'tok', libraries: 'abc' })
   })
 
   it('keeps AJAX urls root-relative so they route through the same-origin form proxy', async () => {

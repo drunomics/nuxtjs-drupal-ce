@@ -108,6 +108,50 @@ function deepMerge(target: Record<string, unknown>, source: Record<string, unkno
 }
 
 /**
+ * Seeds drupalSettings for the decoupled page.
+ *
+ * Merges the backend's settings into `window.drupalSettings` and writes them to
+ * the `drupal-settings-json` `<script>` element that core's
+ * `drupalSettingsLoader.js` reads. That element is essential:
+ * `drupalSettingsLoader.js` unconditionally resets `window.drupalSettings` to
+ * `{}` and only repopulates it from that element, so a plain in-memory merge is
+ * wiped the moment core JS runs and behaviours (e.g. AJAX, which builds its
+ * instances from `drupalSettings.ajax`) then see empty settings. Writing the
+ * full merged settings to the element keeps them intact whenever
+ * `drupalSettingsLoader.js` runs; the in-memory merge covers the window before
+ * it does, and the case where it has already loaded and will not run again.
+ *
+ * @param json - The backend's merged drupalSettings as a JSON string.
+ */
+function seedDrupalSettings(json: string): void {
+  try {
+    const win = window as unknown as { drupalSettings?: Record<string, unknown> }
+    const merged = deepMerge(win.drupalSettings ?? {}, JSON.parse(json))
+    // ajaxPageState must exist for core's ajax.js: Drupal.Ajax.beforeSerialize()
+    // reads drupalSettings.ajaxPageState.{theme,theme_token,libraries} and throws
+    // (swallowed by Ajax.execute()) if it is absent, so no request is ever sent.
+    // The backend omits it from a CE-rendered form; default it so the first
+    // request works, then the AJAX response's own ajaxPageState takes over.
+    if (!merged.ajaxPageState) {
+      merged.ajaxPageState = { theme: '', theme_token: null, libraries: '' }
+    }
+    win.drupalSettings = merged
+    const selector = 'script[data-drupal-selector="drupal-settings-json"]'
+    let el = document.querySelector<HTMLScriptElement>(selector)
+    if (!el) {
+      el = document.createElement('script')
+      el.type = 'application/json'
+      el.dataset.drupalSelector = 'drupal-settings-json'
+      document.head.appendChild(el)
+    }
+    el.textContent = JSON.stringify(merged)
+  }
+  catch (error) {
+    console.error('[drupal-library] invalid drupalSettings', error)
+  }
+}
+
+/**
  * Runs Drupal.attachBehaviors on the document, if Drupal has loaded.
  *
  * Safe to call repeatedly: Drupal's `once()` prevents re-processing.
@@ -122,11 +166,10 @@ function attachBehaviors(): void {
  * Loads a resolved Drupal library, then attaches behaviours once the batch is
  * done.
  *
- * `drupalSettings` (if any) is merged into `window.drupalSettings` synchronously
- * before any script runs — Drupal core JS expects it to exist, and a decoupled
- * page has no settings-json `<script>` for `drupalSettingsLoader.js` to read.
- * Files are appended to the shared queue so they load after earlier requests;
- * when the queue drains, behaviours attach once.
+ * `drupalSettings` (if any) is seeded synchronously before any script runs (see
+ * seedDrupalSettings) — Drupal core JS expects it to exist. Files are appended
+ * to the shared queue so they load after earlier requests; when the queue
+ * drains, behaviours attach once.
  *
  * @param library - The resolved library (JS files + optional drupalSettings).
  * @param baseUrl - The Drupal backend base URL for resolving root-relative URLs.
@@ -134,13 +177,7 @@ function attachBehaviors(): void {
  */
 export function loadDrupalLibrary(library: DrupalResolvedLibrary, baseUrl: string): Promise<void> {
   if (library.drupalSettings) {
-    try {
-      const win = window as unknown as { drupalSettings?: Record<string, unknown> }
-      win.drupalSettings = deepMerge(win.drupalSettings ?? {}, JSON.parse(library.drupalSettings))
-    }
-    catch (error) {
-      console.error('[drupal-library] invalid drupalSettings', error)
-    }
+    seedDrupalSettings(library.drupalSettings)
   }
 
   const urls = (library.js ?? []).map(file => absoluteUrl(file.url, baseUrl))
