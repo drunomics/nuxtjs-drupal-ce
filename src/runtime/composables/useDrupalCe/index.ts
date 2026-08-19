@@ -712,8 +712,12 @@ export const useDrupalCe = () => {
     if (import.meta.server) {
       return
     }
-    const { loadDrupalLibrary } = await (drupalLibraryLoaderPromise ??= import('./drupalLibraryLoader'))
-    await loadDrupalLibrary(library, getDrupalBaseUrl(), config.skipLibraryScripts ?? [])
+    const loader = await (drupalLibraryLoaderPromise ??= import('./drupalLibraryLoader'))
+    // Route messenger messages carried in Drupal AJAX responses (e.g. a
+    // managed_file upload error) into the global messages instead of leaving
+    // them inline and unstyled on the decoupled page.
+    loader.setMessageSink(messages => getMessages().value.push(...messages))
+    await loader.loadDrupalLibrary(library, getDrupalBaseUrl(), config.skipLibraryScripts ?? [])
   }
 
   return {

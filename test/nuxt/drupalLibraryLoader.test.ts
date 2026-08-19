@@ -176,4 +176,74 @@ describe('drupalLibraryLoader', () => {
     expect(seeded.ajax['edit-upload-button'].progress.url).toBe('/file/progress/123')
     expect(seeded.ajaxTrustedUrl).toEqual({ '/form/x?ajax_form=1': true })
   })
+
+  describe('AJAX message forwarding', () => {
+    let setMessageSink: LoaderModule['setMessageSink']
+    let insertSpy: ReturnType<typeof vi.fn>
+    let messageSpy: ReturnType<typeof vi.fn>
+
+    beforeEach(async () => {
+      ;({ setMessageSink } = await import('../../src/runtime/composables/useDrupalCe/drupalLibraryLoader'))
+      insertSpy = vi.fn()
+      messageSpy = vi.fn()
+      // Provide Drupal.AjaxCommands so attachBehaviors installs the wrappers.
+      ;(window as unknown as { Drupal: unknown }).Drupal = {
+        attachBehaviors,
+        AjaxCommands: function () {},
+      }
+      ;(window as unknown as { Drupal: { AjaxCommands: { prototype: Record<string, unknown> } } })
+        .Drupal.AjaxCommands.prototype = { insert: insertSpy, message: messageSpy }
+    })
+
+    /** Loads any library so the loader's attachBehaviors runs and installs. */
+    const triggerInstall = () => loadDrupalLibrary({ js: [{ url: '/ajax.js' }] }, 'http://backend')
+
+    it('lifts messenger .messages out of an insert into the sink, stripped from the HTML', async () => {
+      const received: Array<{ type: string, message: string }> = []
+      setMessageSink(messages => received.push(...messages))
+      await triggerInstall()
+
+      const html = `<div data-drupal-messages><div class="messages messages--error" role="alert">`
+        + `<h2 class="visually-hidden">Error message</h2>`
+        + `<ul class="messages__list"><li class="messages__item">Upload failed.</li>`
+        + `<li class="messages__item">'private' is not allowed.</li></ul></div></div>`
+        + `<div class="form-item form-type-managed-file">widget</div>`
+      const proto = (window as unknown as { Drupal: { AjaxCommands: { prototype: { insert: (a: unknown, r: unknown, s: unknown) => void } } } }).Drupal.AjaxCommands.prototype
+      proto.insert({}, { data: html }, 'success')
+
+      expect(received).toEqual([
+        { type: 'error', message: 'Upload failed.' },
+        { type: 'error', message: '\'private\' is not allowed.' },
+      ])
+      // Original insert still ran, with the messages block removed but the
+      // widget kept.
+      expect(insertSpy).toHaveBeenCalledTimes(1)
+      const forwarded = insertSpy.mock.calls[0]![1] as { data: string }
+      expect(forwarded.data).toContain('form-type-managed-file')
+      expect(forwarded.data).not.toContain('messages--error')
+      expect(forwarded.data).not.toContain('data-drupal-messages')
+    })
+
+    it('forwards a message command and suppresses its inline insertion', async () => {
+      const received: Array<{ type: string, message: string }> = []
+      setMessageSink(messages => received.push(...messages))
+      await triggerInstall()
+
+      const proto = (window as unknown as { Drupal: { AjaxCommands: { prototype: { message: (a: unknown, r: unknown, s: unknown) => void } } } }).Drupal.AjaxCommands.prototype
+      proto.message({}, { message: 'Saved.', messageOptions: { type: 'status' } }, 'success')
+
+      expect(received).toEqual([{ type: 'success', message: 'Saved.' }])
+      expect(messageSpy).not.toHaveBeenCalled()
+    })
+
+    it('leaves inserts without messenger blocks untouched', async () => {
+      setMessageSink(() => {})
+      await triggerInstall()
+      const proto = (window as unknown as { Drupal: { AjaxCommands: { prototype: { insert: (a: unknown, r: unknown, s: unknown) => void } } } }).Drupal.AjaxCommands.prototype
+      proto.insert({}, { data: '<div class="form-item--error-message">Required.</div>' }, 'success')
+      const forwarded = insertSpy.mock.calls[0]![1] as { data: string }
+      // Field-level inline errors are kept in place.
+      expect(forwarded.data).toContain('form-item--error-message')
+    })
+  })
 })
