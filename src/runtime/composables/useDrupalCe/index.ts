@@ -573,12 +573,11 @@ export const useDrupalCe = () => {
   ): VNode | null => {
     const vnodes = renderCustomElementsToVNodes(customElements)
 
-    // Wrap a VNode[] in a Fragment so <component :is> receives a single vnode
-    // of a stable type. Re-invoking this helper on a re-render (the documented
-    // template usage) then yields a same-type Fragment that Vue patches in
-    // place. Returning a fresh component identity per call instead makes
-    // <component :is> unmount and remount the whole custom-element subtree on
-    // any unrelated re-render, discarding component state, focus and scroll.
+    // Wrap a VNode[] in a Fragment so <component :is> receives a single vnode.
+    // The documented template usage re-invokes this helper on every re-render
+    // of the consumer, so the wrapper must keep the same vnode type across
+    // calls: same-type Fragments are patched in place, preserving component
+    // state, focus and scroll in the custom-element subtree.
     if (Array.isArray(vnodes)) {
       return h(Fragment, vnodes)
     }
