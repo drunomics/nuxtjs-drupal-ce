@@ -21,6 +21,8 @@ export interface DrupalLibraryJsFile {
 
 /** A resolved Drupal library: its JS files (in load order) and merged settings. */
 export interface DrupalResolvedLibrary {
+  /** The library's fully-qualified name, e.g. `core/drupal.ajax`. */
+  name?: string
   /** The library's JS files, in dependency order. */
   js: DrupalLibraryJsFile[]
   /** Merged drupalSettings as a JSON string (kept opaque so keys survive). */
@@ -29,6 +31,14 @@ export interface DrupalResolvedLibrary {
 
 /** URLs already loaded, so a library shared by several callers loads once. */
 const loadedScripts = new Set<string>()
+
+/**
+ * Fully-qualified names of the Drupal libraries loaded on this page, reported
+ * through `drupalSettings.ajaxPageState.libraries` so an AJAX response (e.g. a
+ * managed_file upload) does not re-send `add_css`/`add_js` for libraries already
+ * present. A report of what the components loaded, not a driver of loading.
+ */
+const loadedLibraries = new Set<string>()
 
 /** Serialises loading so scripts execute in request order across callers. */
 let queue: Promise<void> = Promise.resolve()
@@ -48,6 +58,26 @@ function absoluteUrl(url: string, baseUrl: string): string {
     return url
   }
   return baseUrl.replace(/\/$/, '') + url
+}
+
+/**
+ * Whether to skip loading a given Drupal JS file.
+ *
+ * `core/misc/drupalSettingsLoader.js` is always skipped: it resets
+ * `window.drupalSettings` to `{}` and repopulates it only from a
+ * `drupal-settings-json` element a CE page never emits, so it would wipe our
+ * merged settings (see seedDrupalSettings). Sites can skip further files via the
+ * `skipLibraryScripts` module option (substring match).
+ *
+ * @param url - Root-relative or absolute JS URL from the backend.
+ * @param extraSkip - Site-configured URL substrings to skip.
+ * @returns True if the file should not be loaded.
+ */
+function skipScript(url: string, extraSkip: string[]): boolean {
+  if (/\/core\/misc\/drupalSettingsLoader\.js(\?|$)/.test(url)) {
+    return true
+  }
+  return extraSkip.some(pattern => url.includes(pattern))
 }
 
 /**
@@ -108,6 +138,54 @@ function deepMerge(target: Record<string, unknown>, source: Record<string, unkno
 }
 
 /**
+ * Seeds drupalSettings for the decoupled page.
+ *
+ * Merges the backend's settings into `window.drupalSettings` in memory. This is
+ * the sole owner of `drupalSettings` on the decoupled frontend: core's
+ * `drupalSettingsLoader.js` (which would reset the global to `{}` and repopulate
+ * it from a `drupal-settings-json` element that a CE page never emits) is
+ * skipped at load time (see skipScript), so nothing wipes this merge.
+ *
+ * @param json - The backend's merged drupalSettings as a JSON string.
+ */
+function seedDrupalSettings(json: string): void {
+  try {
+    const win = window as unknown as { drupalSettings?: Record<string, unknown> }
+    const merged = deepMerge(win.drupalSettings ?? {}, JSON.parse(json))
+    // core ajax.js reads ajaxPageState.{theme,theme_token,libraries}; a CE form
+    // omits it, so default to an empty stub so dependent callers have something.
+    if (!merged.ajaxPageState) {
+      merged.ajaxPageState = { theme: '', theme_token: null, libraries: '' }
+    }
+    win.drupalSettings = merged
+  }
+  catch (error) {
+    console.error('[drupal-library] invalid drupalSettings', error)
+  }
+}
+
+/**
+ * Reflects the loaded-library set into `drupalSettings.ajaxPageState.libraries`
+ * (a plain comma-joined list Drupal reads uncompressed) so the backend skips
+ * assets already on the page. No-op when no library names were given or before
+ * drupalSettings has been seeded.
+ */
+function reportLoadedLibraries(): void {
+  if (loadedLibraries.size === 0) {
+    return
+  }
+  const win = window as unknown as { drupalSettings?: Record<string, unknown> }
+  const settings = win.drupalSettings
+  if (!settings) {
+    return
+  }
+  if (!settings.ajaxPageState) {
+    settings.ajaxPageState = { theme: '', theme_token: null, libraries: '' }
+  }
+  ;(settings.ajaxPageState as Record<string, unknown>).libraries = [...loadedLibraries].join(',')
+}
+
+/**
  * Runs Drupal.attachBehaviors on the document, if Drupal has loaded.
  *
  * Safe to call repeatedly: Drupal's `once()` prevents re-processing.
@@ -119,31 +197,26 @@ function attachBehaviors(): void {
 }
 
 /**
- * Loads a resolved Drupal library, then attaches behaviours once the batch is
- * done.
+ * Loads a resolved Drupal library's JS files (in dependency order), then
+ * attaches behaviours once the current batch drains.
  *
- * `drupalSettings` (if any) is merged into `window.drupalSettings` synchronously
- * before any script runs — Drupal core JS expects it to exist, and a decoupled
- * page has no settings-json `<script>` for `drupalSettingsLoader.js` to read.
- * Files are appended to the shared queue so they load after earlier requests;
- * when the queue drains, behaviours attach once.
- *
- * @param library - The resolved library (JS files + optional drupalSettings).
+ * @param library - The resolved library (name, JS files, optional drupalSettings).
  * @param baseUrl - The Drupal backend base URL for resolving root-relative URLs.
+ * @param skipScripts - Site-configured URL substrings not to load.
  * @returns A promise that settles once this library's files have loaded.
  */
-export function loadDrupalLibrary(library: DrupalResolvedLibrary, baseUrl: string): Promise<void> {
-  if (library.drupalSettings) {
-    try {
-      const win = window as unknown as { drupalSettings?: Record<string, unknown> }
-      win.drupalSettings = deepMerge(win.drupalSettings ?? {}, JSON.parse(library.drupalSettings))
-    }
-    catch (error) {
-      console.error('[drupal-library] invalid drupalSettings', error)
-    }
+export function loadDrupalLibrary(library: DrupalResolvedLibrary, baseUrl: string, skipScripts: string[] = []): Promise<void> {
+  if (library.name) {
+    loadedLibraries.add(library.name)
   }
+  if (library.drupalSettings) {
+    seedDrupalSettings(library.drupalSettings)
+  }
+  reportLoadedLibraries()
 
-  const urls = (library.js ?? []).map(file => absoluteUrl(file.url, baseUrl))
+  const urls = (library.js ?? [])
+    .filter(file => !skipScript(file.url, skipScripts))
+    .map(file => absoluteUrl(file.url, baseUrl))
 
   pending++
   const done = queue

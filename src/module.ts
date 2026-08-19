@@ -61,6 +61,8 @@ export interface ModuleOptions {
   serverLogLevel?: boolean | 'info' | 'error'
   disableFormHandler?: boolean | string[]
   enableComponentPreview?: boolean
+  /** Extra Drupal JS URLs (substring match) the library loader must not load. */
+  skipLibraryScripts?: string[]
 }
 
 export default defineNuxtModule<ModuleOptions>({
@@ -88,6 +90,7 @@ export default defineNuxtModule<ModuleOptions>({
     serverLogLevel: 'info',
     disableFormHandler: false,
     enableComponentPreview: true,
+    skipLibraryScripts: [],
   },
   async setup(options, nuxt) {
     const nuxtOptions = nuxt.options as NuxtOptionsWithDrupalCe

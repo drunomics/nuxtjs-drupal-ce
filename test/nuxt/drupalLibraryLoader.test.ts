@@ -27,11 +27,15 @@ describe('drupalLibraryLoader', () => {
       globalThis.CSS = { escape: (s: string) => s } as unknown as typeof CSS
     }
 
-    // Mock script insertion: record it and fire onload on the next microtask.
-    vi.spyOn(document.head, 'appendChild').mockImplementation(((el: HTMLScriptElement) => {
-      injected.push(el)
-      queueMicrotask(() => el.onload?.(new Event('load')))
-      return el
+    // Mock script insertion: record scripts and fire onload on the next
+    // microtask.
+    vi.spyOn(document.head, 'appendChild').mockImplementation(((el: HTMLElement) => {
+      if (el.tagName === 'SCRIPT') {
+        injected.push(el as HTMLScriptElement)
+        queueMicrotask(() => (el as HTMLScriptElement).onload?.(new Event('load')))
+        return el
+      }
+      return Node.prototype.appendChild.call(document.head, el)
     }) as typeof document.head.appendChild)
   })
 
@@ -74,6 +78,102 @@ describe('drupalLibraryLoader', () => {
       'http://backend',
     )
     expect((window as unknown as { drupalSettings: Record<string, unknown> }).drupalSettings)
-      .toEqual({ my_module: { some_key: 'value' } })
+      .toEqual({ my_module: { some_key: 'value' }, ajaxPageState: { theme: '', theme_token: null, libraries: '' } })
+  })
+
+  it('skips core drupalSettingsLoader.js so it cannot wipe the in-memory settings', async () => {
+    // core/misc/drupalSettingsLoader.js resets window.drupalSettings to {} and
+    // only repopulates it from a drupal-settings-json element that a CE page
+    // never emits. Loading it would drop the AJAX settings (and thus the
+    // managed_file upload's Drupal.ajax instance), so it must not be injected.
+    await loadDrupalLibrary(
+      {
+        js: [
+          { url: '/core/misc/drupalSettingsLoader.js?v=11.4.5' },
+          { url: '/core/misc/drupal.js?v=1' },
+        ],
+        drupalSettings: '{"ajax":{"edit-x":{"url":"/form/x?ajax_form=1"}}}',
+      },
+      'http://backend',
+    )
+    expect(injected.map(s => s.src)).toEqual(['http://backend/core/misc/drupal.js?v=1'])
+    expect((window as unknown as { drupalSettings: Record<string, unknown> }).drupalSettings)
+      .toEqual({
+        ajax: { 'edit-x': { url: '/form/x?ajax_form=1' } },
+        ajaxPageState: { theme: '', theme_token: null, libraries: '' },
+      })
+  })
+
+  it('skips site-configured scripts (skipLibraryScripts substring match)', async () => {
+    await loadDrupalLibrary(
+      { js: [{ url: '/core/misc/tabledrag.js?v=1' }, { url: '/core/misc/drupal.js?v=1' }] },
+      'http://backend',
+      ['tabledrag.js'],
+    )
+    expect(injected.map(s => s.src)).toEqual(['http://backend/core/misc/drupal.js?v=1'])
+  })
+
+  it('defaults drupalSettings.ajaxPageState so Ajax.beforeSerialize does not throw', async () => {
+    // core/misc/ajax.js Drupal.Ajax.beforeSerialize reads ajaxPageState.theme /
+    // .theme_token / .libraries; a CE-rendered form omits ajaxPageState, so
+    // without a default beforeSerialize throws and no request is ever sent.
+    await loadDrupalLibrary(
+      { js: [{ url: '/a.js' }], drupalSettings: '{"ajax":{"edit-x":{"url":"/form/x?ajax_form=1"}}}' },
+      'http://backend',
+    )
+    const seeded = (window as unknown as { drupalSettings: { ajaxPageState?: Record<string, unknown> } }).drupalSettings
+    expect(seeded.ajaxPageState).toEqual({ theme: '', theme_token: null, libraries: '' })
+  })
+
+  it('keeps a backend-provided ajaxPageState instead of overwriting it', async () => {
+    await loadDrupalLibrary(
+      { js: [{ url: '/a.js' }], drupalSettings: '{"ajaxPageState":{"theme":"olivero","theme_token":"tok","libraries":"abc"}}' },
+      'http://backend',
+    )
+    const seeded = (window as unknown as { drupalSettings: { ajaxPageState?: Record<string, unknown> } }).drupalSettings
+    expect(seeded.ajaxPageState).toEqual({ theme: 'olivero', theme_token: 'tok', libraries: 'abc' })
+  })
+
+  it('reports loaded library names as ajaxPageState.libraries so the backend skips their assets', async () => {
+    // The backend diffs its AJAX-response assets against ajaxPageState.libraries.
+    // Reporting what the drupal-library components loaded (a plain comma list)
+    // stops it re-sending add_css/add_js for libraries already on the page, and a
+    // non-empty list avoids the empty-'' entry that trips core's asset resolver.
+    await loadDrupalLibrary(
+      { name: 'core/drupal.ajax', js: [{ url: '/ajax.js' }], drupalSettings: '{"ajax":{"edit-x":{"url":"/form/x?ajax_form=1"}}}' },
+      'http://backend',
+    )
+    // A later element carries only its name (drupalSettings is on the first only).
+    await loadDrupalLibrary(
+      { name: 'webform/webform.element.managed_file', js: [{ url: '/managed-file.js' }] },
+      'http://backend',
+    )
+    const seeded = (window as unknown as { drupalSettings: { ajaxPageState: { libraries: string } } }).drupalSettings
+    expect(seeded.ajaxPageState.libraries).toBe('core/drupal.ajax,webform/webform.element.managed_file')
+  })
+
+  it('keeps AJAX urls root-relative so they route through the same-origin form proxy', async () => {
+    // The AJAX callback url must stay root-relative: it then resolves against the
+    // frontend origin, where the drupalFormHandler middleware proxies the request
+    // (and its ?ajax_form=1 response) to the backend. Absolutizing it here would
+    // instead send Drupal.ajax cross-origin and bypass the proxy.
+    const settings = {
+      ajax: {
+        'edit-upload-button': {
+          url: '/form/x?ajax_form=1',
+          callback: 'foo',
+          progress: { type: 'bar', url: '/file/progress/123' },
+        },
+      },
+      ajaxTrustedUrl: { '/form/x?ajax_form=1': true },
+    }
+    await loadDrupalLibrary(
+      { js: [{ url: '/a.js' }], drupalSettings: JSON.stringify(settings) },
+      'http://backend',
+    )
+    const seeded = (window as unknown as { drupalSettings: typeof settings }).drupalSettings
+    expect(seeded.ajax['edit-upload-button'].url).toBe('/form/x?ajax_form=1')
+    expect(seeded.ajax['edit-upload-button'].progress.url).toBe('/file/progress/123')
+    expect(seeded.ajaxTrustedUrl).toEqual({ '/form/x?ajax_form=1': true })
   })
 })
