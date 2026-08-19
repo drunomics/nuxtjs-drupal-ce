@@ -29,6 +29,34 @@ export interface DrupalResolvedLibrary {
   drupalSettings?: string
 }
 
+/** A message forwarded from a Drupal AJAX response to the frontend. */
+export interface DrupalForwardedMessage {
+  /** Maps to the SiteMessages styling: error, warning or success. */
+  type: 'error' | 'warning' | 'success'
+  /** The message text (HTML from Drupal's messenger output). */
+  message: string
+}
+
+/**
+ * Sink that receives Drupal messenger messages carried in an AJAX response so
+ * the caller can surface them through the frontend's global messages
+ * (`useDrupalCe().getMessages()`). Registered once via {@link setMessageSink};
+ * a no-op until then.
+ */
+let messageSink: ((messages: DrupalForwardedMessage[]) => void) | null = null
+
+/**
+ * Registers the sink for messages extracted from Drupal AJAX responses.
+ *
+ * @param sink - Receives the forwarded messages (e.g. pushes to global state).
+ */
+export function setMessageSink(sink: (messages: DrupalForwardedMessage[]) => void): void {
+  messageSink = sink
+}
+
+/** Installed once: guards against re-wrapping Drupal.AjaxCommands. */
+let ajaxMessageForwardingInstalled = false
+
 /** URLs already loaded, so a library shared by several callers loads once. */
 const loadedScripts = new Set<string>()
 
@@ -186,11 +214,111 @@ function reportLoadedLibraries(): void {
 }
 
 /**
+ * Extracts Drupal messenger messages from an AJAX response's HTML, forwards
+ * them to the registered sink, and returns the HTML with those blocks removed.
+ *
+ * Drupal's managed_file upload AJAX callback prepends `#type => status_messages`
+ * into the replaced element's `#prefix` (see
+ * \Drupal\file\Element\ManagedFile::uploadAjaxCallback), so upload errors arrive
+ * as a `.messages` block inside the inserted markup — unstyled on the decoupled
+ * frontend, which never loads core's messages CSS. Lift them into the global
+ * messages instead. Field-level inline errors (`.form-item--error-message`)
+ * are left in place: they belong next to their field.
+ *
+ * @param html - The AJAX command's HTML payload.
+ * @returns The HTML with messenger `.messages` blocks stripped.
+ */
+function forwardResponseMessages(html: string): string {
+  if (!messageSink) {
+    return html
+  }
+  const template = document.createElement('template')
+  template.innerHTML = html
+  const blocks = template.content.querySelectorAll('.messages')
+  if (!blocks.length) {
+    return html
+  }
+  const messages: DrupalForwardedMessage[] = []
+  blocks.forEach((block) => {
+    const type = block.classList.contains('messages--error')
+      ? 'error'
+      : block.classList.contains('messages--warning')
+        ? 'warning'
+        : 'success'
+    // Drop the screen-reader-only heading Drupal adds ("Error message").
+    block.querySelectorAll('.visually-hidden, .messages__header').forEach(node => node.remove())
+    const items = block.querySelectorAll('.messages__item')
+    const texts = items.length
+      ? [...items].map(item => (item.textContent ?? '').trim())
+      : [((block.querySelector('.messages__content') ?? block).textContent ?? '').trim()]
+    texts.filter(Boolean).forEach(message => messages.push({ type, message }))
+    // Remove the block (and an emptied data-drupal-messages wrapper) so it does
+    // not also render inline.
+    const wrapper = block.closest('[data-drupal-messages]')
+    block.remove()
+    if (wrapper && !wrapper.querySelector('.messages')) {
+      wrapper.remove()
+    }
+  })
+  if (messages.length) {
+    messageSink(messages)
+  }
+  return template.innerHTML
+}
+
+/**
+ * Wraps Drupal's AJAX command handlers, once, to route messenger messages to
+ * the frontend's global messages instead of leaving them inline/unstyled:
+ * - `insert` (all replace/html/prepend commands) has its HTML de-messaged via
+ *   {@link forwardResponseMessages};
+ * - `message` (a MessageCommand) is forwarded and suppressed, since the
+ *   decoupled page has no `[data-drupal-messages]` target for it.
+ *
+ * No-op until `core/drupal.ajax` has defined `Drupal.AjaxCommands`.
+ */
+function installAjaxMessageForwarding(): void {
+  if (ajaxMessageForwardingInstalled) {
+    return
+  }
+  const commands = (window as unknown as {
+    Drupal?: { AjaxCommands?: { prototype?: Record<string, ((...args: unknown[]) => unknown) | undefined> } }
+  }).Drupal?.AjaxCommands?.prototype
+  if (!commands) {
+    return
+  }
+  ajaxMessageForwardingInstalled = true
+
+  const originalInsert = commands.insert
+  if (originalInsert) {
+    commands.insert = function (this: unknown, ajax: unknown, response: { data?: unknown }, status: unknown) {
+      if (typeof response?.data === 'string') {
+        response = { ...response, data: forwardResponseMessages(response.data) }
+      }
+      return originalInsert.call(this, ajax, response, status)
+    }
+  }
+
+  const originalMessage = commands.message
+  commands.message = function (this: unknown, ajax: unknown, response: { message?: unknown, messageOptions?: { type?: string } }, status: unknown) {
+    if (messageSink && typeof response?.message === 'string') {
+      const type = response.messageOptions?.type
+      messageSink([{
+        type: type === 'error' ? 'error' : type === 'warning' ? 'warning' : 'success',
+        message: response.message,
+      }])
+      return
+    }
+    return originalMessage?.call(this, ajax, response, status)
+  }
+}
+
+/**
  * Runs Drupal.attachBehaviors on the document, if Drupal has loaded.
  *
  * Safe to call repeatedly: Drupal's `once()` prevents re-processing.
  */
 function attachBehaviors(): void {
+  installAjaxMessageForwarding()
   const drupal = (window as unknown as { Drupal?: { attachBehaviors?: (el: Element, settings?: unknown) => void } }).Drupal
   const settings = (window as unknown as { drupalSettings?: unknown }).drupalSettings
   drupal?.attachBehaviors?.(document.body, settings)
