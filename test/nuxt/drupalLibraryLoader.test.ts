@@ -104,6 +104,15 @@ describe('drupalLibraryLoader', () => {
       })
   })
 
+  it('skips site-configured scripts (skipLibraryScripts substring match)', async () => {
+    await loadDrupalLibrary(
+      { js: [{ url: '/core/misc/tabledrag.js?v=1' }, { url: '/core/misc/drupal.js?v=1' }] },
+      'http://backend',
+      ['tabledrag.js'],
+    )
+    expect(injected.map(s => s.src)).toEqual(['http://backend/core/misc/drupal.js?v=1'])
+  })
+
   it('defaults drupalSettings.ajaxPageState so Ajax.beforeSerialize does not throw', async () => {
     // core/misc/ajax.js Drupal.Ajax.beforeSerialize reads ajaxPageState.theme /
     // .theme_token / .libraries; a CE-rendered form omits ajaxPageState, so

@@ -33,24 +33,12 @@ export interface DrupalResolvedLibrary {
 const loadedScripts = new Set<string>()
 
 /**
- * Fully-qualified names of the Drupal libraries loaded on this page.
- *
- * Reported back to Drupal through `drupalSettings.ajaxPageState.libraries` so an
- * AJAX response (e.g. a managed_file upload) does not re-send `add_css`/`add_js`
- * for libraries already present — the backend diffs its attachments against this
- * set. This is a report of what the `<drupal-library-*>` components loaded, not
- * a mechanism that drives loading.
+ * Fully-qualified names of the Drupal libraries loaded on this page, reported
+ * through `drupalSettings.ajaxPageState.libraries` so an AJAX response (e.g. a
+ * managed_file upload) does not re-send `add_css`/`add_js` for libraries already
+ * present. A report of what the components loaded, not a driver of loading.
  */
 const loadedLibraries = new Set<string>()
-
-/**
- * Whether we own `ajaxPageState.libraries`.
- *
- * A CE-rendered page sends no `ajaxPageState`, so we populate it from
- * `loadedLibraries`. If a backend ever supplies its own `ajaxPageState`, we
- * defer to it verbatim and stop managing the field.
- */
-let manageAjaxLibraries = true
 
 /** Serialises loading so scripts execute in request order across callers. */
 let queue: Promise<void> = Promise.resolve()
@@ -75,17 +63,21 @@ function absoluteUrl(url: string, baseUrl: string): string {
 /**
  * Whether to skip loading a given Drupal JS file.
  *
- * `core/misc/drupalSettingsLoader.js` unconditionally resets
+ * `core/misc/drupalSettingsLoader.js` is always skipped: it resets
  * `window.drupalSettings` to `{}` and repopulates it only from a
- * `drupal-settings-json` element, which a CE-rendered page never emits. On the
- * decoupled frontend we own drupalSettings ourselves (see seedDrupalSettings),
- * so running it would just wipe our merged settings. Skip it.
+ * `drupal-settings-json` element a CE page never emits, so it would wipe our
+ * merged settings (see seedDrupalSettings). Sites can skip further files via the
+ * `skipLibraryScripts` module option (substring match).
  *
  * @param url - Root-relative or absolute JS URL from the backend.
+ * @param extraSkip - Site-configured URL substrings to skip.
  * @returns True if the file should not be loaded.
  */
-function skipScript(url: string): boolean {
-  return /\/core\/misc\/drupalSettingsLoader\.js(\?|$)/.test(url)
+function skipScript(url: string, extraSkip: string[]): boolean {
+  if (/\/core\/misc\/drupalSettingsLoader\.js(\?|$)/.test(url)) {
+    return true
+  }
+  return extraSkip.some(pattern => url.includes(pattern))
 }
 
 /**
@@ -160,19 +152,10 @@ function seedDrupalSettings(json: string): void {
   try {
     const win = window as unknown as { drupalSettings?: Record<string, unknown> }
     const merged = deepMerge(win.drupalSettings ?? {}, JSON.parse(json))
-    // ajaxPageState must exist for core's ajax.js: Drupal.Ajax.beforeSerialize()
-    // reads drupalSettings.ajaxPageState.{theme,theme_token,libraries} and throws
-    // (swallowed by Ajax.execute()) if it is absent, so no request is ever sent.
-    // A CE-rendered form omits it; a minimal stub is enough — an empty theme
-    // resolves to the default theme on the backend. Its `libraries` list is
-    // filled from the loaded set (see reportLoadedLibraries) so the backend
-    // skips re-sending assets already on the page. If a backend ever supplies
-    // its own ajaxPageState, defer to it verbatim.
+    // core ajax.js reads ajaxPageState.{theme,theme_token,libraries}; a CE form
+    // omits it, so default to an empty stub so dependent callers have something.
     if (!merged.ajaxPageState) {
       merged.ajaxPageState = { theme: '', theme_token: null, libraries: '' }
-    }
-    else {
-      manageAjaxLibraries = false
     }
     win.drupalSettings = merged
   }
@@ -182,20 +165,13 @@ function seedDrupalSettings(json: string): void {
 }
 
 /**
- * Reflects the loaded-library set into `drupalSettings.ajaxPageState.libraries`.
- *
- * A plain comma-joined list is enough: Drupal's
- * `UrlHelper::uncompressQueryParameter()` falls back to the raw string when
- * gzip-inflate fails, so the backend reads the names without any compression. A
- * non-empty list also avoids the degenerate empty-string entry that otherwise
- * reaches core's asset resolver and triggers "Undefined array key 1" /
- * missing-theme warnings while diffing an empty `''` library.
- *
- * No-op until drupalSettings has been seeded (seedDrupalSettings creates the
- * ajaxPageState it writes into) and when a backend owns ajaxPageState itself.
+ * Reflects the loaded-library set into `drupalSettings.ajaxPageState.libraries`
+ * (a plain comma-joined list Drupal reads uncompressed) so the backend skips
+ * assets already on the page. No-op when no library names were given or before
+ * drupalSettings has been seeded.
  */
 function reportLoadedLibraries(): void {
-  if (!manageAjaxLibraries) {
+  if (loadedLibraries.size === 0) {
     return
   }
   const win = window as unknown as { drupalSettings?: Record<string, unknown> }
@@ -221,21 +197,15 @@ function attachBehaviors(): void {
 }
 
 /**
- * Loads a resolved Drupal library, then attaches behaviours once the batch is
- * done.
+ * Loads a resolved Drupal library's JS files (in dependency order), then
+ * attaches behaviours once the current batch drains.
  *
- * `drupalSettings` (if any) is seeded synchronously before any script runs (see
- * seedDrupalSettings) — Drupal core JS expects it to exist. The library's name
- * is recorded and reflected into `ajaxPageState.libraries` (see
- * reportLoadedLibraries) so the backend skips its assets on later AJAX
- * responses. Files are appended to the shared queue so they load after earlier
- * requests; when the queue drains, behaviours attach once.
- *
- * @param library - The resolved library (JS files + optional drupalSettings).
+ * @param library - The resolved library (name, JS files, optional drupalSettings).
  * @param baseUrl - The Drupal backend base URL for resolving root-relative URLs.
+ * @param skipScripts - Site-configured URL substrings not to load.
  * @returns A promise that settles once this library's files have loaded.
  */
-export function loadDrupalLibrary(library: DrupalResolvedLibrary, baseUrl: string): Promise<void> {
+export function loadDrupalLibrary(library: DrupalResolvedLibrary, baseUrl: string, skipScripts: string[] = []): Promise<void> {
   if (library.name) {
     loadedLibraries.add(library.name)
   }
@@ -245,7 +215,7 @@ export function loadDrupalLibrary(library: DrupalResolvedLibrary, baseUrl: strin
   reportLoadedLibraries()
 
   const urls = (library.js ?? [])
-    .filter(file => !skipScript(file.url))
+    .filter(file => !skipScript(file.url, skipScripts))
     .map(file => absoluteUrl(file.url, baseUrl))
 
   pending++

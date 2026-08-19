@@ -687,7 +687,7 @@ export const useDrupalCe = () => {
       return
     }
     const { loadDrupalLibrary } = await (drupalLibraryLoaderPromise ??= import('./drupalLibraryLoader'))
-    await loadDrupalLibrary(library, getDrupalBaseUrl())
+    await loadDrupalLibrary(library, getDrupalBaseUrl(), config.skipLibraryScripts ?? [])
   }
 
   return {
