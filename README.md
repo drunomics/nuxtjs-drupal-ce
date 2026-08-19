@@ -350,6 +350,26 @@ You have the option to override the default error handlers by using a parameter 
 
 Note: The `error` parameter is optional and can be omitted.
 
+## Deferred menu loading
+
+`fetchMenu()` is a setup-time helper built on Nuxt's `useFetch()`. Call it directly
+from `<script setup>` so Nuxt can register its hydration lifecycle hooks.
+
+When a menu should load later from `onMounted()`, a watcher, or an event handler,
+create the request with `useMenu()` during setup and execute it when needed:
+
+```vue
+<script lang="ts" setup>
+const { useMenu } = useDrupalCe()
+const { data: accountMenu, execute: loadAccountMenu } = useMenu('account', {
+  immediate: false,
+  server: false,
+})
+
+onMounted(() => loadAccountMenu())
+</script>
+```
+
 ## Previous options not supported in 2.x version
 
 The following options were support in 1.x but got dropped:

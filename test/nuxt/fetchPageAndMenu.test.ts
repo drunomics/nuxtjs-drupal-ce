@@ -87,4 +87,20 @@ describe('fetchPage and fetchMenu use the right API endpoints', () => {
       })
     })
   })
+
+  describe('useMenu', () => {
+    it('supports a deferred request executed later in the component lifecycle', async () => {
+      const { useMenu } = useDrupalCe()
+      const { data, execute } = useMenu('main', {
+        immediate: false,
+        key: 'main-deferred',
+      })
+
+      expect(data.value).toBeUndefined()
+
+      await execute()
+
+      expect(data.value?.items?.[0]?.title).toBe('Via Proxy Menu')
+    })
+  })
 })
