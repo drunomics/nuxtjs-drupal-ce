@@ -116,6 +116,8 @@ is added automatically to requests. Defaults to `false`.
 
 - `enableComponentPreview`: Enable component preview for Drupal Canvas integration. Automatically configures CORS based on `drupalBaseUrl`. Set to `false` to disable. Defaults to `true`.
 
+- `skipLibraryScripts`: List of URL substrings for Drupal JS files the library loader must not load (in addition to `core/misc/drupalSettingsLoader.js`, which is always skipped). Defaults to `[]`.
+
 ## Overriding options with environment variables
 
 Runtime config values can be overridden with environment variables via `NUXT_PUBLIC_` prefix. Supported runtime overrides:
