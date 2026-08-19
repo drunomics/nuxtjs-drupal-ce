@@ -1,6 +1,5 @@
 <script lang="ts">
 import { defineComponent, onMounted, type PropType } from 'vue'
-import { useDrupalCe } from '../../../src/runtime/composables/useDrupalCe'
 
 /**
  * A single JS file of a Drupal library, as emitted by the backend.
@@ -48,7 +47,7 @@ export default defineComponent({
     const { loadLibrary } = useDrupalCe()
 
     onMounted(() => {
-      loadLibrary({ js: props.js, drupalSettings: props.drupalSettings })
+      loadLibrary({ name: props.library, js: props.js, drupalSettings: props.drupalSettings })
     })
 
     // Renderless: emit no markup.
@@ -56,3 +55,17 @@ export default defineComponent({
   },
 })
 </script>
+
+<style>
+/*
+ * Core ships `.js .js-hide { display: none }` in its `system/base` CSS, which
+ * the decoupled frontend deliberately never loads. Without it, elements Drupal
+ * marks as JS-only stay visible — e.g. a managed_file element's "Upload" button,
+ * which is `js-hide` because its auto-upload behaviour replaces it. `core/drupal`
+ * (misc/drupal.init.js) already adds the `js` class to <html>, so this rule
+ * applies as soon as a Drupal library is on the page.
+ */
+.js .js-hide {
+  display: none;
+}
+</style>

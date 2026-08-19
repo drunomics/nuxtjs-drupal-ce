@@ -116,6 +116,8 @@ is added automatically to requests. Defaults to `false`.
 
 - `enableComponentPreview`: Enable component preview for Drupal Canvas integration. Automatically configures CORS based on `drupalBaseUrl`. Set to `false` to disable. Defaults to `true`.
 
+- `skipLibraryScripts`: List of URL substrings for Drupal JS files the library loader must not load (in addition to `core/misc/drupalSettingsLoader.js`, which is always skipped). Defaults to `[]`.
+
 ## Overriding options with environment variables
 
 Runtime config values can be overridden with environment variables via `NUXT_PUBLIC_` prefix. Supported runtime overrides:
@@ -226,6 +228,20 @@ x node-custom--default.vue
 ✓ node--default.vue
 ```
 
+## Loading Drupal JavaScript libraries
+
+The backend emits the JavaScript libraries attached to a rendered form, block or
+component as `drupal-library-*` elements. To load them, add a global
+`drupal-library--default.vue` component - see
+`playground/components/global/drupal-library--default.vue` for a renderless
+reference component handing the library to `useDrupalCe().loadLibrary()`, and
+`/form/states` in the playground for a form whose conditional field is driven
+this way.
+
+Docs: [Drupal JS libraries](https://lupus-decoupled.org/nuxt/drupal-libraries)
+for the Nuxt side, [Drupal JavaScript](https://lupus-decoupled.org/advanced-topics/drupal-javascript)
+for what the backend sends.
+
 ## Component Preview Integration
 
 Built-in support for [nuxt-component-preview](https://github.com/drunomics/nuxt-component-preview) enables fully-rendered component previews in Drupal and easy Drupal Canvas integration. It works automatically with your `drupalBaseUrl` - CORS is configured automatically.
@@ -333,6 +349,26 @@ You have the option to override the default error handlers by using a parameter 
   ```
 
 Note: The `error` parameter is optional and can be omitted.
+
+## Deferred menu loading
+
+`fetchMenu()` is a setup-time helper built on Nuxt's `useFetch()`. Call it directly
+from `<script setup>` so Nuxt can register its hydration lifecycle hooks.
+
+When a menu should load later from `onMounted()`, a watcher, or an event handler,
+create the request with `useMenu()` during setup and execute it when needed:
+
+```vue
+<script lang="ts" setup>
+const { useMenu } = useDrupalCe()
+const { data: accountMenu, execute: loadAccountMenu } = useMenu('account', {
+  immediate: false,
+  server: false,
+})
+
+onMounted(() => loadAccountMenu())
+</script>
+```
 
 ## Previous options not supported in 2.x version
 
