@@ -1,12 +1,12 @@
 import { defu } from 'defu'
 import { appendResponseHeader } from 'h3'
 import type { $Fetch, NitroFetchRequest } from 'nitropack'
-import { type Ref, type ComputedRef, type Component, type VNode, Fragment } from 'vue'
+import { type Ref, type ComputedRef, type VNode, Fragment } from 'vue'
 import { getDrupalBaseUrl, getMenuBaseUrl, headersToRecord } from './server'
 import type { DrupalResolvedLibrary } from './drupalLibraryLoader'
 import type { UseFetchOptions, AsyncData } from '#app'
 import { callWithNuxt } from '#app'
-import { useRuntimeConfig, useState, useFetch, navigateTo, createError, h, resolveComponent, setResponseStatus, useNuxtApp, useRequestHeaders, ref, watch, useRequestEvent, computed, useHead, defineComponent, toRef, useRoute, useRouter, useSlots } from '#imports'
+import { useRuntimeConfig, useState, useFetch, navigateTo, createError, h, resolveComponent, setResponseStatus, useNuxtApp, useRequestHeaders, ref, watch, useRequestEvent, computed, useHead, toRef, useRoute, useRouter, useSlots } from '#imports'
 import type { DrupalCePage, DrupalCeApiResponse } from '../../types'
 
 // Cache the dynamic import of the library loader in a single module-level
@@ -556,13 +556,12 @@ export const useDrupalCe = () => {
    * Renders Vue components from JSON-serialized custom element data.
    *
    * Wrapper around renderCustomElementsToVNodes that makes the result compatible with
-   * <component :is> by wrapping VNode[] in a Component.
+   * <component :is> by wrapping VNode[] in a single Fragment VNode.
    *
    * @param customElements {CustomElementContent} - Custom element data to render.
    *          See {@link https://github.com/drunomics/nuxtjs-drupal-ce/blob/2.x/src/runtime/types.d.ts} type definition for detailed structure documentation.
-   * @returns VNode | Component | null
-   *          - VNode: For single elements and strings
-   *          - Component: For arrays (wraps VNode[] in defineComponent for <component :is> compatibility)
+   * @returns VNode | null
+   *          - VNode: For single elements, strings, and arrays (arrays as a Fragment VNode)
    *          - null: For empty/null input
    *
    * Usage:
@@ -571,16 +570,17 @@ export const useDrupalCe = () => {
    */
   const renderCustomElements = (
     customElements: CustomElementContent,
-  ): VNode | Component | null => {
+  ): VNode | null => {
     const vnodes = renderCustomElementsToVNodes(customElements)
 
-    // If we got an array of VNodes, wrap in a Component for <component :is> compatibility
+    // Wrap a VNode[] in a Fragment so <component :is> receives a single vnode
+    // of a stable type. Re-invoking this helper on a re-render (the documented
+    // template usage) then yields a same-type Fragment that Vue patches in
+    // place. Returning a fresh component identity per call instead makes
+    // <component :is> unmount and remount the whole custom-element subtree on
+    // any unrelated re-render, discarding component state, focus and scroll.
     if (Array.isArray(vnodes)) {
-      return defineComponent({
-        setup() {
-          return () => vnodes
-        }
-      })
+      return h(Fragment, vnodes)
     }
 
     // Single VNode or null - return as-is

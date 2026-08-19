@@ -1,7 +1,7 @@
 // @vitest-environment nuxt
 import { describe, it, expect, beforeAll } from 'vitest'
 import { mountSuspended } from '@nuxt/test-utils/runtime'
-import { defineComponent } from 'vue'
+import { defineComponent, h, ref, nextTick } from 'vue'
 import { useDrupalCe } from '../../src/runtime/composables/useDrupalCe'
 import {useNuxtApp} from "#imports";
 
@@ -26,11 +26,23 @@ describe('renderCustomElements', () => {
     },
     template: '<section>Another Component: {{ bar }}</section>'
   })
+
+  // Counts how many times it is mounted, so a test can tell an in-place patch
+  // from a full remount of the custom-element subtree.
+  let mountCount = 0
+  const MountCounter = defineComponent({
+    name: 'MountCounter',
+    setup() {
+      mountCount++
+      return () => h('span', 'counted')
+    }
+  })
   beforeAll(() => {
     ({ renderCustomElements } = useDrupalCe())
     const app = useNuxtApp()
     app.vueApp.component('TestComponent', TestComponent)
     app.vueApp.component('AnotherComponent', AnotherComponent)
+    app.vueApp.component('MountCounter', MountCounter)
   })
 
   describe('basic input handling', () => {
@@ -149,6 +161,31 @@ describe('renderCustomElements', () => {
       expect(wrapper.text()).toContain('Another Component: two')
       expect(wrapper.html()).toEqual("<section>Test Component: one</section>\n" +
         "<section>Another Component: two</section>")
+    })
+
+    it('does not remount the subtree when the consumer re-renders', async () => {
+      // The documented usage re-invokes renderCustomElements on every render of
+      // the consuming component. The array result must render as a stable-type
+      // vnode so an unrelated re-render patches it in place rather than
+      // unmounting and remounting the whole subtree.
+      mountCount = 0
+      const tick = ref(0)
+      const wrapper = await mountSuspended(defineComponent({
+        setup() {
+          return { tick, render: () => renderCustomElements([
+            { element: 'mount-counter' },
+            { element: 'test-component', foo: 'x' }
+          ]) }
+        },
+        template: '<div><span class="tick">{{ tick }}</span><component :is="render()" /></div>'
+      }))
+      expect(mountCount).toBe(1)
+
+      tick.value++
+      await nextTick()
+
+      expect(mountCount).toBe(1)
+      expect(wrapper.text()).toContain('Test Component: x')
     })
   })
 
