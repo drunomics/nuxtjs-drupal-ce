@@ -716,7 +716,13 @@ export const useDrupalCe = () => {
     // Route messenger messages carried in Drupal AJAX responses (e.g. a
     // managed_file upload error) into the global messages instead of leaving
     // them inline and unstyled on the decoupled page.
-    loader.setMessageSink(messages => getMessages().value.push(...messages))
+    loader.setMessageSink((messages, clearPrevious) => {
+      const state = getMessages()
+      if (clearPrevious) {
+        state.value = []
+      }
+      state.value.push(...messages)
+    })
     await loader.loadDrupalLibrary(library, getDrupalBaseUrl(), config.skipLibraryScripts ?? [])
   }
 
