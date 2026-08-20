@@ -712,11 +712,14 @@ export const useDrupalCe = () => {
     if (import.meta.server) {
       return
     }
+    // Capture the messages state before any await, while the Nuxt instance is
+    // active (useState is unreliable after an await).
+    const messages = getMessages()
     const loader = await (drupalLibraryLoaderPromise ??= import('./drupalLibraryLoader'))
     await loader.loadDrupalLibrary(library, getDrupalBaseUrl(), config.skipLibraryScripts ?? [])
     // Once core's AJAX library is loaded, route its `message` commands into the
-    // global messages (see installDrupalMessageCommand).
-    installDrupalMessageCommand(getMessages())
+    // captured global messages (see installDrupalMessageCommand).
+    installDrupalMessageCommand(messages)
   }
 
   return {
