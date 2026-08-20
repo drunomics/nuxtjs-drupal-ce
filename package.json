@@ -50,7 +50,7 @@
     "@vue/server-renderer": "^3.5.41",
     "@vue/test-utils": "^2.4.11",
     "eslint": "^9.39.5",
-    "happy-dom": "^20.11.2",
+    "happy-dom": "^20.11.6",
     "nuxt": "^4.5.2",
     "playwright-core": "^1.62.1",
     "typescript": "^5.9.3",
