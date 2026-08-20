@@ -29,36 +29,6 @@ export interface DrupalResolvedLibrary {
   drupalSettings?: string
 }
 
-/** A message forwarded from a Drupal AJAX response to the frontend. */
-export interface DrupalForwardedMessage {
-  /** Maps to the SiteMessages styling: error, warning or success. */
-  type: 'error' | 'warning' | 'success'
-  /** The message text (HTML from Drupal's messenger output). */
-  message: string
-}
-
-/**
- * Sink that receives Drupal messenger messages carried in an AJAX response so
- * the caller can surface them through the frontend's global messages
- * (`useDrupalCe().getMessages()`). Registered once via {@link setMessageSink};
- * a no-op until then.
- */
-let messageSink: ((messages: DrupalForwardedMessage[], clearPrevious?: boolean) => void) | null = null
-
-/**
- * Registers the sink for messages forwarded from Drupal AJAX responses.
- *
- * @param sink - Receives the forwarded messages (e.g. pushes to global state).
- *   `clearPrevious` mirrors the message command's flag: the message area is
- *   reset first, so e.g. a retried upload replaces its earlier error.
- */
-export function setMessageSink(sink: (messages: DrupalForwardedMessage[], clearPrevious?: boolean) => void): void {
-  messageSink = sink
-}
-
-/** Installed once: guards against re-wrapping Drupal.AjaxCommands. */
-let ajaxMessageForwardingInstalled = false
-
 /** URLs already loaded, so a library shared by several callers loads once. */
 const loadedScripts = new Set<string>()
 
@@ -216,47 +186,11 @@ function reportLoadedLibraries(): void {
 }
 
 /**
- * Defines the `message` AJAX command handler, once.
- *
- * Core's MessageCommand renders through Drupal.Message into the theme's
- * `[data-drupal-messages]` region — a decoupled page has neither the region
- * nor core's message CSS, so the command is routed into the frontend's global
- * messages instead. No-op until `core/drupal.ajax` has defined
- * `Drupal.AjaxCommands`.
- */
-function installAjaxMessageForwarding(): void {
-  if (ajaxMessageForwardingInstalled) {
-    return
-  }
-  const commands = (window as unknown as {
-    Drupal?: { AjaxCommands?: { prototype?: Record<string, ((...args: unknown[]) => unknown) | undefined> } }
-  }).Drupal?.AjaxCommands?.prototype
-  if (!commands) {
-    return
-  }
-  ajaxMessageForwardingInstalled = true
-
-  const originalMessage = commands.message
-  commands.message = function (this: unknown, ajax: unknown, response: { message?: unknown, messageOptions?: { type?: string }, clearPrevious?: unknown }, status: unknown) {
-    if (messageSink && typeof response?.message === 'string') {
-      const type = response.messageOptions?.type
-      messageSink([{
-        type: type === 'error' ? 'error' : type === 'warning' ? 'warning' : 'success',
-        message: response.message,
-      }], Boolean(response.clearPrevious))
-      return
-    }
-    return originalMessage?.call(this, ajax, response, status)
-  }
-}
-
-/**
  * Runs Drupal.attachBehaviors on the document, if Drupal has loaded.
  *
  * Safe to call repeatedly: Drupal's `once()` prevents re-processing.
  */
 function attachBehaviors(): void {
-  installAjaxMessageForwarding()
   const drupal = (window as unknown as { Drupal?: { attachBehaviors?: (el: Element, settings?: unknown) => void } }).Drupal
   const settings = (window as unknown as { drupalSettings?: unknown }).drupalSettings
   drupal?.attachBehaviors?.(document.body, settings)

@@ -7,7 +7,7 @@ import type { DrupalResolvedLibrary } from './drupalLibraryLoader'
 import type { UseFetchOptions, AsyncData } from '#app'
 import { callWithNuxt } from '#app'
 import { useRuntimeConfig, useState, useFetch, navigateTo, createError, h, resolveComponent, setResponseStatus, useNuxtApp, useRequestHeaders, ref, watch, useRequestEvent, computed, useHead, toRef, useRoute, useRouter, useSlots } from '#imports'
-import type { DrupalCePage, DrupalCeApiResponse } from '../../types'
+import type { DrupalCePage, DrupalCeApiResponse, DrupalMessage } from '../../types'
 
 // Cache the dynamic import of the library loader in a single module-level
 // promise. All loadLibrary() callers await the *same* promise, so their
@@ -388,7 +388,7 @@ export const useDrupalCe = () => {
   /**
    * Use messages state
    */
-  const getMessages = (): Ref => useState('drupal-ce-messages', () => [])
+  const getMessages = (): Ref<DrupalMessage[]> => useState('drupal-ce-messages', () => [])
 
   /**
    * Get the current page data ref.
@@ -713,17 +713,10 @@ export const useDrupalCe = () => {
       return
     }
     const loader = await (drupalLibraryLoaderPromise ??= import('./drupalLibraryLoader'))
-    // Route messenger messages carried in Drupal AJAX responses (e.g. a
-    // managed_file upload error) into the global messages instead of leaving
-    // them inline and unstyled on the decoupled page.
-    loader.setMessageSink((messages, clearPrevious) => {
-      const state = getMessages()
-      if (clearPrevious) {
-        state.value = []
-      }
-      state.value.push(...messages)
-    })
     await loader.loadDrupalLibrary(library, getDrupalBaseUrl(), config.skipLibraryScripts ?? [])
+    // Once core's AJAX library is loaded, route its `message` commands into the
+    // global messages (see installDrupalMessageCommand).
+    installDrupalMessageCommand(getMessages())
   }
 
   return {
@@ -750,7 +743,7 @@ export const useDrupalCe = () => {
 
 const pushMessagesToState = (messages) => {
   messages = Object.assign({ success: [], error: [] }, messages)
-  const messagesArray = [
+  const messagesArray: DrupalMessage[] = [
     ...messages.error.map(message => ({ type: 'error', message })),
     ...messages.success.map(message => ({ type: 'success', message })),
   ]
@@ -766,6 +759,50 @@ const menuErrorHandler = (error: Record<string, any>) => {
     type: 'error',
     message: `Menu error: ${error.value.message}.`,
   })
+}
+
+/** Installed once: guards against re-wrapping `Drupal.AjaxCommands`. */
+let drupalMessageCommandInstalled = false
+
+/**
+ * Routes Drupal's `message` AJAX command into the given messages state.
+ *
+ * Core's MessageCommand renders through `Drupal.Message` into a theme's
+ * `[data-drupal-messages]` region — a decoupled page has neither that region
+ * nor core's message CSS, so the command pushes a {@link DrupalMessage} into the
+ * global messages instead. `clearPrevious` resets the state first (a retried
+ * upload replaces its earlier error). A general Drupal AJAX feature, not
+ * specific to any element.
+ *
+ * No-op until `core/drupal.ajax` has defined `Drupal.AjaxCommands`; installs
+ * once.
+ *
+ * @param messages - The global messages state (`getMessages()`).
+ */
+export const installDrupalMessageCommand = (messages: Ref<DrupalMessage[]>): void => {
+  if (drupalMessageCommandInstalled) {
+    return
+  }
+  const commands = (window as unknown as {
+    Drupal?: { AjaxCommands?: { prototype?: Record<string, ((...args: unknown[]) => unknown) | undefined> } }
+  }).Drupal?.AjaxCommands?.prototype
+  if (!commands) {
+    return
+  }
+  drupalMessageCommandInstalled = true
+  commands.message = function (this: unknown, _ajax: unknown, response: { message?: unknown, messageOptions?: { type?: string }, clearPrevious?: unknown }) {
+    if (typeof response?.message !== 'string') {
+      return
+    }
+    if (response.clearPrevious) {
+      messages.value = []
+    }
+    const type = response.messageOptions?.type
+    messages.value.push({
+      type: type === 'error' ? 'error' : type === 'warning' ? 'warning' : 'success',
+      message: response.message,
+    })
+  }
 }
 
 const pageErrorHandler = (error: Record<string, any>, _context?: Record<string, any>) => {

@@ -43,6 +43,17 @@ export type CustomElementContent =
   | Array<string | CustomElementContentObject>
 
 /**
+ * A single message shown in the global messages, styled by `type`.
+ *
+ * Fed from two sources: the fetched page object's `messages`, and Drupal AJAX
+ * `message` commands routed in via `useDrupalCe().getMessages()`.
+ */
+export interface DrupalMessage {
+  type: 'error' | 'warning' | 'success'
+  message: string
+}
+
+/**
  * Metatags structure
  */
 export interface DrupalCeMetatags {
