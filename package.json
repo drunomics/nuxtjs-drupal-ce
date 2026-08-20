@@ -38,7 +38,20 @@
     "nuxt-component-preview": "^1.1.1",
     "ufo": "^1.6.4"
   },
+  "peerDependencies": {
+    "@json-render/vue": ">=0.20.0",
+    "zod": "^4.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@json-render/vue": {
+      "optional": true
+    },
+    "zod": {
+      "optional": true
+    }
+  },
   "devDependencies": {
+    "@json-render/vue": "^0.20.0",
     "@nuxt/eslint": "^1.17.0",
     "@nuxt/eslint-config": "^1.17.0",
     "@nuxt/kit": "^4.5.2",
@@ -55,6 +68,7 @@
     "playwright-core": "^1.62.1",
     "typescript": "^5.9.3",
     "vitest": "^4.1.11",
-    "vue": "^3.5.41"
+    "vue": "^3.5.41",
+    "zod": "^4.0.0"
   }
 }

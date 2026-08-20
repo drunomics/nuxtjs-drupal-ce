@@ -7,7 +7,17 @@ import type { DrupalResolvedLibrary } from './drupalLibraryLoader'
 import type { UseFetchOptions, AsyncData } from '#app'
 import { callWithNuxt } from '#app'
 import { useRuntimeConfig, useState, useFetch, navigateTo, createError, h, resolveComponent, setResponseStatus, useNuxtApp, useRequestHeaders, ref, watch, useRequestEvent, computed, useHead, toRef, useRoute, useRouter, useSlots } from '#imports'
-import type { DrupalCePage, DrupalCeApiResponse } from '../../types'
+import type { DrupalCePage, DrupalCeApiResponse, JsonRenderSpec } from '../../types'
+
+/**
+ * Whether the given custom elements content is a json-render spec — the flat
+ * element-map format custom_elements can emit (issue #3580092) — rather than
+ * a nested explicit/legacy custom element object.
+ */
+export const isJsonRenderSpec = (content: unknown): content is JsonRenderSpec =>
+  typeof content === 'object' && content !== null && !Array.isArray(content)
+  && typeof (content as JsonRenderSpec).root === 'string'
+  && typeof (content as JsonRenderSpec).elements === 'object' && (content as JsonRenderSpec).elements !== null
 
 // Cache the dynamic import of the library loader in a single module-level
 // promise. All loadLibrary() callers await the *same* promise, so their
@@ -535,6 +545,19 @@ export const useDrupalCe = () => {
     // Handle multiple elements - return VNode[]
     if (Array.isArray(customElements)) {
       return customElements.map(element => renderCustomElementsToVNodes(element))
+    }
+
+    // Handle the json-render format: a flat element map plus a root reference.
+    if (isJsonRenderSpec(customElements)) {
+      // Resolved directly by name: the component only exists when the
+      // `jsonRender` module option registered it, and the custom-element
+      // fallback resolution must not kick in for this internal component.
+      const component = useNuxtApp().vueApp.component('DrupalCeJsonRender')
+      if (component) {
+        return h(component, { spec: customElements })
+      }
+      console.error('[nuxtjs-drupal-ce] Received a json-render spec, but json-render support is not enabled. Set the `jsonRender` module option and install the optional `@json-render/vue` dependency (plus its `zod` peer).')
+      return null
     }
 
     // Handle single custom element object based on configured format

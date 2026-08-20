@@ -40,7 +40,31 @@ export type CustomElementContent =
   | undefined
   | string
   | CustomElementContentObject
+  | JsonRenderSpec
   | Array<string | CustomElementContentObject>
+
+/**
+ * One element of a json-render spec.
+ *
+ * `children` and slot entries reference other elements of the spec by key.
+ * A `drupal-markup` element carries inline HTML in `props.markup`.
+ */
+export interface JsonRenderElement {
+  type: string
+  props?: Record<string, any>
+  children?: string[]
+  slots?: Record<string, string[]>
+}
+
+/**
+ * json-render format custom elements content: a flat element map plus the key
+ * of the root element, as emitted by custom_elements' json-render output
+ * format (drupal.org/project/custom_elements, issue #3580092).
+ */
+export interface JsonRenderSpec {
+  root: string
+  elements: Record<string, JsonRenderElement>
+}
 
 /**
  * Metatags structure

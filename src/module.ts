@@ -1,4 +1,4 @@
-import { defineNuxtModule, addPlugin, addServerPlugin, createResolver, addImportsDir, addServerHandler, addImports, installModule } from '@nuxt/kit'
+import { defineNuxtModule, addPlugin, addServerPlugin, createResolver, addImportsDir, addServerHandler, addImports, addComponent, installModule } from '@nuxt/kit'
 import { defu } from 'defu'
 import type { NuxtOptionsWithDrupalCe } from './runtime/types'
 
@@ -63,6 +63,11 @@ export interface ModuleOptions {
   enableComponentPreview?: boolean
   /** Extra Drupal JS URLs (substring match) the library loader must not load. */
   skipLibraryScripts?: string[]
+  /**
+   * Render custom_elements' json-render output format. Requires the optional
+   * `@json-render/vue` dependency (plus its `zod` peer) to be installed.
+   */
+  jsonRender?: boolean
 }
 
 export default defineNuxtModule<ModuleOptions>({
@@ -91,6 +96,7 @@ export default defineNuxtModule<ModuleOptions>({
     disableFormHandler: false,
     enableComponentPreview: true,
     skipLibraryScripts: [],
+    jsonRender: false,
   },
   async setup(options, nuxt) {
     const nuxtOptions = nuxt.options as NuxtOptionsWithDrupalCe
@@ -113,6 +119,17 @@ export default defineNuxtModule<ModuleOptions>({
     addImportsDir(resolve(runtimeDir, 'composables/useDrupalCe'))
     addPlugin(resolve(runtimeDir, 'plugins/payloadPath.client'))
     addPlugin(resolve(runtimeDir, 'plugins/drupalMarkup'))
+
+    // json-render support is opt-in: the component statically imports the
+    // optional @json-render/vue dependency, so it must stay unregistered (and
+    // unbundled) unless enabled.
+    if (options.jsonRender) {
+      addComponent({
+        name: 'DrupalCeJsonRender',
+        filePath: resolve(runtimeDir, 'components/DrupalCeJsonRender'),
+        global: true,
+      })
+    }
 
     // Add form handler middleware if not disabled (via boolean)
     if (!(options.disableFormHandler === true)) {
