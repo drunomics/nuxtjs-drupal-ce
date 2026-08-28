@@ -135,6 +135,18 @@ The components should be placed in `~/components/global`, refer to the `/playgro
 For example, for the custom element `node-article-teaser` a global component `node-article-teaser.vue` would be
 picked up for rendering.
 
+### Declared props only
+
+A custom element is a data payload, not a set of HTML attributes: a component
+receives only the props it declares. Everything else is dropped instead of
+falling through onto the rendered element as a non-standard HTML attribute — so
+adding a field on the Drupal side never changes the markup of a component that
+does not ask for it. In dev mode the dropped keys are logged.
+
+Attributes that are valid on any element pass through regardless: `class`,
+`style`, `id`, `role`, `lang`, `dir`, `hidden`, `tabindex`, `data-*`,
+`aria-*` and event listeners.
+
 ### JSON Format Options
 
 The module supports two JSON formats for custom elements:

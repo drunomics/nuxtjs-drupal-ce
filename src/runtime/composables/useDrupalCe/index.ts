@@ -3,6 +3,7 @@ import { appendResponseHeader } from 'h3'
 import type { $Fetch, NitroFetchRequest } from 'nitropack'
 import { type Ref, type ComputedRef, type VNode, Fragment } from 'vue'
 import { getDrupalBaseUrl, getMenuBaseUrl, headersToRecord } from './server'
+import { withDeclaredProps } from './customElementProps'
 import type { DrupalResolvedLibrary } from './drupalLibraryLoader'
 import type { UseFetchOptions, AsyncData } from '#app'
 import { callWithNuxt } from '#app'
@@ -491,6 +492,18 @@ export const useDrupalCe = () => {
   }
 
   /**
+   * Resolve a custom element into the component that renders it.
+   *
+   * The component only receives the props it declares: a custom element is a
+   * data payload, so anything undeclared would fall through onto the rendered
+   * element as a non-standard HTML attribute.
+   */
+  const resolveCustomElementComponent = (element: string) => {
+    const resolved = resolveCustomElement(element)
+    return resolved ? withDeclaredProps(resolved) : null
+  }
+
+  /**
    * Converts custom element data to VNodes for use in slots and render functions.
    *
    * This is the main rendering function that contains all the logic for converting
@@ -550,14 +563,14 @@ export const useDrupalCe = () => {
         }
         // Use legacy format handling
         const { element, ...props } = customElements
-        const resolvedElement = resolveCustomElement(element)
+        const resolvedElement = resolveCustomElementComponent(element)
         return resolvedElement ? h(resolvedElement, props) : null
       }
 
       // Use explicit format: {element, props?, slots?}
       const explicitElement = customElements as CustomElementExplicitContent
       const { element, props = {}, slots = {} } = explicitElement
-      const resolvedElement = resolveCustomElement(element)
+      const resolvedElement = resolveCustomElementComponent(element)
 
       if (!resolvedElement) {
         return null
@@ -574,7 +587,7 @@ export const useDrupalCe = () => {
     else {
       // Config is 'legacy' - use legacy format handling
       const { element, ...props } = customElements
-      const resolvedElement = resolveCustomElement(element)
+      const resolvedElement = resolveCustomElementComponent(element)
       return resolvedElement ? h(resolvedElement, props) : null
     }
   }

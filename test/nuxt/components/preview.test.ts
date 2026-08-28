@@ -7,7 +7,7 @@ describe('Preview routes', () => {
   registerEndpoint('http://127.0.0.1:3021/ce-api/node/preview/node', () => ({
     content: {
       element: 'node-article',
-      body: '<p>Some <b>example</b> body.</p>'
+      slots: { body: '<p>Some <b>example</b> body.</p>' }
     },
     local_tasks: {},
     messages: [],
@@ -17,7 +17,7 @@ describe('Preview routes', () => {
   registerEndpoint('http://127.0.0.1:3021/ce-api/node/5/layout-preview', () => ({
     content: {
       element: 'node-article',
-      body: '<p>Some <b>example</b> body.</p>'
+      slots: { body: '<p>Some <b>example</b> body.</p>' }
     },
     local_tasks: {},
     messages: [],
