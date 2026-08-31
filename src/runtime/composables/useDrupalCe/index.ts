@@ -494,13 +494,16 @@ export const useDrupalCe = () => {
   /**
    * Resolve a custom element into the component that renders it.
    *
-   * The component only receives the props it declares: a custom element is a
-   * data payload, so anything undeclared would fall through onto the rendered
-   * element as a non-standard HTML attribute.
+   * With `customElementDeclaredPropsOnly` the component receives only the props
+   * it declares, so undeclared payload keys cannot fall through onto the
+   * rendered element as non-standard HTML attributes.
    */
   const resolveCustomElementComponent = (element: string) => {
     const resolved = resolveCustomElement(element)
-    return resolved ? withDeclaredProps(resolved) : null
+    if (!resolved) {
+      return null
+    }
+    return config.customElementDeclaredPropsOnly ? withDeclaredProps(resolved) : resolved
   }
 
   /**

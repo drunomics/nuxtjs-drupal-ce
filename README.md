@@ -116,6 +116,8 @@ is added automatically to requests. Defaults to `false`.
 
 - `enableComponentPreview`: Enable component preview for Drupal Canvas integration. Automatically configures CORS based on `drupalBaseUrl`. Set to `false` to disable. Defaults to `true`.
 
+- `customElementDeclaredPropsOnly`: Pass a custom element component only the props it declares, see [Declared props only](#declared-props-only). Defaults to `false`.
+
 - `skipLibraryScripts`: List of URL substrings for Drupal JS files the library loader must not load (in addition to `core/misc/drupalSettingsLoader.js`, which is always skipped). Defaults to `[]`.
 
 ## Overriding options with environment variables
@@ -137,15 +139,27 @@ picked up for rendering.
 
 ### Declared props only
 
-A custom element is a data payload, not a set of HTML attributes: a component
-receives only the props it declares. Everything else is dropped instead of
-falling through onto the rendered element as a non-standard HTML attribute — so
-adding a field on the Drupal side never changes the markup of a component that
-does not ask for it. In dev mode the dropped keys are logged.
+By default a component receives the whole custom element payload, and Vue lets
+every key it does not declare as a prop fall through onto the rendered element
+as an HTML attribute. A field added on the Drupal side then shows up in the
+markup of components that never asked for it.
 
-Attributes that are valid on any element pass through regardless: `class`,
-`style`, `id`, `role`, `lang`, `dir`, `hidden`, `tabindex`, `data-*`,
-`aria-*` and event listeners.
+Opt out of that fallthrough with:
+
+```js
+drupalCe: {
+  customElementDeclaredPropsOnly: true
+}
+```
+
+A component then receives only the props it declares; the remaining payload
+keys are dropped and, in dev mode, logged. Attributes that are valid on any
+element still pass through, so Drupal's own `attributes` keep working: `class`,
+`style`, `id`, `role`, `lang`, `dir`, `hidden`, `tabindex`, `data-*`, `aria-*`
+and event listeners.
+
+A component that reads undeclared payload keys out of `$attrs` and relays them
+to a child must declare them as props before turning this on.
 
 ### JSON Format Options
 
