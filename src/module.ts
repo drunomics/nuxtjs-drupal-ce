@@ -61,6 +61,8 @@ export interface ModuleOptions {
   serverLogLevel?: boolean | 'info' | 'error'
   disableFormHandler?: boolean | string[]
   enableComponentPreview?: boolean
+  /** Pass custom element components only the props they declare. */
+  customElementDeclaredPropsOnly?: boolean
   /** Extra Drupal JS URLs (substring match) the library loader must not load. */
   skipLibraryScripts?: string[]
 }
@@ -90,6 +92,7 @@ export default defineNuxtModule<ModuleOptions>({
     serverLogLevel: 'info',
     disableFormHandler: false,
     enableComponentPreview: true,
+    customElementDeclaredPropsOnly: false,
     skipLibraryScripts: [],
   },
   async setup(options, nuxt) {
