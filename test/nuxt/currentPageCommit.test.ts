@@ -2,7 +2,7 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { registerEndpoint } from '@nuxt/test-utils/runtime'
 import { useDrupalCe } from '../../src/runtime/composables/useDrupalCe'
-import { useNuxtApp, useState } from '#imports'
+import { useNuxtApp, useRouter, useState } from '#imports'
 
 describe('committed Drupal page state', () => {
   beforeEach(() => {
@@ -53,6 +53,26 @@ describe('committed Drupal page state', () => {
     await nuxtApp.callHook('page:finish')
 
     expect(currentPage.value.title).toBe('Origin page')
+    expect(useState<string>('drupal-ce-pending-page-key').value).toBe('')
+  })
+
+  it('preserves a pending page when a later navigation fails', async () => {
+    const nuxtApp = useNuxtApp()
+    const router = useRouter()
+    const { fetchPage, getPage } = useDrupalCe()
+    const currentPage = getPage()
+
+    await router.push('/destination')
+    await fetchPage('/destination', {
+      key: 'page-destination-proxy',
+    })
+
+    expect(useState<string>('drupal-ce-pending-page-key').value).toBe('page-destination-proxy')
+
+    await router.push('/destination')
+    await nuxtApp.callHook('page:finish')
+
+    expect(currentPage.value.title).toBe('Destination page')
     expect(useState<string>('drupal-ce-pending-page-key').value).toBe('')
   })
 })

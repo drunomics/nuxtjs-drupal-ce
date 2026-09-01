@@ -230,9 +230,9 @@ export const useDrupalCe = () => {
       pendingPageKey.value = computePageKey(skipProxy, nuxtApp)
 
       router.afterEach((_to, _from, failure) => {
-        pendingPageKey.value = failure
-          ? ''
-          : computePageKey(skipProxy, nuxtApp)
+        if (!failure) {
+          pendingPageKey.value = computePageKey(skipProxy, nuxtApp)
+        }
       })
 
       nuxtApp.hook('page:finish', promotePendingPage)
