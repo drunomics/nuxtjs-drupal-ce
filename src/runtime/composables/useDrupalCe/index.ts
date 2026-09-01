@@ -195,6 +195,64 @@ export const useDrupalCe = () => {
   }
 
   /**
+   * Keep getPage() aligned with the page Nuxt has actually committed.
+   *
+   * NuxtPage keeps the outgoing page visible while the destination resolves in
+   * Suspense. Page data can finish fetching during that overlap, so exposing it
+   * immediately makes shared layout and Drupal components combine the outgoing
+   * route with destination page data. Hold the fetched key as pending and only
+   * promote it after Nuxt commits the destination page.
+   */
+  const initializePageKeySync = (nuxtApp: ReturnType<typeof useNuxtApp>) => {
+    if (import.meta.server) return
+
+    const watcherInitialized = useState<boolean>('drupal-ce-watcher-init', () => false)
+
+    if (watcherInitialized.value) return
+
+    watcherInitialized.value = true
+
+    try {
+      const router = useRouter()
+      const currentPageKey = useState<string>('drupal-ce-current-page-key', () => '')
+      const pendingPageKey = useState<string>('drupal-ce-pending-page-key', () => '')
+      const skipProxy = !config.serverApiProxy
+
+      const promotePendingPage = () => {
+        const key = pendingPageKey.value
+
+        if (key && nuxtApp.payload.data[key]) {
+          currentPageKey.value = key
+          pendingPageKey.value = ''
+        }
+      }
+
+      pendingPageKey.value = computePageKey(skipProxy, nuxtApp)
+
+      router.afterEach((_to, _from, failure) => {
+        if (!failure) {
+          pendingPageKey.value = computePageKey(skipProxy, nuxtApp)
+        }
+      })
+
+      nuxtApp.hook('page:finish', promotePendingPage)
+      nuxtApp.hook('app:error', () => {
+        pendingPageKey.value = ''
+      })
+
+      // Hydration already represents a committed page. A client-only initial
+      // boot has no outgoing page to preserve, so existing payload data is also
+      // safe to expose immediately.
+      if (nuxtApp.isHydrating || !currentPageKey.value) {
+        promotePendingPage()
+      }
+    }
+    catch {
+      // Silently skip if not in proper Nuxt context (e.g., unit tests).
+    }
+  }
+
+  /**
    * Fetches page data from Drupal, handles redirects, errors and messages
    *
    * By default, the cache key is generated from the current route's fullPath (without hash).
@@ -209,6 +267,9 @@ export const useDrupalCe = () => {
   const fetchPage = async (path: string, useFetchOptions: UseFetchOptions<any> = {}, overrideErrorHandler?: (error?: any) => void, skipDrupalCeApiProxy: boolean = false): Promise<Ref<DrupalCePage>> => {
     const nuxtApp = useNuxtApp()
     const currentPageKey = useState<string>('drupal-ce-current-page-key')
+    const pendingPageKey = useState<string>('drupal-ce-pending-page-key', () => '')
+
+    initializePageKeySync(nuxtApp)
 
     // Build cache key from current route's fullPath (without hash) if not already provided
     // Callers can optionally provide a custom key via useFetchOptions.key
@@ -252,6 +313,8 @@ export const useDrupalCe = () => {
     }
 
     // Handle redirect
+    const hasRedirect = Boolean(pageRef.value?.redirect)
+
     if (pageRef.value?.redirect) {
       const redirect = pageRef.value.redirect
       await callWithNuxt(nuxtApp, navigateTo, [
@@ -301,8 +364,16 @@ export const useDrupalCe = () => {
     // Add key to page
     pageRef.value.key = useFetchOptions.key
 
-    // Store the current page key for getPage() lookup
-    currentPageKey.value = useFetchOptions.key
+    if (!hasRedirect) {
+      // Server rendering has already committed this page. In the browser, hold
+      // the destination until NuxtPage emits page:finish after Suspense resolves.
+      if (import.meta.server) {
+        currentPageKey.value = useFetchOptions.key
+      }
+      else {
+        pendingPageKey.value = useFetchOptions.key
+      }
+    }
 
     return pageRef
   }
@@ -404,43 +475,8 @@ export const useDrupalCe = () => {
     const nuxtApp = useNuxtApp()
     const currentPageKey = useState<string>('drupal-ce-current-page-key', () => '')
 
-    // Set up route watcher to keep currentPageKey in sync (for KeepAlive scenarios)
-    // Only needed when using default key (not custom key)
     if (!customKey && import.meta.client) {
-      const watcherInitialized = useState<boolean>('drupal-ce-watcher-init', () => false)
-      const pendingPageKey = useState<string>('drupal-ce-pending-page-key', () => '')
-
-      if (!watcherInitialized.value) {
-        watcherInitialized.value = true
-        try {
-          const router = useRouter()
-
-          // Determine proxy mode based on config (same logic as fetchPage)
-          const skipProxy = !config.serverApiProxy
-
-          // Track the initial key without switching current until data exists
-          pendingPageKey.value = computePageKey(skipProxy, nuxtApp)
-
-          // Use router.afterEach to update the pending key after navigation completes
-          router.afterEach(() => {
-            pendingPageKey.value = computePageKey(skipProxy, nuxtApp)
-          })
-
-          // Promote pending key to current key once payload data is present
-          watch(
-            () => pendingPageKey.value && nuxtApp.payload.data[pendingPageKey.value],
-            (page) => {
-              if (page && pendingPageKey.value) {
-                currentPageKey.value = pendingPageKey.value
-              }
-            },
-            { immediate: true },
-          )
-        }
-        catch {
-          // Silently skip if not in proper Nuxt context (e.g., unit tests)
-        }
-      }
+      initializePageKeySync(nuxtApp)
     }
 
     // Return computed ref that looks up the page data in the reactive Nuxt payload
