@@ -43,4 +43,12 @@ describe('Module error handling', async () => {
     const { status } = await fetch('/error404')
     expect(status).toEqual(404)
   })
+  it('keeps the Drupal cache headers on an error response that carries no page structure', async () => {
+    const response = await fetch('/notapage')
+    expect(response.status).toEqual(404)
+    // Nitro renders its own error response here, replacing what the pass-through
+    // set — so without the re-apply the edge sees `no-cache` and every probe of
+    // the path renders again.
+    expect(response.headers.get('cache-control')).toEqual('max-age=60, public, s-maxage=86400')
+  })
 })
