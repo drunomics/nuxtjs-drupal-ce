@@ -212,43 +212,43 @@ export const useDrupalCe = () => {
 
     watcherInitialized.value = true
 
-    try {
-      const router = useRouter()
-      const currentPageKey = useState<string>('drupal-ce-current-page-key', () => '')
-      const pendingPageKey = useState<string>('drupal-ce-pending-page-key', () => '')
-      const skipProxy = !config.serverApiProxy
+    const router = useRouter()
+    const currentPageKey = useState<string>('drupal-ce-current-page-key', () => '')
+    const pendingPageKey = useState<string>('drupal-ce-pending-page-key', () => '')
+    const requestVersion = useState<number>('drupal-ce-page-request-version', () => 0)
+    const skipProxy = !config.serverApiProxy
 
-      const promotePendingPage = () => {
-        const key = pendingPageKey.value
+    const promotePendingPage = () => {
+      const key = pendingPageKey.value
 
-        if (key && nuxtApp.payload.data[key]) {
-          currentPageKey.value = key
-          pendingPageKey.value = ''
-        }
-      }
+      const page = key && nuxtApp.payload.data[key]
 
-      pendingPageKey.value = computePageKey(skipProxy, nuxtApp)
-
-      router.afterEach((_to, _from, failure) => {
-        if (!failure) {
-          pendingPageKey.value = computePageKey(skipProxy, nuxtApp)
-        }
-      })
-
-      nuxtApp.hook('page:finish', promotePendingPage)
-      nuxtApp.hook('app:error', () => {
+      if (page) {
+        if (!page.redirect) currentPageKey.value = key
         pendingPageKey.value = ''
-      })
-
-      // Hydration already represents a committed page. A client-only initial
-      // boot has no outgoing page to preserve, so existing payload data is also
-      // safe to expose immediately.
-      if (nuxtApp.isHydrating || !currentPageKey.value) {
-        promotePendingPage()
       }
     }
-    catch {
-      // Silently skip if not in proper Nuxt context (e.g., unit tests).
+
+    pendingPageKey.value = computePageKey(skipProxy, nuxtApp)
+
+    router.afterEach((to, from, failure) => {
+      // Failed and hash-only navigations do not replace the active page.
+      if (failure || to.fullPath.split('#')[0] === from.fullPath.split('#')[0]) return
+      requestVersion.value++
+      pendingPageKey.value = computePageKey(skipProxy, nuxtApp)
+    })
+
+    nuxtApp.hook('page:finish', promotePendingPage)
+    nuxtApp.hook('app:error', () => {
+      requestVersion.value++
+      pendingPageKey.value = ''
+    })
+
+    // Hydration already represents a committed page. A client-only initial
+    // boot has no outgoing page to preserve, so existing payload data is also
+    // safe to expose immediately.
+    if (nuxtApp.isHydrating || !currentPageKey.value) {
+      promotePendingPage()
     }
   }
 
@@ -270,6 +270,9 @@ export const useDrupalCe = () => {
     const pendingPageKey = useState<string>('drupal-ce-pending-page-key', () => '')
 
     initializePageKeySync(nuxtApp)
+    const requestVersion = useState<number>('drupal-ce-page-request-version', () => 0)
+    const version = import.meta.client ? ++requestVersion.value : requestVersion.value
+    const requestRoute = import.meta.client ? nuxtApp.$router.currentRoute.value.fullPath.split('#')[0] : ''
 
     // Build cache key from current route's fullPath (without hash) if not already provided
     // Callers can optionally provide a custom key via useFetchOptions.key
@@ -305,6 +308,14 @@ export const useDrupalCe = () => {
       const result = await useCeApi(path, useFetchOptions, true, skipDrupalCeApiProxy)
       pageRef = result.data
       error = result.error.value
+    }
+
+    // Superseded requests may populate their own cache, but must not change
+    // the active navigation, display messages or follow a stale redirect.
+    if (import.meta.client && (version !== requestVersion.value
+      || requestRoute !== nuxtApp.$router.currentRoute.value.fullPath.split('#')[0])) {
+      if (pageRef.value) pageRef.value.key = useFetchOptions.key
+      return pageRef.value ? pageRef : ref(createEmptyPage())
     }
 
     // Process messages
