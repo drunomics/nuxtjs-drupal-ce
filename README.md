@@ -97,6 +97,8 @@ is added automatically to requests. Defaults to `false`.
   - `'legacy'`: Legacy format with props and slots flattened at the same level. Explicitly configure this for improved compatibility with older backends.
   Defaults to `'explicit'`.
 
+- `jsonRender`: Enables rendering custom_elements' [json-render](https://github.com/vercel-labs/json-render) output format — a flat element map (`{root, elements}`) instead of a nested custom element tree. Requires installing the optional dependencies: `npm install @json-render/vue zod`. When a page's content is a json-render spec, it renders via `@json-render/vue`; element types resolve through the same component resolution as the other formats, named slots and `drupal-markup` inline-HTML elements included. Defaults to `false`.
+
 - `customErrorPages`: By default, error pages provided by Drupal (e.g. 403, 404 page) are shown,
   while keeping the right status code. By enabling customErrorPages, the regular Nuxt error
   pages are shown instead, such that the pages can be customized with Nuxt. Defaults to `false`.
