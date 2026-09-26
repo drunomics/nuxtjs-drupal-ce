@@ -485,6 +485,7 @@ export const useDrupalCe = () => {
   const getPage = (customKey?: string): Ref<DrupalCePage> => {
     const nuxtApp = useNuxtApp()
     const currentPageKey = useState<string>('drupal-ce-current-page-key', () => '')
+    const pendingPageKey = useState<string>('drupal-ce-pending-page-key', () => '')
 
     if (!customKey && import.meta.client) {
       initializePageKeySync(nuxtApp)
@@ -496,6 +497,13 @@ export const useDrupalCe = () => {
       const key = customKey || currentPageKey.value
       if (key && nuxtApp.payload.data[key]) {
         return nuxtApp.payload.data[key]
+      }
+      // Nuxt purges the outgoing page's data when its component unmounts, just
+      // before page:finish commits the destination. Bridge that gap with the
+      // fetched destination instead of an empty page.
+      const pending = !customKey && pendingPageKey.value && nuxtApp.payload.data[pendingPageKey.value]
+      if (pending && !pending.redirect) {
+        return pending
       }
       // Return empty page data if no page has been fetched yet
       return createEmptyPage()

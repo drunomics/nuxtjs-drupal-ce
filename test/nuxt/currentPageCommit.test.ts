@@ -40,6 +40,23 @@ describe('committed Drupal page state', () => {
     expect(useState<string>('drupal-ce-pending-page-key').value).toBe('')
   })
 
+  it('shows the destination when Nuxt purges the outgoing page before the commit', async () => {
+    const nuxtApp = useNuxtApp()
+    const { fetchPage, getPage } = useDrupalCe()
+    const currentPage = getPage()
+
+    await fetchPage('/destination', {
+      key: 'page-destination-proxy',
+    })
+    delete nuxtApp.payload.data['page-origin-proxy']
+
+    expect(currentPage.value.title).toBe('Destination page')
+
+    await nuxtApp.callHook('page:finish')
+
+    expect(currentPage.value.title).toBe('Destination page')
+  })
+
   it('does not promote a destination when navigation errors', async () => {
     const nuxtApp = useNuxtApp()
     const { fetchPage, getPage } = useDrupalCe()
