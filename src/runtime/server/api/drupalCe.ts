@@ -1,11 +1,12 @@
-import { defineEventHandler, proxyRequest, getRouterParams, getQuery } from 'h3'
+import { defineEventHandler, proxyRequest, getRouterParams, getRequestURL } from 'h3'
 import { getDrupalBaseUrl } from '../../composables/useDrupalCe/server'
 import { useRuntimeConfig } from '#imports'
 
 export default defineEventHandler(async (event) => {
   const params = getRouterParams(event)._
   const path = params ? '/' + params : ''
-  const query = getQuery(event) ? '?' + new URLSearchParams(getQuery(event)) : ''
+  // The query string as received: repeated keys (`a[]=1&a[]=2`) stay apart.
+  const query = getRequestURL(event).search
   const { ceApiEndpoint } = useRuntimeConfig().public.drupalCe
   // Remove x-forwarded-proto header as it causes issues with the request.
   delete event.req.headers['x-forwarded-proto']
