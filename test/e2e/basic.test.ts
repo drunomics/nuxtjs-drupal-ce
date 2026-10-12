@@ -65,4 +65,10 @@ describe('Module renders pages', async () => {
       ],
     })
   })
+
+  it('proxies the query string unchanged', async () => {
+    const query = '?bundesland%5B%5D=wien&bundesland%5B%5D=tirol&format=Job%2COpen%20Call'
+    const response = await $fetch(`/api/drupal-ce/query-echo${query}`)
+    expect(response).toEqual({ query })
+  })
 })
