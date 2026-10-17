@@ -35,7 +35,7 @@
   },
   "dependencies": {
     "defu": "^6.1.7",
-    "h3": "^1.15.11",
+    "h3": "^2.0.3",
     "nuxt-component-preview": "^1.1.1",
     "ufo": "^1.6.4"
   },
