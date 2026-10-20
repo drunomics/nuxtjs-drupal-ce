@@ -116,6 +116,8 @@ is added automatically to requests. Defaults to `false`.
 
 - `enableComponentPreview`: Enable component preview for Drupal Canvas integration. Automatically configures CORS based on `drupalBaseUrl`. Set to `false` to disable. Defaults to `true`.
 
+- `customElementDeclaredPropsOnly`: Pass a custom element component only the props it declares, see [Declared props only](#declared-props-only). Defaults to `false`.
+
 - `skipLibraryScripts`: List of URL substrings for Drupal JS files the library loader must not load (in addition to `core/misc/drupalSettingsLoader.js`, which is always skipped). Defaults to `[]`.
 
 ## Overriding options with environment variables
@@ -134,6 +136,30 @@ Generally, custom elements are rendered as [dynamic components](https://nuxt.com
 The components should be placed in `~/components/global`, refer to the `/playground` directory for an example.
 For example, for the custom element `node-article-teaser` a global component `node-article-teaser.vue` would be
 picked up for rendering.
+
+### Declared props only
+
+By default a component receives the whole custom element payload, and Vue lets
+every key it does not declare as a prop fall through onto the rendered element
+as an HTML attribute. A field added on the Drupal side then shows up in the
+markup of components that never asked for it.
+
+Opt out of that fallthrough with:
+
+```js
+drupalCe: {
+  customElementDeclaredPropsOnly: true
+}
+```
+
+A component then receives only the props it declares; the remaining payload
+keys are dropped and, in dev mode, logged. Attributes that are valid on any
+element still pass through, so Drupal's own `attributes` keep working: `class`,
+`style`, `id`, `role`, `lang`, `dir`, `hidden`, `tabindex`, `data-*`, `aria-*`
+and event listeners.
+
+A component that reads undeclared payload keys out of `$attrs` and relays them
+to a child must declare them as props before turning this on.
 
 ### JSON Format Options
 
