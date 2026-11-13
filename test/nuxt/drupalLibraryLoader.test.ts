@@ -13,6 +13,8 @@ describe('drupalLibraryLoader', () => {
   let loadDrupalLibrary: LoaderModule['loadDrupalLibrary']
   let injected: HTMLScriptElement[]
   let attachBehaviors: ReturnType<typeof vi.fn>
+  /** When false, scripts stay pending until a test fires onload/onerror. */
+  let autoLoad: boolean
 
   beforeEach(async () => {
     // Fresh module per test so the module-level queue/loaded-set reset.
@@ -20,6 +22,7 @@ describe('drupalLibraryLoader', () => {
     ;({ loadDrupalLibrary } = await import('../../src/runtime/composables/useDrupalCe/drupalLibraryLoader'))
 
     injected = []
+    autoLoad = true
     attachBehaviors = vi.fn()
     ;(window as unknown as { Drupal?: unknown }).Drupal = { attachBehaviors }
     ;(window as unknown as { drupalSettings?: unknown }).drupalSettings = undefined
@@ -27,12 +30,12 @@ describe('drupalLibraryLoader', () => {
       globalThis.CSS = { escape: (s: string) => s } as unknown as typeof CSS
     }
 
-    // Mock script insertion: record scripts and fire onload on the next
-    // microtask.
+    // Mock script insertion: record scripts and, unless a test drives loading
+    // itself, fire onload on the next microtask.
     vi.spyOn(document.head, 'appendChild').mockImplementation(((el: HTMLElement) => {
       if (el.tagName === 'SCRIPT') {
         injected.push(el as HTMLScriptElement)
-        queueMicrotask(() => (el as HTMLScriptElement).onload?.(new Event('load')))
+        if (autoLoad) queueMicrotask(() => (el as HTMLScriptElement).onload?.(new Event('load')))
         return el
       }
       return Node.prototype.appendChild.call(document.head, el)
@@ -70,6 +73,77 @@ describe('drupalLibraryLoader', () => {
     const second = loadDrupalLibrary({ js: [{ url: '/states.js' }] }, 'http://backend')
     await Promise.all([first, second])
     expect(injected.map(s => s.src)).toEqual(['http://backend/jquery.js', 'http://backend/states.js'])
+  })
+
+  it('inserts all script tags up front so downloads run in parallel', async () => {
+    autoLoad = false
+    const first = loadDrupalLibrary({ js: [{ url: '/jquery.js' }, { url: '/once.js' }, { url: '/drupal.js' }] }, 'http://backend')
+    const second = loadDrupalLibrary({ js: [{ url: '/states.js' }] }, 'http://backend')
+
+    // Nothing has loaded yet, still every tag is in place, in request order.
+    expect(injected.map(s => s.src)).toEqual([
+      'http://backend/jquery.js',
+      'http://backend/once.js',
+      'http://backend/drupal.js',
+      'http://backend/states.js',
+    ])
+    expect(injected.every(s => s.async === false)).toBe(true)
+
+    injected.forEach(s => s.onload?.(new Event('load')))
+    await Promise.all([first, second])
+    expect(attachBehaviors).toHaveBeenCalledTimes(1)
+  })
+
+  it('attaches behaviors once, only after every script of the batch has loaded', async () => {
+    autoLoad = false
+    const settled: string[] = []
+    const first = loadDrupalLibrary({ js: [{ url: '/jquery.js' }, { url: '/drupal.js' }] }, 'http://backend')
+      .then(() => settled.push('first'))
+    const second = loadDrupalLibrary({ js: [{ url: '/states.js' }] }, 'http://backend')
+      .then(() => settled.push('second'))
+    const flush = () => new Promise(resolve => setTimeout(resolve))
+
+    // A later library does not settle before an earlier one.
+    injected[2]!.onload?.(new Event('load'))
+    injected[0]!.onload?.(new Event('load'))
+    await flush()
+    expect(settled).toEqual([])
+    expect(attachBehaviors).not.toHaveBeenCalled()
+
+    injected[1]!.onload?.(new Event('load'))
+    await Promise.all([first, second])
+    expect(settled).toEqual(['first', 'second'])
+    expect(attachBehaviors).toHaveBeenCalledTimes(1)
+  })
+
+  it('does not let a failing script block the rest or the behaviors', async () => {
+    autoLoad = false
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const done = loadDrupalLibrary({ js: [{ url: '/a.js' }, { url: '/missing.js' }, { url: '/c.js' }] }, 'http://backend')
+    expect(injected).toHaveLength(3)
+
+    injected[0]!.onload?.(new Event('load'))
+    injected[1]!.onerror?.(new Event('error'))
+    injected[2]!.onload?.(new Event('load'))
+    await done
+    expect(warn).toHaveBeenCalledWith('[drupal-library] skipped, failed to load http://backend/missing.js')
+    expect(attachBehaviors).toHaveBeenCalledTimes(1)
+  })
+
+  it('shares a still-loading script between libraries instead of injecting it twice', async () => {
+    autoLoad = false
+    let secondSettled = false
+    const first = loadDrupalLibrary({ js: [{ url: '/jquery.js' }] }, 'http://backend')
+    const second = loadDrupalLibrary({ js: [{ url: '/jquery.js' }] }, 'http://backend')
+      .then(() => (secondSettled = true))
+    expect(injected.map(s => s.src)).toEqual(['http://backend/jquery.js'])
+
+    await new Promise(resolve => setTimeout(resolve))
+    expect(secondSettled).toBe(false)
+
+    injected[0]!.onload?.(new Event('load'))
+    await Promise.all([first, second])
+    expect(attachBehaviors).toHaveBeenCalledTimes(1)
   })
 
   it('seeds window.drupalSettings from the JSON string before loading', async () => {

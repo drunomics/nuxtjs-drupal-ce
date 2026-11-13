@@ -6,9 +6,9 @@
  * so Vite splits it into its own chunk: neither the loader nor the Drupal JS it
  * pulls in is shipped until a component actually loads a library.
  *
- * Loading is coordinated through a module-level queue so scripts execute in the
- * order they are requested (dependencies before dependents, which the backend
- * resolves) and `Drupal.attachBehaviors()` runs exactly once per batch.
+ * Scripts download in parallel and execute in the order they are requested
+ * (dependencies before dependents, which the backend resolves). A module-level
+ * queue makes `Drupal.attachBehaviors()` run exactly once per batch.
  */
 
 /** A single JS file of a Drupal library. */
@@ -29,8 +29,8 @@ export interface DrupalResolvedLibrary {
   drupalSettings?: string
 }
 
-/** URLs already loaded, so a library shared by several callers loads once. */
-const loadedScripts = new Set<string>()
+/** Load promise per URL, so a library shared by several callers loads once. */
+const scriptLoads = new Map<string, Promise<void>>()
 
 /**
  * Fully-qualified names of the Drupal libraries loaded on this page, reported
@@ -40,7 +40,7 @@ const loadedScripts = new Set<string>()
  */
 const loadedLibraries = new Set<string>()
 
-/** Serialises loading so scripts execute in request order across callers. */
+/** Settles libraries in request order across callers. */
 let queue: Promise<void> = Promise.resolve()
 
 /** Outstanding loads in the current batch; behaviours attach when it hits 0. */
@@ -83,8 +83,9 @@ function skipScript(url: string, extraSkip: string[]): boolean {
 /**
  * Injects a `<script>` for the given source, once.
  *
- * Already-loaded sources resolve immediately. A load error resolves (not
- * rejects) with a warning so one missing asset does not abort a library or the
+ * The tag is inserted synchronously, so the download starts right away. A
+ * source requested before shares its load. A load error resolves (not rejects)
+ * with a warning so one missing asset does not abort a library or the
  * behaviours: some Drupal "JS" is generated per request (e.g. locale
  * translations) and legitimately 404s in a decoupled context.
  *
@@ -92,26 +93,26 @@ function skipScript(url: string, extraSkip: string[]): boolean {
  * @returns A promise that settles when the script has loaded (or failed).
  */
 function loadScript(src: string): Promise<void> {
-  if (loadedScripts.has(src) || document.querySelector(`script[data-drupal-library="${CSS.escape(src)}"]`)) {
-    loadedScripts.add(src)
-    return Promise.resolve()
+  let load = scriptLoads.get(src)
+  if (!load) {
+    load = document.querySelector(`script[data-drupal-library="${CSS.escape(src)}"]`)
+      ? Promise.resolve()
+      : new Promise((resolve) => {
+          const el = document.createElement('script')
+          el.src = src
+          // async=false scripts execute in insertion order.
+          el.async = false
+          el.dataset.drupalLibrary = src
+          el.onload = () => resolve()
+          el.onerror = () => {
+            console.warn(`[drupal-library] skipped, failed to load ${src}`)
+            resolve()
+          }
+          document.head.appendChild(el)
+        })
+    scriptLoads.set(src, load)
   }
-  return new Promise((resolve) => {
-    const el = document.createElement('script')
-    el.src = src
-    // Keep execution order deterministic even though the src is set eagerly.
-    el.async = false
-    el.dataset.drupalLibrary = src
-    el.onload = () => {
-      loadedScripts.add(src)
-      resolve()
-    }
-    el.onerror = () => {
-      console.warn(`[drupal-library] skipped, failed to load ${src}`)
-      resolve()
-    }
-    document.head.appendChild(el)
-  })
+  return load
 }
 
 /**
@@ -197,8 +198,11 @@ function attachBehaviors(): void {
 }
 
 /**
- * Loads a resolved Drupal library's JS files (in dependency order), then
- * attaches behaviours once the current batch drains.
+ * Loads a resolved Drupal library's JS files, then attaches behaviours once
+ * the current batch drains.
+ *
+ * All script tags are inserted before returning: downloads run in parallel,
+ * execution follows insertion order (dependency order, also across calls).
  *
  * @param library - The resolved library (name, JS files, optional drupalSettings).
  * @param baseUrl - The Drupal backend base URL for resolving root-relative URLs.
@@ -219,13 +223,10 @@ export function loadDrupalLibrary(library: DrupalResolvedLibrary, baseUrl: strin
     .map(file => absoluteUrl(file.url, baseUrl))
 
   pending++
+  const loads = Promise.all(urls.map(async url => loadScript(url)))
+    .then(() => {}, error => console.error(error))
   const done = queue
-    .then(async () => {
-      for (const url of urls) {
-        await loadScript(url)
-      }
-    })
-    .catch(error => console.error(error))
+    .then(() => loads)
     .finally(() => {
       pending--
       if (pending === 0) {
