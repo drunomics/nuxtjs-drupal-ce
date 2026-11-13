@@ -104,6 +104,23 @@ describe('fetchPage and fetchMenu use the right API endpoints', () => {
     })
   })
 
+  describe('getDrupalPath', () => {
+    it('returns the path as given without i18n', () => {
+      const { getDrupalPath } = useDrupalCe()
+      expect(getDrupalPath('api/menu_items/main')).toBe('api/menu_items/main')
+      expect(getDrupalPath()).toBe('')
+    })
+
+    it('prefixes the path with the route prefix of the current locale', () => {
+      const nuxtApp = useNuxtApp()
+      nuxtApp.$i18n = { locale: ref('fr'), defaultLocale: 'en' }
+      nuxtApp.$localePath = (path: string) => `/fr${path}`
+      const { getDrupalPath } = useDrupalCe()
+      expect(getDrupalPath('api/menu_items/main')).toBe('fr/api/menu_items/main')
+      expect(getDrupalPath()).toBe('fr/')
+    })
+  })
+
   describe('useMenu', () => {
     it('supports a deferred request executed later in the component lifecycle', async () => {
       const { useMenu } = useDrupalCe()

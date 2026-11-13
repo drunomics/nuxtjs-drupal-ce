@@ -1,10 +1,12 @@
 // @vitest-environment nuxt
 import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { ref } from 'vue'
+import { useNuxtApp, useRouter } from '#imports'
 
 type LoaderModule = typeof import('../../src/runtime/composables/useDrupalCe/drupalLibraryLoader')
 
 /**
- * Tests the standalone Drupal library loader. Script `<script>` tags are mocked
+ * Tests the Drupal library loader. Script `<script>` tags are mocked
  * to "load" immediately (there is no real network), so the assertions cover the
  * loader's own behaviour: URL resolution, insertion order, dedup, drupalSettings
  * seeding and the run-once attachBehaviors barrier.
@@ -20,6 +22,11 @@ describe('drupalLibraryLoader', () => {
     // Fresh module per test so the module-level queue/loaded-set reset.
     vi.resetModules()
     ;({ loadDrupalLibrary } = await import('../../src/runtime/composables/useDrupalCe/drupalLibraryLoader'))
+
+    const nuxtApp = useNuxtApp()
+    nuxtApp.$i18n = undefined
+    nuxtApp.$localePath = undefined
+    await useRouter().push('/')
 
     injected = []
     autoLoad = true
@@ -152,7 +159,11 @@ describe('drupalLibraryLoader', () => {
       'http://backend',
     )
     expect((window as unknown as { drupalSettings: Record<string, unknown> }).drupalSettings)
-      .toEqual({ my_module: { some_key: 'value' }, ajaxPageState: { theme: '', theme_token: null, libraries: '' } })
+      .toEqual({
+        my_module: { some_key: 'value' },
+        path: { baseUrl: '/', pathPrefix: '' },
+        ajaxPageState: { theme: '', theme_token: null, libraries: '' },
+      })
   })
 
   it('skips core drupalSettingsLoader.js so it cannot wipe the in-memory settings', async () => {
@@ -174,6 +185,7 @@ describe('drupalLibraryLoader', () => {
     expect((window as unknown as { drupalSettings: Record<string, unknown> }).drupalSettings)
       .toEqual({
         ajax: { 'edit-x': { url: '/form/x?ajax_form=1' } },
+        path: { baseUrl: '/', pathPrefix: '' },
         ajaxPageState: { theme: '', theme_token: null, libraries: '' },
       })
   })
@@ -249,5 +261,82 @@ describe('drupalLibraryLoader', () => {
     expect(seeded.ajax['edit-upload-button'].url).toBe('/form/x?ajax_form=1')
     expect(seeded.ajax['edit-upload-button'].progress.url).toBe('/file/progress/123')
     expect(seeded.ajaxTrustedUrl).toEqual({ '/form/x?ajax_form=1': true })
+  })
+
+  describe('drupalSettings.path', () => {
+    const seededPath = () => (window as unknown as { drupalSettings: { path: Record<string, unknown> } }).drupalSettings.path
+    // Same as core's Drupal.url().
+    const drupalUrl = (path: string) => `${seededPath().baseUrl}${seededPath().pathPrefix}${path}`
+    const load = (drupalSettings?: string) => loadDrupalLibrary({ js: [], drupalSettings }, 'http://backend')
+
+    /** Navigates to a route of the given locale, as @nuxtjs/i18n prefixes it. */
+    const visit = async (path: string, locale: string = 'en') => {
+      const nuxtApp = useNuxtApp()
+      nuxtApp.$i18n = { locale: ref(locale), defaultLocale: 'en' }
+      nuxtApp.$localePath = (path: string) => locale === 'en' ? path : `/${locale}${path === '/' ? '' : path}`
+      await useRouter().push(nuxtApp.$localePath(path))
+    }
+
+    it('seeds baseUrl and pathPrefix on the first load on a route when the backend sends no path', async () => {
+      await load('{"my_module":{}}')
+      expect(seededPath()).toEqual({ baseUrl: '/', pathPrefix: '' })
+      expect(drupalUrl('form/x')).toBe('/form/x')
+    })
+
+    it('seeds them for a library without drupalSettings', async () => {
+      await load()
+      expect(seededPath()).toEqual({ baseUrl: '/', pathPrefix: '' })
+    })
+
+    it('seeds the language prefix of the current locale', async () => {
+      await visit('/form/a', 'de')
+      await load('{"my_module":{}}')
+      expect(seededPath()).toEqual({ baseUrl: '/', pathPrefix: 'de/' })
+      expect(drupalUrl('form/x')).toBe('/de/form/x')
+    })
+
+    it('seeds baseUrl and pathPrefix when the backend sends them as null, keeping other keys', async () => {
+      await visit('/form/b', 'de')
+      await load('{"path":{"baseUrl":null,"pathPrefix":null,"currentPath":"form/x","isFront":false}}')
+      expect(seededPath()).toEqual({ baseUrl: '/', pathPrefix: 'de/', currentPath: 'form/x', isFront: false })
+    })
+
+    it('keeps non-null backend values, including an empty pathPrefix', async () => {
+      await visit('/form/c', 'de')
+      await load('{"path":{"baseUrl":"/sub/","pathPrefix":""}}')
+      expect(seededPath()).toEqual({ baseUrl: '/sub/', pathPrefix: '' })
+    })
+
+    it('keeps the seeded values on later loads on the same route', async () => {
+      await visit('/form/d', 'de')
+      await load('{"path":{"baseUrl":"/sub/"}}')
+      // Neither missing nor null values of a later library reset them.
+      await load('{"my_module":{}}')
+      await load('{"path":{"baseUrl":null,"pathPrefix":null,"currentPath":"form/x"}}')
+      await load()
+      expect(seededPath()).toEqual({ baseUrl: '/sub/', pathPrefix: 'de/', currentPath: 'form/x' })
+    })
+
+    it('updates the prefix on the first load after a route change, e.g. a locale switch', async () => {
+      await visit('/form/e', 'de')
+      await load('{"my_module":{}}')
+      expect(seededPath()).toEqual({ baseUrl: '/', pathPrefix: 'de/' })
+
+      await visit('/form/e', 'en')
+      await load('{"path":{"baseUrl":null,"pathPrefix":null}}')
+      expect(seededPath()).toEqual({ baseUrl: '/', pathPrefix: '' })
+
+      await visit('/form/e', 'de')
+      await load()
+      expect(seededPath()).toEqual({ baseUrl: '/', pathPrefix: 'de/' })
+    })
+
+    it('leaves invalid drupalSettings to the seeding, which reports them', async () => {
+      const error = vi.spyOn(console, 'error').mockImplementation(() => {})
+      await load('{invalid')
+      expect(error).toHaveBeenCalledWith('[drupal-library] invalid drupalSettings', expect.anything())
+      await load('{"my_module":{}}')
+      expect(seededPath()).toEqual({ baseUrl: '/', pathPrefix: '' })
+    })
   })
 })
