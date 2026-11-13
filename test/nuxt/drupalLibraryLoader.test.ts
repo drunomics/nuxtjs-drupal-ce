@@ -78,7 +78,11 @@ describe('drupalLibraryLoader', () => {
       'http://backend',
     )
     expect((window as unknown as { drupalSettings: Record<string, unknown> }).drupalSettings)
-      .toEqual({ my_module: { some_key: 'value' }, ajaxPageState: { theme: '', theme_token: null, libraries: '' } })
+      .toEqual({
+        my_module: { some_key: 'value' },
+        path: { baseUrl: '/', pathPrefix: '' },
+        ajaxPageState: { theme: '', theme_token: null, libraries: '' },
+      })
   })
 
   it('skips core drupalSettingsLoader.js so it cannot wipe the in-memory settings', async () => {
@@ -100,6 +104,7 @@ describe('drupalLibraryLoader', () => {
     expect((window as unknown as { drupalSettings: Record<string, unknown> }).drupalSettings)
       .toEqual({
         ajax: { 'edit-x': { url: '/form/x?ajax_form=1' } },
+        path: { baseUrl: '/', pathPrefix: '' },
         ajaxPageState: { theme: '', theme_token: null, libraries: '' },
       })
   })
@@ -175,5 +180,48 @@ describe('drupalLibraryLoader', () => {
     expect(seeded.ajax['edit-upload-button'].url).toBe('/form/x?ajax_form=1')
     expect(seeded.ajax['edit-upload-button'].progress.url).toBe('/file/progress/123')
     expect(seeded.ajaxTrustedUrl).toEqual({ '/form/x?ajax_form=1': true })
+  })
+
+  describe('drupalSettings.path', () => {
+    const seededPath = () => (window as unknown as { drupalSettings: { path: Record<string, unknown> } }).drupalSettings.path
+    // Same as core's Drupal.url().
+    const drupalUrl = (path: string) => `${seededPath().baseUrl}${seededPath().pathPrefix}${path}`
+
+    it('seeds baseUrl and pathPrefix when the backend sends no path', async () => {
+      await loadDrupalLibrary({ js: [], drupalSettings: '{"my_module":{}}' }, 'http://backend')
+      expect(seededPath()).toEqual({ baseUrl: '/', pathPrefix: '' })
+      expect(drupalUrl('form/x')).toBe('/form/x')
+    })
+
+    it('seeds the given values, e.g. a language prefix', async () => {
+      await loadDrupalLibrary({ js: [], drupalSettings: '{"my_module":{}}' }, 'http://backend', [], { baseUrl: '/', pathPrefix: 'de/' })
+      expect(drupalUrl('form/x')).toBe('/de/form/x')
+    })
+
+    it('seeds baseUrl and pathPrefix when the backend sends them as null, keeping other keys', async () => {
+      await loadDrupalLibrary(
+        { js: [], drupalSettings: '{"path":{"baseUrl":null,"pathPrefix":null,"currentPath":"form/x","isFront":false}}' },
+        'http://backend',
+        [],
+        { baseUrl: '/', pathPrefix: 'de/' },
+      )
+      expect(seededPath()).toEqual({ baseUrl: '/', pathPrefix: 'de/', currentPath: 'form/x', isFront: false })
+    })
+
+    it('keeps non-null backend values, including an empty pathPrefix', async () => {
+      await loadDrupalLibrary(
+        { js: [], drupalSettings: '{"path":{"baseUrl":"/sub/","pathPrefix":""}}' },
+        'http://backend',
+        [],
+        { baseUrl: '/', pathPrefix: 'de/' },
+      )
+      expect(seededPath()).toEqual({ baseUrl: '/sub/', pathPrefix: '' })
+    })
+
+    it('follows the current values on a later page, e.g. after a locale switch', async () => {
+      await loadDrupalLibrary({ js: [], drupalSettings: '{"my_module":{}}' }, 'http://backend', [], { baseUrl: '/', pathPrefix: 'de/' })
+      await loadDrupalLibrary({ js: [], drupalSettings: '{"my_module":{}}' }, 'http://backend', [], { baseUrl: '/', pathPrefix: '' })
+      expect(seededPath()).toEqual({ baseUrl: '/', pathPrefix: '' })
+    })
   })
 })

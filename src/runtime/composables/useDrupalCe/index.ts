@@ -3,7 +3,7 @@ import { appendResponseHeader } from 'h3'
 import type { $Fetch, NitroFetchRequest } from 'nitropack'
 import { type Ref, type ComputedRef, type VNode, Fragment } from 'vue'
 import { getDrupalBaseUrl, getMenuBaseUrl, headersToRecord } from './server'
-import type { DrupalResolvedLibrary } from './drupalLibraryLoader'
+import type { DrupalPathSettings, DrupalResolvedLibrary } from './drupalLibraryLoader'
 import type { UseFetchOptions, AsyncData } from '#app'
 import { callWithNuxt } from '#app'
 import { useRuntimeConfig, useState, useFetch, navigateTo, createError, h, resolveComponent, setResponseStatus, useNuxtApp, useRequestHeaders, ref, watch, useRequestEvent, computed, useHead, toRef, useRoute, useRouter, useSlots } from '#imports'
@@ -693,6 +693,21 @@ export const useDrupalCe = () => {
   }
 
   /**
+   * Returns the `drupalSettings.path` values for the current page.
+   *
+   * URLs Drupal JS builds via `Drupal.url()` are requested from the frontend
+   * origin, like the root-relative URLs the backend puts into drupalSettings:
+   * - `baseUrl` is `/`.
+   * - `pathPrefix` is the route prefix of the current locale (e.g. `de/`) when
+   *   @nuxtjs/i18n is installed, else empty.
+   */
+  const getDrupalPathSettings = (): DrupalPathSettings => {
+    const nuxtApp = useNuxtApp()
+    const prefix = nuxtApp.$i18n ? (nuxtApp.$localePath as (path: string) => string)('/').replace(/^\/+|\/+$/g, '') : ''
+    return { baseUrl: '/', pathPrefix: prefix ? `${prefix}/` : '' }
+  }
+
+  /**
    * Lazily loads a resolved Drupal JS library in the browser and runs its
    * behaviours.
    *
@@ -712,8 +727,9 @@ export const useDrupalCe = () => {
     if (import.meta.server) {
       return
     }
+    const path = getDrupalPathSettings()
     const { loadDrupalLibrary } = await (drupalLibraryLoaderPromise ??= import('./drupalLibraryLoader'))
-    await loadDrupalLibrary(library, getDrupalBaseUrl(), config.skipLibraryScripts ?? [])
+    await loadDrupalLibrary(library, getDrupalBaseUrl(), config.skipLibraryScripts ?? [], path)
   }
 
   return {

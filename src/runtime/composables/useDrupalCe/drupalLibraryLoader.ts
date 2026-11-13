@@ -19,6 +19,14 @@ export interface DrupalLibraryJsFile {
   attributes?: Record<string, unknown>
 }
 
+/** The `drupalSettings.path` values core's `Drupal.url()` builds URLs from. */
+export interface DrupalPathSettings {
+  /** Base path with trailing slash, e.g. `/`. */
+  baseUrl: string
+  /** URL language prefix with trailing slash (e.g. `de/`), or an empty string. */
+  pathPrefix: string
+}
+
 /** A resolved Drupal library: its JS files (in load order) and merged settings. */
 export interface DrupalResolvedLibrary {
   /** The library's fully-qualified name, e.g. `core/drupal.ajax`. */
@@ -146,12 +154,23 @@ function deepMerge(target: Record<string, unknown>, source: Record<string, unkno
  * it from a `drupal-settings-json` element that a CE page never emits) is
  * skipped at load time (see skipScript), so nothing wipes this merge.
  *
+ * `path.baseUrl` and `path.pathPrefix` are set from the given frontend values
+ * unless the backend sends non-null ones: core's `Drupal.url()` and
+ * `Drupal.url.isLocal()` read both.
+ *
  * @param json - The backend's merged drupalSettings as a JSON string.
+ * @param path - The frontend's path settings.
  */
-function seedDrupalSettings(json: string): void {
+function seedDrupalSettings(json: string, path: DrupalPathSettings): void {
   try {
     const win = window as unknown as { drupalSettings?: Record<string, unknown> }
-    const merged = deepMerge(win.drupalSettings ?? {}, JSON.parse(json))
+    const settings = JSON.parse(json)
+    const merged = deepMerge(win.drupalSettings ?? {}, settings)
+    merged.path = {
+      ...(isPlainObject(merged.path) ? merged.path : {}),
+      baseUrl: settings.path?.baseUrl ?? path.baseUrl,
+      pathPrefix: settings.path?.pathPrefix ?? path.pathPrefix,
+    }
     // core ajax.js reads ajaxPageState.{theme,theme_token,libraries}; a CE form
     // omits it, so default to an empty stub so dependent callers have something.
     if (!merged.ajaxPageState) {
@@ -203,14 +222,15 @@ function attachBehaviors(): void {
  * @param library - The resolved library (name, JS files, optional drupalSettings).
  * @param baseUrl - The Drupal backend base URL for resolving root-relative URLs.
  * @param skipScripts - Site-configured URL substrings not to load.
+ * @param path - `drupalSettings.path` values to seed where the backend sends none.
  * @returns A promise that settles once this library's files have loaded.
  */
-export function loadDrupalLibrary(library: DrupalResolvedLibrary, baseUrl: string, skipScripts: string[] = []): Promise<void> {
+export function loadDrupalLibrary(library: DrupalResolvedLibrary, baseUrl: string, skipScripts: string[] = [], path: DrupalPathSettings = { baseUrl: '/', pathPrefix: '' }): Promise<void> {
   if (library.name) {
     loadedLibraries.add(library.name)
   }
   if (library.drupalSettings) {
-    seedDrupalSettings(library.drupalSettings)
+    seedDrupalSettings(library.drupalSettings, path)
   }
   reportLoadedLibraries()
 
