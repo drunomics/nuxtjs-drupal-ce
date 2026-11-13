@@ -239,11 +239,13 @@ reference component handing the library to `useDrupalCe().loadLibrary()`, and
 this way.
 
 The loader merges the `drupalSettings` sent by the backend into
-`window.drupalSettings`. Where the backend sends no `path.baseUrl` and
-`path.pathPrefix`, it sets them to `/` and to the route prefix of the current
-[nuxtjs/i18n](https://i18n.nuxtjs.org) locale (e.g. `de/`, empty without the
-i18n module), so `Drupal.url()` builds URLs that reach Drupal through the
-frontend.
+`window.drupalSettings`. On the first load on a route it adds `path.baseUrl`
+and `path.pathPrefix` where the backend sends none: `/` and the language prefix
+of the current [nuxtjs/i18n](https://i18n.nuxtjs.org) locale (e.g. `de/`, empty
+without the i18n module), so `Drupal.url()` builds URLs that reach Drupal
+through the frontend. The prefix comes from `getDrupalPath()`, which returns
+the Drupal path of a frontend path in the current locale and also localizes
+the menu endpoint.
 
 Docs: [Drupal JS libraries](https://lupus-decoupled.org/nuxt/drupal-libraries)
 for the Nuxt side, [Drupal JavaScript](https://lupus-decoupled.org/advanced-topics/drupal-javascript)

@@ -36,13 +36,14 @@ describe('Module @nuxtjs/i18n integration works', async () => {
     expect(html).toContain('Willkommen auf Ihrer Drupal-Website mit benutzerdefinierten Elementen')
   })
   it('seeds drupalSettings.path with the language prefix of the current locale', async () => {
-    let page = await createPage('/de/form/states')
+    const page = await createPage('/de/form/states')
     await page.waitForFunction(() => Boolean((window as any).Drupal?.behaviors?.states))
     expect(await page.evaluate(() => (window as any).drupalSettings.path)).toEqual({ baseUrl: '/', pathPrefix: 'de/' })
     expect(await page.evaluate(() => (window as any).Drupal.url('form/x'))).toBe('/de/form/x')
 
-    page = await createPage('/form/states')
-    await page.waitForFunction(() => Boolean((window as any).Drupal?.behaviors?.states))
+    // A client-side navigation to another locale updates the prefix.
+    await page.evaluate(() => (window as any).useNuxtApp().$router.push('/form/states'))
+    await page.waitForFunction(() => (window as any).drupalSettings.path.pathPrefix === '')
     expect(await page.evaluate(() => (window as any).Drupal.url('form/x'))).toBe('/form/x')
   }, 20000)
   it('correct menu is rendered', async () => {

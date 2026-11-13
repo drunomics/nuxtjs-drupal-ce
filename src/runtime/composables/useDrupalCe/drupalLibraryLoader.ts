@@ -1,15 +1,19 @@
 /**
  * Lazy loader for Drupal JavaScript libraries in the decoupled frontend.
  *
- * This module is intentionally standalone (no Vue/Nuxt imports) and is only
- * ever reached through a dynamic `import()` from `useDrupalCe().loadLibrary()`,
- * so Vite splits it into its own chunk: neither the loader nor the Drupal JS it
- * pulls in is shipped until a component actually loads a library.
+ * This module is only ever reached through a dynamic `import()` from
+ * `useDrupalCe().loadLibrary()`, so Vite splits it into its own chunk: neither
+ * the loader nor the Drupal JS it pulls in is shipped until a component
+ * actually loads a library. It runs in the browser only, where the Nuxt app is
+ * a singleton its composables reach outside of a component setup.
  *
  * Loading is coordinated through a module-level queue so scripts execute in the
  * order they are requested (dependencies before dependents, which the backend
  * resolves) and `Drupal.attachBehaviors()` runs exactly once per batch.
  */
+
+import { getDrupalPath } from './drupalPath'
+import { useRouter } from '#imports'
 
 /** A single JS file of a Drupal library. */
 export interface DrupalLibraryJsFile {
@@ -17,14 +21,6 @@ export interface DrupalLibraryJsFile {
   url: string
   /** Optional attributes for the `<script>` tag (reserved). */
   attributes?: Record<string, unknown>
-}
-
-/** The `drupalSettings.path` values core's `Drupal.url()` builds URLs from. */
-export interface DrupalPathSettings {
-  /** Base path with trailing slash, e.g. `/`. */
-  baseUrl: string
-  /** URL language prefix with trailing slash (e.g. `de/`), or an empty string. */
-  pathPrefix: string
 }
 
 /** A resolved Drupal library: its JS files (in load order) and merged settings. */
@@ -145,6 +141,46 @@ function deepMerge(target: Record<string, unknown>, source: Record<string, unkno
   return target
 }
 
+/** Route path of the last load that got the `drupalSettings.path` defaults. */
+let pathDefaultsRoute: string | undefined
+
+/**
+ * Completes `path.baseUrl` and `path.pathPrefix` in a drupalSettings JSON
+ * string: core's `Drupal.url()` and `Drupal.url.isLocal()` read both.
+ *
+ * - Non-null backend values are kept.
+ * - On the first load on the current route, missing or null ones are set:
+ *   `baseUrl` to `/`, `pathPrefix` to the language prefix of the current locale
+ *   (e.g. `de/`).
+ * - On later loads on that route, null ones are dropped, so the merge keeps the
+ *   values in place.
+ *
+ * @param json - The backend's merged drupalSettings as a JSON string, if any.
+ * @returns The completed JSON string. Invalid JSON is returned as is.
+ */
+function addPathDefaults(json: string = '{}'): string {
+  try {
+    const parsed = JSON.parse(json)
+    const settings = isPlainObject(parsed) ? parsed : {}
+    const path = isPlainObject(settings.path) ? settings.path : {}
+    if (path.baseUrl == null) {
+      delete path.baseUrl
+    }
+    if (path.pathPrefix == null) {
+      delete path.pathPrefix
+    }
+    const route = useRouter().currentRoute.value.path
+    const prefix = route === pathDefaultsRoute ? undefined : getDrupalPath().replace(/\/+$/, '')
+    const defaults = prefix === undefined ? {} : { baseUrl: '/', pathPrefix: prefix && `${prefix}/` }
+    settings.path = { ...defaults, ...path }
+    pathDefaultsRoute = route
+    return JSON.stringify(settings)
+  }
+  catch {
+    return json
+  }
+}
+
 /**
  * Seeds drupalSettings for the decoupled page.
  *
@@ -154,23 +190,12 @@ function deepMerge(target: Record<string, unknown>, source: Record<string, unkno
  * it from a `drupal-settings-json` element that a CE page never emits) is
  * skipped at load time (see skipScript), so nothing wipes this merge.
  *
- * `path.baseUrl` and `path.pathPrefix` are set from the given frontend values
- * unless the backend sends non-null ones: core's `Drupal.url()` and
- * `Drupal.url.isLocal()` read both.
- *
  * @param json - The backend's merged drupalSettings as a JSON string.
- * @param path - The frontend's path settings.
  */
-function seedDrupalSettings(json: string, path: DrupalPathSettings): void {
+function seedDrupalSettings(json: string): void {
   try {
     const win = window as unknown as { drupalSettings?: Record<string, unknown> }
-    const settings = JSON.parse(json)
-    const merged = deepMerge(win.drupalSettings ?? {}, settings)
-    merged.path = {
-      ...(isPlainObject(merged.path) ? merged.path : {}),
-      baseUrl: settings.path?.baseUrl ?? path.baseUrl,
-      pathPrefix: settings.path?.pathPrefix ?? path.pathPrefix,
-    }
+    const merged = deepMerge(win.drupalSettings ?? {}, JSON.parse(json))
     // core ajax.js reads ajaxPageState.{theme,theme_token,libraries}; a CE form
     // omits it, so default to an empty stub so dependent callers have something.
     if (!merged.ajaxPageState) {
@@ -222,16 +247,13 @@ function attachBehaviors(): void {
  * @param library - The resolved library (name, JS files, optional drupalSettings).
  * @param baseUrl - The Drupal backend base URL for resolving root-relative URLs.
  * @param skipScripts - Site-configured URL substrings not to load.
- * @param path - `drupalSettings.path` values to seed where the backend sends none.
  * @returns A promise that settles once this library's files have loaded.
  */
-export function loadDrupalLibrary(library: DrupalResolvedLibrary, baseUrl: string, skipScripts: string[] = [], path: DrupalPathSettings = { baseUrl: '/', pathPrefix: '' }): Promise<void> {
+export function loadDrupalLibrary(library: DrupalResolvedLibrary, baseUrl: string, skipScripts: string[] = []): Promise<void> {
   if (library.name) {
     loadedLibraries.add(library.name)
   }
-  if (library.drupalSettings) {
-    seedDrupalSettings(library.drupalSettings, path)
-  }
+  seedDrupalSettings(addPathDefaults(library.drupalSettings))
   reportLoadedLibraries()
 
   const urls = (library.js ?? [])
