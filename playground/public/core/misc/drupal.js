@@ -8,6 +8,11 @@
  */
 window.Drupal = window.Drupal || { behaviors: {} }
 
+// Same as core's Drupal.url().
+window.Drupal.url = function (path) {
+  return window.drupalSettings.path.baseUrl + window.drupalSettings.path.pathPrefix + path
+}
+
 window.Drupal.attachBehaviors = function (context, settings) {
   context = context || document
   settings = settings || window.drupalSettings

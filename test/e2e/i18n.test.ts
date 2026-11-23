@@ -1,6 +1,6 @@
 import { fileURLToPath } from 'node:url'
 import { describe, it, expect } from 'vitest'
-import { setup, $fetch } from '@nuxt/test-utils/e2e'
+import { setup, $fetch, createPage } from '@nuxt/test-utils/e2e'
 import DrupalCe from '../../'
 import { join } from 'node:path'
 
@@ -35,6 +35,17 @@ describe('Module @nuxtjs/i18n integration works', async () => {
     html = await $fetch('/de')
     expect(html).toContain('Willkommen auf Ihrer Drupal-Website mit benutzerdefinierten Elementen')
   })
+  it('seeds drupalSettings.path with the language prefix of the current locale', async () => {
+    const page = await createPage('/de/form/states')
+    await page.waitForFunction(() => Boolean((window as any).Drupal?.behaviors?.states))
+    expect(await page.evaluate(() => (window as any).drupalSettings.path)).toEqual({ baseUrl: '/', pathPrefix: 'de/' })
+    expect(await page.evaluate(() => (window as any).Drupal.url('form/x'))).toBe('/de/form/x')
+
+    // A client-side navigation to another locale updates the prefix.
+    await page.evaluate(() => (window as any).useNuxtApp().$router.push('/form/states'))
+    await page.waitForFunction(() => (window as any).drupalSettings.path.pathPrefix === '')
+    expect(await page.evaluate(() => (window as any).Drupal.url('form/x'))).toBe('/form/x')
+  }, 20000)
   it('correct menu is rendered', async () => {
     let html = await $fetch('/')
     expect(html).toContain('Another page')

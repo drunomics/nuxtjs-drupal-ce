@@ -3,6 +3,7 @@ import { appendResponseHeader } from 'h3'
 import type { $Fetch, NitroFetchRequest } from 'nitropack'
 import { type Ref, type ComputedRef, type VNode, Fragment } from 'vue'
 import { getDrupalBaseUrl, getMenuBaseUrl, headersToRecord } from './server'
+import { getDrupalPath } from './drupalPath'
 import type { DrupalResolvedLibrary } from './drupalLibraryLoader'
 import type { UseFetchOptions, AsyncData } from '#app'
 import { callWithNuxt } from '#app'
@@ -418,9 +419,9 @@ export const useDrupalCe = () => {
 
     if (config.useLocalizedMenuEndpoint && nuxtApp.$i18n) {
       // API path with localization
-      menuPath.value = sanitizeMenuPath(nuxtApp.$localePath('/' + baseMenuPath))
+      menuPath.value = getDrupalPath(baseMenuPath)
       watch(nuxtApp.$i18n.locale, () => {
-        menuPath.value = sanitizeMenuPath(nuxtApp.$localePath('/' + baseMenuPath))
+        menuPath.value = getDrupalPath(baseMenuPath)
       })
     }
     else {
@@ -787,6 +788,7 @@ export const useDrupalCe = () => {
     getCeApiEndpoint,
     getDrupalBaseUrl,
     getMenuBaseUrl,
+    getDrupalPath,
     getPageLayout,
     usePageHead,
     getSlotItems,

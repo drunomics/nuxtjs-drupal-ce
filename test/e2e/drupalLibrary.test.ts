@@ -35,6 +35,9 @@ describe('Drupal library loading', async () => {
     // drupalSettings of the first library element is merged into the global.
     expect(await page.evaluate(() => (window as any).drupalSettings?.states_demo?.greeting)).toBe('Hello from drupalSettings')
 
+    // Drupal.url() builds root-relative URLs from the seeded path settings.
+    expect(await page.evaluate(() => (window as any).Drupal.url('form/x'))).toBe('/form/x')
+
     // The behavior attached to the server-rendered markup: the conditional
     // field is hidden until the checkbox is ticked.
     const message = page.locator('[data-drupal-selector="edit-message"]')
